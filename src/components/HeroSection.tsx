@@ -115,13 +115,13 @@ export function HeroSection() {
     if (isManualControl) {
       const resetTimer = setTimeout(() => {
         setIsManualControl(false);
-      }, 3000);
+      }, 2500);
       return () => clearTimeout(resetTimer);
     }
 
     const intervalId = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slideConfigs.length);
-    }, 3000);
+    }, 2500);
 
     return () => clearInterval(intervalId);
   }, [isManualControl]);

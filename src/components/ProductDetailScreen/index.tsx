@@ -3,10 +3,13 @@ import {
   ArrowLeft,
   ShoppingBag,
   ChevronDown,
-  ChevronUp,
   Share,
+  UserRoundCheck,
+  Package,
+  Shirt,
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { useProductDetail, useAddToCart } from "./data";
 import { ExpandableSection } from "./types";
 import { useCartStore } from "../../store/cartStore";
@@ -154,26 +157,43 @@ const ExpandableSectionComponent = ({
   onToggle: () => void;
 }) => (
   <div>
-    <button
+    <motion.button
       onClick={onToggle}
+      whileHover={{ backgroundColor: "rgba(0, 0, 0, 0.02)" }}
       className="w-full flex items-center justify-between py-4 text-left"
     >
       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
         {title}
       </h3>
-      {isExpanded ? (
-        <ChevronUp className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-      ) : (
+      <motion.div
+        className="flex-shrink-0 ml-4"
+        animate={{ rotate: isExpanded ? 180 : 0 }}
+        transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+      >
         <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+      </motion.div>
+    </motion.button>
+    <AnimatePresence>
+      {isExpanded && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{
+            duration: 0.3,
+            ease: [0.25, 0.46, 0.45, 0.94],
+            opacity: { duration: 0.2 },
+          }}
+          className="overflow-hidden"
+        >
+          <div className="pb-4">
+            <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+              {content}
+            </p>
+          </div>
+        </motion.div>
       )}
-    </button>
-    {isExpanded && (
-      <div className="pb-4">
-        <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-          {content}
-        </p>
-      </div>
-    )}
+    </AnimatePresence>
   </div>
 );
 
@@ -187,43 +207,162 @@ const SizeSelector = ({
   selectedSize: string;
   onSizeChange: (size: string) => void;
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleSizeSelect = (size: string) => {
+    onSizeChange(size);
+    setIsModalOpen(false);
+  };
 
   return (
-    <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-4 rounded-lg bg-white dark:bg-gray-800"
+    <>
+      {/* Size Selector Button - Inline Style */}
+      <motion.button
+        onClick={() => setIsModalOpen(true)}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className="flex items-center gap-2 text-gray-900 dark:text-gray-100 focus:outline-none"
       >
-        <span className="text-gray-900 dark:text-gray-100">
+        <span className="text-lg font-semibold">
           {selectedSize || "Select Size"}
         </span>
-        <ChevronDown
-          className={`w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform ${
-            isOpen ? "rotate-180" : ""
-          }`}
-        />
-      </button>
+        <motion.div
+          animate={{ rotate: isModalOpen ? 180 : 0 }}
+          transition={{ duration: 0.2, ease: "easeInOut" }}
+        >
+          <ChevronDown className="w-5 h-5 text-gray-400" />
+        </motion.div>
+      </motion.button>
 
-      {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10">
-          {sizes.map((size) => (
-            <button
-              key={size}
-              onClick={() => {
-                onSizeChange(size);
-                setIsOpen(false);
+      {/* Size Selection Modal */}
+      <AnimatePresence mode="wait">
+        {isModalOpen && (
+          <motion.div
+            initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
+            animate={{ opacity: 1, backdropFilter: "blur(8px)" }}
+            exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
+            transition={{
+              duration: 0.3,
+              ease: [0.25, 0.46, 0.45, 0.94],
+            }}
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm"
+            onClick={() => setIsModalOpen(false)}
+          >
+            <motion.div
+              initial={{ y: "100%", opacity: 0, scale: 0.95 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: "100%", opacity: 0, scale: 0.95 }}
+              transition={{
+                duration: 0.4,
+                ease: [0.25, 0.46, 0.45, 0.94],
               }}
-              className={`w-full p-4 text-left bg-gray-50 dark:bg-gray-700 transition-colors ${
-                selectedSize === size ? "bg-gray-100 dark:bg-gray-700" : ""
-              }`}
+              className="w-full max-w-md bg-white dark:bg-gray-900 rounded-t-3xl p-6 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
             >
-              {size}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+              {/* Modal Header */}
+              <motion.div
+                className="flex items-center justify-between mb-6"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1, duration: 0.3 }}
+              >
+                <motion.h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                  Select size
+                </motion.h2>
+                <motion.button
+                  onClick={() => setIsModalOpen(false)}
+                  whileHover={{
+                    scale: 1.1,
+                    backgroundColor: "rgba(0, 0, 0, 0.1)",
+                    rotate: 90,
+                  }}
+                  whileTap={{ scale: 0.9 }}
+                  transition={{ duration: 0.2 }}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                >
+                  <svg
+                    className="w-6 h-6 text-gray-500 dark:text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </motion.button>
+              </motion.div>
+
+              {/* Size Options */}
+              <motion.div
+                className="space-y-3"
+                initial="hidden"
+                animate="visible"
+              >
+                {sizes.map((size) => (
+                  <motion.button
+                    key={size}
+                    onClick={() => handleSizeSelect(size)}
+                    variants={{
+                      hidden: { opacity: 0, y: 20, scale: 0.95 },
+                      visible: {
+                        opacity: 1,
+                        y: 0,
+                        scale: 1,
+                        transition: {
+                          duration: 0.3,
+                          ease: [0.25, 0.46, 0.45, 0.94],
+                        },
+                      },
+                    }}
+                    whileHover={{
+                      scale: 1.02,
+                      backgroundColor: "rgba(0, 0, 0, 0.05)",
+                      transition: { duration: 0.2 },
+                    }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                  >
+                    <span className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                      {size}
+                    </span>
+                    <AnimatePresence>
+                      {selectedSize === size && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.5, rotate: -90 }}
+                          animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                          exit={{ opacity: 0, scale: 0.5, rotate: 90 }}
+                          transition={{
+                            duration: 0.3,
+                            ease: [0.25, 0.46, 0.45, 0.94],
+                          }}
+                          className="w-6 h-6 bg-black dark:bg-white rounded-full flex items-center justify-center"
+                        >
+                          <svg
+                            className="w-4 h-4 text-white dark:text-black"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.button>
+                ))}
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 
@@ -350,19 +489,16 @@ export const ProductDetailScreen: React.FC = () => {
 
         {/* Size Selector */}
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between">
             <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               Size
             </span>
-            <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              {selectedSize}
-            </span>
+            <SizeSelector
+              sizes={productDetail.sizes}
+              selectedSize={selectedSize}
+              onSizeChange={setSelectedSize}
+            />
           </div>
-          <SizeSelector
-            sizes={productDetail.sizes}
-            selectedSize={selectedSize}
-            onSizeChange={setSelectedSize}
-          />
         </div>
 
         {/* Expandable Sections */}
@@ -375,12 +511,10 @@ export const ProductDetailScreen: React.FC = () => {
           />
 
           {expandedSections.has("about") && (
-            <div className="px-4 pb-4 space-y-3">
+            <div className="pb-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-full border-2 border-gray-400 flex items-center justify-center">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                  </div>
+                  <UserRoundCheck className="w-5 h-5 text-gray-400" />
                   <span className="text-gray-600 dark:text-gray-300">
                     Made by
                   </span>
@@ -392,7 +526,7 @@ export const ProductDetailScreen: React.FC = () => {
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 text-gray-400">📦</div>
+                  <Package className="w-5 h-5 text-gray-400" />
                   <span className="text-gray-600 dark:text-gray-300">
                     In stock
                   </span>
@@ -404,7 +538,7 @@ export const ProductDetailScreen: React.FC = () => {
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 text-gray-400">👕</div>
+                  <Shirt className="w-5 h-5 text-gray-400" />
                   <span className="text-gray-600 dark:text-gray-300">
                     Collection
                   </span>

@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useProductStore } from "../store/productStore";
 
-const collections = [
+// Slide configurations that map to API data
+const slideConfigs = [
   {
     id: 1,
     title: "Core Collection",
@@ -10,8 +13,8 @@ const collections = [
   },
   {
     id: 2,
-    title: "Premium Line",
-    subtitle: "Luxury items",
+    title: "Limited Drop",
+    subtitle: "Exclusive items",
     bgColor: "from-blue-300 to-blue-400 dark:from-blue-600 dark:to-blue-700",
     product: "tshirt",
   },
@@ -25,19 +28,19 @@ const collections = [
   },
   {
     id: 4,
-    title: "Limited Edition",
-    subtitle: "Exclusive drops",
+    title: "Premium Line",
+    subtitle: "Luxury collection",
     bgColor:
       "from-purple-300 to-purple-400 dark:from-purple-600 dark:to-purple-700",
-    product: "hoodie",
+    product: "crewneck",
   },
   {
     id: 5,
-    title: "Seasonal",
+    title: "Featured",
     subtitle: "Trending now",
     bgColor:
       "from-orange-300 to-orange-400 dark:from-orange-600 dark:to-orange-700",
-    product: "tshirt",
+    product: "bot-hat",
   },
 ];
 
@@ -94,10 +97,19 @@ function ProductIllustration({ type }: { type: string }) {
 }
 
 export function HeroSection() {
+  const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isManualControl, setIsManualControl] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const { sliderProducts, isLoadingSlider, fetchSliderProducts } =
+    useProductStore();
+
+  useEffect(() => {
+    if (sliderProducts.length === 0) {
+      fetchSliderProducts();
+    }
+  }, [sliderProducts.length, fetchSliderProducts]);
 
   useEffect(() => {
     if (isManualControl) {
@@ -108,7 +120,7 @@ export function HeroSection() {
     }
 
     const intervalId = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % collections.length);
+      setCurrentSlide((prev) => (prev + 1) % slideConfigs.length);
     }, 3000);
 
     return () => clearInterval(intervalId);
@@ -136,13 +148,13 @@ export function HeroSection() {
     const isRightSwipe = distance < -50;
 
     if (isLeftSwipe) {
-      const nextSlide = (currentSlide + 1) % collections.length;
+      const nextSlide = (currentSlide + 1) % slideConfigs.length;
       handleManualSlide(nextSlide);
     }
 
     if (isRightSwipe) {
       const prevSlide =
-        currentSlide === 0 ? collections.length - 1 : currentSlide - 1;
+        currentSlide === 0 ? slideConfigs.length - 1 : currentSlide - 1;
       handleManualSlide(prevSlide);
     }
   };
@@ -164,38 +176,58 @@ export function HeroSection() {
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
           >
-            {collections.map((collection) => (
-              <div
-                key={collection.id}
-                className={`w-full flex-shrink-0 relative bg-gradient-to-b ${collection.bgColor} h-full`}
-              >
-                {/* Product illustration */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <ProductIllustration type={collection.product} />
-                </div>
-
-                {/* Overlay content */}
+            {isLoadingSlider ? (
+              // Loading state
+              <div className="w-full flex-shrink-0 relative bg-gray-200 dark:bg-gray-700 h-full animate-pulse">
                 <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
                   <div>
-                    <h3 className="text-white text-2xl font-bold mb-1">
-                      {collection.title}
-                    </h3>
-                    <p className="text-white/80 text-sm">
-                      {collection.subtitle}
-                    </p>
+                    <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded w-48 mb-2"></div>
+                    <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-32"></div>
                   </div>
-                  <button className="bg-white text-gray-900 px-6 py-2 rounded-full font-medium hover:bg-gray-100 transition-colors">
-                    Explore
-                  </button>
+                  <div className="h-10 bg-gray-300 dark:bg-gray-600 rounded-full w-24"></div>
                 </div>
               </div>
-            ))}
+            ) : (
+              slideConfigs.map((collection) => (
+                <div
+                  key={collection.id}
+                  className={`w-full flex-shrink-0 relative bg-gradient-to-b ${collection.bgColor} h-full`}
+                >
+                  {/* Product illustration */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <ProductIllustration type={collection.product} />
+                  </div>
+
+                  {/* Overlay content */}
+                  <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
+                    <div>
+                      <h3 className="text-white text-2xl font-bold mb-1">
+                        {collection.title}
+                      </h3>
+                      <p className="text-white/80 text-sm">
+                        {collection.subtitle}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() =>
+                        navigate(
+                          `/collection/${encodeURIComponent(collection.title)}`
+                        )
+                      }
+                      className="bg-white text-gray-900 px-6 py-2 rounded-full font-medium hover:bg-gray-100 transition-colors"
+                    >
+                      Explore
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
         {/* Slide indicators */}
         <div className="flex justify-center gap-2 mt-4">
-          {collections.map((_, index) => (
+          {slideConfigs.map((_, index) => (
             <button
               key={index}
               onClick={() => handleManualSlide(index)}

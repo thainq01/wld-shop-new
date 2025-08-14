@@ -3,7 +3,7 @@ import { ThemeToggle } from "./ThemeToggle";
 
 export function Header() {
   return (
-    <header className="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+    <header className="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-900 ">
       <button className="p-2 -ml-2">
         <X className="w-6 h-6 text-gray-600 dark:text-gray-300" />
       </button>

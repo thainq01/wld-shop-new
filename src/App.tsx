@@ -4,10 +4,12 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import { Toaster } from "sonner";
 import { MainLayout } from "./layouts/MainLayout";
 import { ExploreScreen } from "./components/ExploreScreen";
 import { CollectionScreen } from "./components/CollectionScreen/index";
 import { ProductDetailScreen } from "./components/ProductDetailScreen/index";
+import { BagScreen } from "./components/BagScreen/index";
 import { ThemeProvider } from "./components/ThemeProvider";
 
 function App() {
@@ -26,8 +28,10 @@ function App() {
               path="/product/:productId"
               element={<ProductDetailScreen />}
             />
+            <Route path="/bag" element={<BagScreen />} />
           </Routes>
         </MainLayout>
+        <Toaster position="top-center" richColors duration={1000} />
       </Router>
     </ThemeProvider>
   );

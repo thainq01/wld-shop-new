@@ -2,25 +2,38 @@ import { useProductStore } from "../../store/productStore";
 import { useCollectionStore } from "../../store/collectionStore";
 import { useEffect } from "react";
 
-export const useCollectionProducts = (collectionName: string = "Core Collection") => {
-  const { 
-    coreCollectionProducts, 
+export const useCollectionProducts = (
+  collectionName: string = "Core Collection"
+) => {
+  const {
+    coreCollectionProducts,
     limitedDropProducts,
-    isLoadingCoreCollection, 
+    isLoadingCoreCollection,
     isLoadingLimitedDrop,
-    coreCollectionError, 
-    limitedDropError,
-    fetchCoreCollectionProducts, 
-    fetchLimitedDropProducts 
+
+    fetchCoreCollectionProducts,
+    fetchLimitedDropProducts,
   } = useProductStore();
 
   useEffect(() => {
-    if (collectionName === "Core Collection" && coreCollectionProducts.length === 0) {
+    if (
+      collectionName === "Core Collection" &&
+      coreCollectionProducts.length === 0
+    ) {
       fetchCoreCollectionProducts();
-    } else if (collectionName === "Limited Drop" && limitedDropProducts.length === 0) {
+    } else if (
+      collectionName === "Limited Drop" &&
+      limitedDropProducts.length === 0
+    ) {
       fetchLimitedDropProducts();
     }
-  }, [collectionName, coreCollectionProducts.length, limitedDropProducts.length, fetchCoreCollectionProducts, fetchLimitedDropProducts]);
+  }, [
+    collectionName,
+    coreCollectionProducts.length,
+    limitedDropProducts.length,
+    fetchCoreCollectionProducts,
+    fetchLimitedDropProducts,
+  ]);
 
   const getCollectionData = () => {
     switch (collectionName) {
@@ -28,14 +41,14 @@ export const useCollectionProducts = (collectionName: string = "Core Collection"
         return {
           products: limitedDropProducts,
           isLoading: isLoadingLimitedDrop,
-          error: limitedDropError,
+          error: null,
         };
       case "Core Collection":
       default:
         return {
           products: coreCollectionProducts,
           isLoading: isLoadingCoreCollection,
-          error: coreCollectionError,
+          error: null,
         };
     }
   };
@@ -46,27 +59,41 @@ export const useCollectionProducts = (collectionName: string = "Core Collection"
     products,
     isLoading,
     isError: error,
-    refetch: collectionName === "Core Collection" ? fetchCoreCollectionProducts : fetchLimitedDropProducts,
+    refetch:
+      collectionName === "Core Collection"
+        ? fetchCoreCollectionProducts
+        : fetchLimitedDropProducts,
   };
 };
 
 export const useCollection = (collectionName: string = "Core Collection") => {
-  const { collections, fetchCollections, setCurrentCollection, currentCollection } = useCollectionStore();
+  const {
+    collections,
+    fetchCollections,
+    setCurrentCollection,
+    currentCollection,
+  } = useCollectionStore();
 
   useEffect(() => {
     if (collections.length === 0) {
       fetchCollections();
     }
     setCurrentCollection(collectionName.toLowerCase().replace(" ", "-"));
-  }, [collectionName, collections.length, fetchCollections, setCurrentCollection]);
+  }, [
+    collectionName,
+    collections.length,
+    fetchCollections,
+    setCurrentCollection,
+  ]);
 
   return {
     collection: currentCollection || {
       id: collectionName.toLowerCase().replace(" ", "-"),
       name: collectionName,
-      description: collectionName === "Core Collection" 
-        ? "Essential pieces for everyday wear"
-        : "Exclusive limited edition items",
+      description:
+        collectionName === "Core Collection"
+          ? "Essential pieces for everyday wear"
+          : "Exclusive limited edition items",
     },
     isLoading: false,
     isError: null,

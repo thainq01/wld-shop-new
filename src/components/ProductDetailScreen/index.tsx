@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ArrowLeft,
   ShoppingBag,
@@ -10,9 +10,10 @@ import {
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useProductDetail, useAddToCart } from "./data";
+import { toast } from "sonner";
 import { ExpandableSection } from "./types";
 import { useCartStore } from "../../store/cartStore";
+import { useProductStore } from "../../store/productStore";
 
 // Product image component - reused from other components
 function ProductImage({
@@ -369,11 +370,13 @@ const SizeSelector = ({
 export const ProductDetailScreen: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
-  const { productDetail, isLoading, error, refetch } = useProductDetail(
-    productId || ""
-  );
-  const { addToCart } = useAddToCart();
-  const { getCartItemCount } = useCartStore();
+  const {
+    currentProduct: productDetail,
+    isLoading,
+    error,
+    fetchProductDetail,
+  } = useProductStore();
+  const { addToCart, getCartItemCount } = useCartStore();
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
@@ -381,6 +384,13 @@ export const ProductDetailScreen: React.FC = () => {
     Set<ExpandableSection>
   >(new Set(["about"]));
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+
+  // Fetch product detail when component mounts or productId changes
+  useEffect(() => {
+    if (productId) {
+      fetchProductDetail(productId);
+    }
+  }, [productId, fetchProductDetail]);
 
   const toggleSection = (section: ExpandableSection) => {
     const newExpanded = new Set(expandedSections);
@@ -396,16 +406,22 @@ export const ProductDetailScreen: React.FC = () => {
     if (!productDetail) return;
 
     if (!selectedSize) {
-      alert("Please select a size");
+      toast.error("Please select a size");
       return;
     }
 
     setIsAddingToCart(true);
     try {
-      addToCart(productDetail, selectedSize);
-      // Could add success feedback here
+      addToCart({
+        productId: productDetail.id,
+        productName: productDetail.name,
+        productPrice: productDetail.price,
+        productImage: productDetail.images[0],
+        size: selectedSize,
+      });
+      toast.success(`${productDetail.name} added to bag!`);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to add to cart");
+      toast.error(err instanceof Error ? err.message : "Failed to add to cart");
     } finally {
       setIsAddingToCart(false);
     }
@@ -414,7 +430,10 @@ export const ProductDetailScreen: React.FC = () => {
   if (isLoading) return <LoadingState />;
   if (error || !productDetail)
     return (
-      <ErrorState error={error || "Product not found"} onRetry={refetch} />
+      <ErrorState
+        error={error || "Product not found"}
+        onRetry={() => productId && fetchProductDetail(productId)}
+      />
     );
 
   const cartItemCount = getCartItemCount();
@@ -435,10 +454,7 @@ export const ProductDetailScreen: React.FC = () => {
             <Share className="w-6 h-6 text-gray-700 dark:text-gray-300" />
           </button>
           <button
-            onClick={() => {
-              // TODO: Navigate to cart screen when implemented
-              console.log("Navigate to cart");
-            }}
+            onClick={() => navigate("/bag")}
             className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full transition-colors relative"
           >
             <ShoppingBag className="w-6 h-6 text-gray-700 dark:text-gray-300" />
@@ -454,10 +470,23 @@ export const ProductDetailScreen: React.FC = () => {
       {/* Product Images */}
       <div className="relative mx-4 mt-4">
         <div className="aspect-square bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden">
-          <ProductImage
-            type={productDetail.images[currentImageIndex]}
-            className="rounded-2xl"
-          />
+          {/* Check if image is a URL (from Dog CEO API) or placeholder */}
+          {productDetail.images[currentImageIndex]?.startsWith("http") ? (
+            <img
+              src={productDetail.images[currentImageIndex]}
+              alt={`${productDetail.name} - Image ${currentImageIndex + 1}`}
+              className="w-full h-full object-cover rounded-2xl"
+              onError={(e) => {
+                // Fallback to placeholder if image fails to load
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          ) : (
+            <ProductImage
+              type={productDetail.images[currentImageIndex]}
+              className="rounded-2xl"
+            />
+          )}
         </div>
 
         {/* Image indicators */}

@@ -7,6 +7,21 @@ import { ProductItemProps } from "./types";
 function ProductImage({ type }: { type: string }) {
   const baseClasses = "w-full h-full bg-black flex items-center justify-center";
 
+  // Check if type is a URL (from Dog CEO API)
+  if (type?.startsWith("http")) {
+    return (
+      <img
+        src={type}
+        alt="Product"
+        className="w-full h-full object-cover"
+        onError={(e) => {
+          // Fallback to placeholder if image fails to load
+          e.currentTarget.style.display = "none";
+        }}
+      />
+    );
+  }
+
   switch (type) {
     case "hoodie":
       return (
@@ -82,7 +97,7 @@ export const ProductItem: React.FC<ProductItemProps> = ({
     >
       {/* Product Image */}
       <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-2xl overflow-hidden flex-shrink-0">
-        <ProductImage type={product.image} />
+        <ProductImage type={product.images[0]} />
       </div>
 
       {/* Product Info */}

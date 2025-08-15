@@ -30,12 +30,9 @@ export function BottomNavigation() {
 
         {/* Bag Tab */}
         <button
-          onClick={() => {
-            // TODO: Navigate to cart screen when implemented
-            console.log("Navigate to cart");
-          }}
+          onClick={() => navigate("/bag")}
           className={`flex flex-col items-center gap-1 py-2 px-4 min-w-0 relative transition-opacity ${
-            location.pathname === "/cart" ? "opacity-100" : "opacity-70"
+            location.pathname === "/bag" ? "opacity-100" : "opacity-70"
           }`}
         >
           <div className="p-2 relative">

@@ -3,6 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useCollectionProducts, useCollection } from "./data";
 import { ProductItem } from "../ProductItem";
+import { ProductDetail } from "../../store/productStore";
 
 // Loading component
 const LoadingState = () => (
@@ -112,7 +113,7 @@ export const CollectionScreen: React.FC = () => {
       ) : (
         <div className="px-4 py-6 pb-20">
           <div className="space-y-4">
-            {products.map((product) => (
+            {products.map((product: ProductDetail) => (
               <ProductItem key={product.id} product={product} />
             ))}
           </div>

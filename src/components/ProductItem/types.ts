@@ -1,6 +1,6 @@
-import { Product } from "../../types";
+import { ProductDetail } from "../../store/productStore";
 
 export interface ProductItemProps {
-  product: Product;
+  product: ProductDetail;
   className?: string;
 }

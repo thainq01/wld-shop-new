@@ -97,6 +97,12 @@ export function RightSidebar({ isOpen, onClose }: RightSidebarProps) {
     }
   );
 
+  console.log("wldBalance", wldBalance);
+
+  if (error) {
+    console.log("error in fetch balance", error);
+  }
+
   const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
   const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
 

@@ -110,10 +110,13 @@ export const useBalance = create<BalanceStore & Actions>()(
           state.error = null;
         });
 
-        const url = new URL(
-          `/api/cms/api/user-balance/chain/480/wallet/${address}`,
-          window.location.origin
-        );
+        // Use different endpoints for development vs production
+        const isDev = import.meta.env.DEV;
+        const apiUrl = isDev
+          ? `/api/cms/api/user-balance/chain/480/wallet/${address}`
+          : `/api/balance?address=${address}`;
+
+        const url = new URL(apiUrl, window.location.origin);
         url.searchParams.set("t", Date.now().toString());
         const response = await fetch(url.toString());
 

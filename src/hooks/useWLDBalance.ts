@@ -45,10 +45,14 @@ export function useWLDBalance() {
       setError(null);
 
       try {
+        // Use different endpoints for development vs production
+        const isDev = import.meta.env.DEV;
+        const apiUrl = isDev
+          ? `/api/cms/api/user-balance/chain/480/wallet/${address}`
+          : `/api/balance?address=${address}`;
+
         // Fetch balance from HoldStation API
-        const response = await fetch(
-          `/api/cms/api/user-balance/chain/480/wallet/${address}`
-        );
+        const response = await fetch(apiUrl);
 
         console.log("response", response);
 
@@ -98,10 +102,14 @@ export function useWLDBalance() {
         setError(null);
 
         try {
+          // Use different endpoints for development vs production
+          const isDev = import.meta.env.DEV;
+          const apiUrl = isDev
+            ? `/api/cms/api/user-balance/chain/480/wallet/${address}`
+            : `/api/balance?address=${address}`;
+
           // Fetch balance from HoldStation API
-          const response = await fetch(
-            `/api/cms/api/user-balance/chain/480/wallet/${address}`
-          );
+          const response = await fetch(apiUrl);
 
           console.log(response);
 

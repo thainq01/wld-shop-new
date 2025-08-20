@@ -82,26 +82,22 @@ export function RightSidebar({ isOpen, onClose }: RightSidebarProps) {
     useLanguageStore();
   const { username, profile_picture_url, address } = useAuthWorld();
 
-  // Use SWR to fetch WLD balance
+  // Use different endpoints for development vs production
+  const isDev = import.meta.env.DEV;
+  const getApiUrl = (address: string) =>
+    isDev
+      ? `/api/cms/api/user-balance/chain/480/wallet/${address}`
+      : `/api/balance?address=${address}`;
+
   const {
     data: wldBalance,
     isLoading: isBalanceLoading,
     error,
-  } = useSWR(
-    address ? `/api/cms/api/user-balance/chain/480/wallet/${address}` : null,
-    fetcher,
-    {
-      refreshInterval: 30000, // Refresh every 30 seconds
-      revalidateOnFocus: false,
-      errorRetryCount: 3,
-    }
-  );
-
-  console.log("wldBalance", wldBalance);
-
-  if (error) {
-    console.log("error in fetch balance", error);
-  }
+  } = useSWR(address ? getApiUrl(address) : null, fetcher, {
+    refreshInterval: 30000,
+    revalidateOnFocus: false,
+    errorRetryCount: 3,
+  });
 
   const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
   const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);

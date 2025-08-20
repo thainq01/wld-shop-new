@@ -1,5 +1,6 @@
-import { X, MoreHorizontal } from "lucide-react";
+import { X, MoreHorizontal, Settings } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
+import { Link } from "react-router-dom";
 
 export function Header() {
   return (
@@ -19,6 +20,13 @@ export function Header() {
 
       <div className="flex items-center gap-2">
         <ThemeToggle />
+        <Link
+          to="/cms"
+          className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 transition-colors"
+          title="CMS Admin"
+        >
+          <Settings className="w-5 h-5" />
+        </Link>
         <button className="p-2 -mr-2">
           <MoreHorizontal className="w-6 h-6 text-gray-600 dark:text-gray-300" />
         </button>

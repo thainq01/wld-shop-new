@@ -2,12 +2,11 @@ import React from "react";
 import { ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ProductItemProps } from "./types";
+// Product type is imported via ProductItemProps
 
-// Product image component - shared across the app
 function ProductImage({ type }: { type: string }) {
   const baseClasses = "w-full h-full bg-black flex items-center justify-center";
 
-  // Check if type is a URL (from Dog CEO API)
   if (type?.startsWith("http")) {
     return (
       <img
@@ -15,7 +14,6 @@ function ProductImage({ type }: { type: string }) {
         alt="Product"
         className="w-full h-full object-cover"
         onError={(e) => {
-          // Fallback to placeholder if image fails to load
           e.currentTarget.style.display = "none";
         }}
       />
@@ -80,37 +78,63 @@ function ProductImage({ type }: { type: string }) {
   }
 }
 
-export const ProductItem: React.FC<ProductItemProps> = ({
-  product,
-  className = "",
-}) => {
+export const ProductItem: React.FC<ProductItemProps> = ({ product }) => {
   const navigate = useNavigate();
 
   const handlePress = () => {
     navigate(`/product/${product.id}`);
   };
 
+  // Get the primary image, fallback to first image if no primary is set
+  const getProductImage = () => {
+    if (!product.images || product.images.length === 0) return "";
+
+    // Find primary image
+    const primaryImage = product.images.find((img) => img.isPrimary);
+    if (primaryImage) return primaryImage.url;
+
+    // Fallback to first image
+    return product.images[0]?.url || "";
+  };
+
   return (
     <button
       onClick={handlePress}
-      className={`flex items-center gap-4 p-1 w-full text-left hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors ${className}`}
+      className={`flex items-center gap-4 p-1 w-full text-left hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors`}
     >
       {/* Product Image */}
-      <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-2xl overflow-hidden flex-shrink-0">
-        <ProductImage type={product.images[0]} />
+      <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-2xl overflow-hidden flex-shrink-0 relative">
+        <ProductImage type={getProductImage()} />
+        {/* Featured badge overlay */}
+        {product.featured && (
+          <div className="absolute top-1 right-1 bg-yellow-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+            ★
+          </div>
+        )}
       </div>
 
       {/* Product Info */}
       <div className="flex-1 min-w-0">
-        <div className="text-sm text-blue-500 dark:text-blue-400 font-medium mb-1">
-          {product.availability}
+        <div className="flex items-center gap-2 mb-1">
+          <div
+            className={`${
+              product.inStock == "Out of Stock"
+                ? "text-red-500"
+                : "text-blue-500"
+            } text-sm font-medium`}
+          >
+            {product.inStock}
+          </div>
+          {product.featured && (
+            <span className="text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-2 py-0.5 rounded-full font-medium">
+              FEATURED
+            </span>
+          )}
         </div>
         <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
           {product.name}
         </h4>
-        <p className="text-gray-500 dark:text-gray-400">
-          USD {product.price.toFixed(2)}
-        </p>
+        <p className="text-gray-500 dark:text-gray-400"> {product.price} WLD</p>
       </div>
 
       {/* Arrow */}

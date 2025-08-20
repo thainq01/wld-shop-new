@@ -3,7 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useCollectionProducts, useCollection } from "./data";
 import { ProductItem } from "../ProductItem";
-import { ProductDetail } from "../../store/productStore";
+import { Product } from "../../types";
 
 // Loading component
 const LoadingState = () => (
@@ -44,12 +44,12 @@ const ErrorState = ({ onRetry }: { onRetry?: () => void }) => (
 export const CollectionScreen: React.FC = () => {
   const { collectionId } = useParams<{ collectionId: string }>();
   const navigate = useNavigate();
-  const decodedCollectionId = collectionId
-    ? decodeURIComponent(collectionId)
-    : "Core Collection";
-  const { collection } = useCollection(decodedCollectionId);
-  const { products, isLoading, isError, refetch } =
-    useCollectionProducts(decodedCollectionId);
+  
+  // The collectionId parameter is actually a collection slug
+  const collectionSlug = collectionId ? decodeURIComponent(collectionId) : "";
+  
+  const { collection, isLoading: isLoadingCollection, isError: collectionError } = useCollection(collectionSlug);
+  const { products, isLoading: isLoadingProducts, isError: productsError, refetch } = useCollectionProducts(collectionSlug);
 
   useEffect(() => {
     window.scrollTo({
@@ -59,20 +59,23 @@ export const CollectionScreen: React.FC = () => {
     });
   }, []);
 
+  const isLoading = isLoadingCollection || isLoadingProducts;
+  const isError = collectionError || productsError;
+
   if (isError) {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900">
         {/* Fixed Header */}
-        <div className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900backdrop-blur-md bg-white/95 dark:bg-gray-900/95">
+        <div className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 backdrop-blur-md bg-white/95 dark:bg-gray-900/95">
           <div className="flex items-center justify-between p-4">
             <button
               onClick={() => navigate(-1)}
-              className="p-2 dark:bg-gray-800 rounded-full transition-colors"
+              className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full transition-colors"
             >
               <ArrowLeft className="w-6 h-6 text-gray-700 dark:text-gray-300" />
             </button>
             <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              {collection?.name}
+              {collection?.name || "Collection"}
             </h1>
             <div className="w-10"></div> {/* Spacer for center alignment */}
           </div>
@@ -97,7 +100,7 @@ export const CollectionScreen: React.FC = () => {
             <ArrowLeft className="w-6 h-6 text-gray-700 dark:text-gray-300" />
           </button>
           <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-            {collection?.name}
+            {collection?.name || "Collection"}
           </h1>
           <div className="w-10"></div> {/* Spacer for center alignment */}
         </div>
@@ -113,9 +116,16 @@ export const CollectionScreen: React.FC = () => {
       ) : (
         <div className="px-4 py-6 pb-20">
           <div className="space-y-4">
-            {products.map((product: ProductDetail) => (
-              <ProductItem key={product.id} product={product} />
-            ))}
+            {products.length > 0 ? (
+              products.map((product: Product) => (
+                <ProductItem key={product.id} product={product} />
+              ))
+            ) : (
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                <p className="text-lg mb-2">No products found</p>
+                <p className="text-sm">This collection doesn't have any products yet</p>
+              </div>
+            )}
           </div>
         </div>
       )}

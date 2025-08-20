@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { Menu } from "lucide-react";
 import { useProductStore } from "../store/productStore";
 
 // Slide configurations that map to API data
@@ -96,8 +98,13 @@ function ProductIllustration({ type }: { type: string }) {
   }
 }
 
-export function HeroSection() {
+interface HeroSectionProps {
+  onMenuClick: () => void;
+}
+
+export function HeroSection({ onMenuClick }: HeroSectionProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isManualControl, setIsManualControl] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -161,9 +168,17 @@ export function HeroSection() {
 
   return (
     <div className="px-4 pt-6 pb-8">
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
-        Explore
-      </h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          {t('explore')}
+        </h2>
+        <button
+          onClick={onMenuClick}
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+        >
+          <Menu className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+        </button>
+      </div>
 
       <div className="relative">
         {/* Fixed border container */}

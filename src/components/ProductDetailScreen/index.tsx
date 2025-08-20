@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { ExpandableSection } from "./types";
 import { useCartStore } from "../../store/cartStore";
 import { useProductStore } from "../../store/productStore";
+import { type ProductImage, type ProductSize } from "../../types";
 
 // Product image component - reused from other components
 function ProductImage({
@@ -203,10 +204,12 @@ const SizeSelector = ({
   sizes,
   selectedSize,
   onSizeChange,
+  sizeDetails,
 }: {
   sizes: string[];
   selectedSize: string;
   onSizeChange: (size: string) => void;
+  sizeDetails?: ProductSize[];
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -303,61 +306,78 @@ const SizeSelector = ({
                 initial="hidden"
                 animate="visible"
               >
-                {sizes.map((size) => (
-                  <motion.button
-                    key={size}
-                    onClick={() => handleSizeSelect(size)}
-                    variants={{
-                      hidden: { opacity: 0, y: 20, scale: 0.95 },
-                      visible: {
-                        opacity: 1,
-                        y: 0,
-                        scale: 1,
-                        transition: {
-                          duration: 0.3,
-                          ease: [0.25, 0.46, 0.45, 0.94],
-                        },
-                      },
-                    }}
-                    whileHover={{
-                      scale: 1.02,
-                      backgroundColor: "rgba(0, 0, 0, 0.05)",
-                      transition: { duration: 0.2 },
-                    }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                  >
-                    <span className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                      {size}
-                    </span>
-                    <AnimatePresence>
-                      {selectedSize === size && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.5, rotate: -90 }}
-                          animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                          exit={{ opacity: 0, scale: 0.5, rotate: 90 }}
-                          transition={{
+                {sizes.map((size) => {
+                  const sizeDetail = sizeDetails?.find((s) => s.size === size);
+                  const isOutOfStock =
+                    sizeDetail &&
+                    (sizeDetail.stockQuantity === 0 || !sizeDetail.available);
+
+                  return (
+                    <motion.button
+                      key={size}
+                      onClick={() => handleSizeSelect(size)}
+                      variants={{
+                        hidden: { opacity: 0, y: 20, scale: 0.95 },
+                        visible: {
+                          opacity: 1,
+                          y: 0,
+                          scale: 1,
+                          transition: {
                             duration: 0.3,
                             ease: [0.25, 0.46, 0.45, 0.94],
-                          }}
-                          className="w-6 h-6 bg-black dark:bg-white rounded-full flex items-center justify-center"
-                        >
-                          <svg
-                            className="w-4 h-4 text-white dark:text-black"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
+                          },
+                        },
+                      }}
+                      whileHover={{
+                        scale: 1.02,
+                        backgroundColor: "rgba(0, 0, 0, 0.05)",
+                        transition: { duration: 0.2 },
+                      }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                          {size}
+                        </span>
+
+                        {sizeDetail &&
+                          !isOutOfStock &&
+                          sizeDetail.stockQuantity <= 5 && (
+                            <span className="text-xs bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 px-2 py-1 rounded-full">
+                              Only {sizeDetail.stockQuantity} left
+                            </span>
+                          )}
+                      </div>
+                      <AnimatePresence>
+                        {selectedSize === size && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.5, rotate: -90 }}
+                            animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                            exit={{ opacity: 0, scale: 0.5, rotate: 90 }}
+                            transition={{
+                              duration: 0.3,
+                              ease: [0.25, 0.46, 0.45, 0.94],
+                            }}
+                            className="w-6 h-6 bg-black dark:bg-white rounded-full flex items-center justify-center"
                           >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.button>
-                ))}
+                            <svg
+                              className="w-4 h-4 text-white dark:text-black"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.button>
+                  );
+                })}
               </motion.div>
             </motion.div>
           </motion.div>
@@ -385,12 +405,91 @@ export const ProductDetailScreen: React.FC = () => {
   >(new Set(["about"]));
   const [isAddingToCart, setIsAddingToCart] = useState(false);
 
+  // Slider functionality states
+  const [isManualControl, setIsManualControl] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
   // Fetch product detail when component mounts or productId changes
   useEffect(() => {
     if (productId) {
       fetchProductDetail(productId);
+      setCurrentImageIndex(0); // Reset to first image (which will be primary) when product changes
     }
   }, [productId, fetchProductDetail]);
+
+  // Reorder images to show primary image first
+  const getOrderedImages = () => {
+    if (!productDetail?.images || productDetail.images.length === 0) return [];
+
+    const images = [...productDetail.images];
+    const primaryIndex = images.findIndex((img) => img.isPrimary);
+
+    // If there's a primary image and it's not already first, move it to the front
+    if (primaryIndex > 0) {
+      const primaryImage = images.splice(primaryIndex, 1)[0];
+      images.unshift(primaryImage);
+    }
+
+    return images;
+  };
+
+  const orderedImages = getOrderedImages();
+
+  // Auto-advance images (only if there are multiple images)
+  useEffect(() => {
+    if (orderedImages.length <= 1) return;
+
+    if (isManualControl) {
+      const resetTimer = setTimeout(() => {
+        setIsManualControl(false);
+      }, 4000); // Longer delay for product images
+      return () => clearTimeout(resetTimer);
+    }
+
+    const intervalId = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % orderedImages.length);
+    }, 4000); // 4 seconds per image
+
+    return () => clearInterval(intervalId);
+  }, [isManualControl, orderedImages.length]);
+
+  // Manual image control
+  const handleManualImageChange = (index: number) => {
+    setCurrentImageIndex(index);
+    setIsManualControl(true);
+  };
+
+  // Touch gesture handlers
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd || orderedImages.length <= 1) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      const nextImage = (currentImageIndex + 1) % orderedImages.length;
+      handleManualImageChange(nextImage);
+    }
+
+    if (isRightSwipe) {
+      const prevImage =
+        currentImageIndex === 0
+          ? orderedImages.length - 1
+          : currentImageIndex - 1;
+      handleManualImageChange(prevImage);
+    }
+  };
 
   const toggleSection = (section: ExpandableSection) => {
     const newExpanded = new Set(expandedSections);
@@ -402,6 +501,20 @@ export const ProductDetailScreen: React.FC = () => {
     setExpandedSections(newExpanded);
   };
 
+  // Get selected size stock information
+  const getSelectedSizeStock = () => {
+    if (!productDetail?.sizes || !selectedSize) return null;
+    return productDetail.sizes.find(
+      (size: ProductSize) => size.size === selectedSize
+    );
+  };
+
+  // Check if selected size is out of stock
+  const isSelectedSizeOutOfStock = () => {
+    const sizeInfo = getSelectedSizeStock();
+    return sizeInfo && (sizeInfo.stockQuantity === 0 || !sizeInfo.available);
+  };
+
   const handleAddToCart = async () => {
     if (!productDetail) return;
 
@@ -410,13 +523,24 @@ export const ProductDetailScreen: React.FC = () => {
       return;
     }
 
+    // Check if selected size is out of stock
+    if (isSelectedSizeOutOfStock()) {
+      toast.error("This size is currently out of stock");
+      return;
+    }
+
+    const primaryImage = productDetail.images?.find(
+      (img: ProductImage) => img.isPrimary
+    );
+    const cartImage = primaryImage?.url || productDetail.images?.[0]?.url || "";
+
     setIsAddingToCart(true);
     try {
       addToCart({
-        productId: productDetail.id,
+        productId: productDetail.id.toString(),
         productName: productDetail.name,
         productPrice: productDetail.price,
-        productImage: productDetail.images[0],
+        productImage: cartImage,
         size: selectedSize,
       });
       toast.success(`${productDetail.name} added to bag!`);
@@ -469,40 +593,110 @@ export const ProductDetailScreen: React.FC = () => {
 
       {/* Product Images */}
       <div className="relative mx-4 mt-4">
-        <div className="aspect-square bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden">
-          {/* Check if image is a URL (from Dog CEO API) or placeholder */}
-          {productDetail.images[currentImageIndex]?.startsWith("http") ? (
+        <div
+          className="aspect-square bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden relative"
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
+          {/* Check if image exists and display it */}
+          {orderedImages[currentImageIndex]?.url ? (
             <img
-              src={productDetail.images[currentImageIndex]}
+              src={orderedImages[currentImageIndex].url}
               alt={`${productDetail.name} - Image ${currentImageIndex + 1}`}
-              className="w-full h-full object-cover rounded-2xl"
+              className="w-full h-full object-cover rounded-2xl transition-opacity duration-300 ease-in-out"
               onError={(e) => {
                 // Fallback to placeholder if image fails to load
                 e.currentTarget.style.display = "none";
               }}
             />
           ) : (
-            <ProductImage
-              type={productDetail.images[currentImageIndex]}
-              className="rounded-2xl"
-            />
+            <ProductImage type="" className="rounded-2xl" />
+          )}
+
+          {/* Swipe Hint - only show if multiple images and not manually controlled recently */}
+          {orderedImages.length > 1 && !isManualControl && (
+            <div className="absolute top-4 right-4 bg-black/50 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
+              {currentImageIndex + 1}/{orderedImages.length} • Swipe
+            </div>
+          )}
+
+          {/* Navigation arrows for desktop/larger screens */}
+          {orderedImages.length > 1 && (
+            <>
+              <button
+                onClick={() =>
+                  handleManualImageChange(
+                    currentImageIndex === 0
+                      ? orderedImages.length - 1
+                      : currentImageIndex - 1
+                  )
+                }
+                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full backdrop-blur-sm opacity-0 hover:opacity-100 transition-opacity md:opacity-70 md:hover:opacity-100"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+              <button
+                onClick={() =>
+                  handleManualImageChange(
+                    (currentImageIndex + 1) % orderedImages.length
+                  )
+                }
+                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full backdrop-blur-sm opacity-0 hover:opacity-100 transition-opacity md:opacity-70 md:hover:opacity-100"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
+            </>
           )}
         </div>
 
-        {/* Image indicators */}
-        {productDetail.images.length > 1 && (
-          <div className="flex justify-center gap-2 mt-4">
-            {productDetail.images.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentImageIndex(index)}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  index === currentImageIndex
-                    ? "bg-gray-900 dark:bg-gray-100"
-                    : "bg-gray-300 dark:bg-gray-600"
-                }`}
-              />
-            ))}
+        {/* Enhanced Image indicators with progress */}
+        {orderedImages && orderedImages.length > 1 && (
+          <div className="mt-4">
+            {/* Dot indicators */}
+            <div className="flex justify-center gap-2">
+              {orderedImages.map((index: number) => (
+                <button
+                  key={index}
+                  onClick={() => handleManualImageChange(index)}
+                  className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                    index === currentImageIndex
+                      ? "bg-gray-900 dark:bg-gray-100 scale-125"
+                      : "bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500"
+                  }`}
+                  aria-label={`View image ${index + 1}`}
+                />
+              ))}
+            </div>
+
+            {/* Image counter */}
+            <div className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">
+              {currentImageIndex + 1} of {orderedImages.length}
+            </div>
           </div>
         )}
       </div>
@@ -513,7 +707,7 @@ export const ProductDetailScreen: React.FC = () => {
           {productDetail.name}
         </h1>
         <p className="text-xl text-gray-600 dark:text-gray-400 mb-6">
-          USD {productDetail.price.toFixed(2)}
+          {productDetail.price} WLD
         </p>
 
         {/* Size Selector */}
@@ -523,9 +717,10 @@ export const ProductDetailScreen: React.FC = () => {
               Size
             </span>
             <SizeSelector
-              sizes={productDetail.sizes}
+              sizes={productDetail.sizes?.map((s: ProductSize) => s.size) || []}
               selectedSize={selectedSize}
               onSizeChange={setSelectedSize}
+              sizeDetails={productDetail.sizes}
             />
           </div>
         </div>
@@ -573,7 +768,7 @@ export const ProductDetailScreen: React.FC = () => {
                   </span>
                 </div>
                 <span className="font-semibold text-gray-900 dark:text-gray-100">
-                  {productDetail.category}
+                  {productDetail.collection.name}
                 </span>
               </div>
             </div>
@@ -587,15 +782,10 @@ export const ProductDetailScreen: React.FC = () => {
           />
 
           <ExpandableSectionComponent
-            title="Size & Fit"
-            content={productDetail.sizeAndFit}
-            isExpanded={expandedSections.has("sizeAndFit")}
-            onToggle={() => toggleSection("sizeAndFit")}
-          />
-
-          <ExpandableSectionComponent
             title="Other Details"
-            content={productDetail.otherDetails}
+            content={
+              productDetail.otherDetails || "Additional details not available"
+            }
             isExpanded={expandedSections.has("otherDetails")}
             onToggle={() => toggleSection("otherDetails")}
           />
@@ -605,15 +795,37 @@ export const ProductDetailScreen: React.FC = () => {
         <div className="mt-8 mb-8">
           <button
             onClick={handleAddToCart}
-            disabled={isAddingToCart || !selectedSize}
+            disabled={
+              isAddingToCart || !selectedSize || isSelectedSizeOutOfStock()
+            }
             className={`w-full py-4 rounded-full font-semibold text-lg transition-colors ${
-              isAddingToCart || !selectedSize
+              isAddingToCart || !selectedSize || isSelectedSizeOutOfStock()
                 ? "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
                 : "bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200"
             }`}
           >
-            {isAddingToCart ? "Adding..." : "Add to bag"}
+            {isAddingToCart
+              ? "Adding..."
+              : isSelectedSizeOutOfStock() && selectedSize
+              ? "Out of product"
+              : "Add to bag"}
           </button>
+
+          {/* Stock information for selected size */}
+          {selectedSize && (
+            <div className="mt-2 text-center text-sm">
+              {(() => {
+                const sizeInfo = getSelectedSizeStock();
+                if (!sizeInfo) return null;
+
+                if (sizeInfo.stockQuantity === 0 || !sizeInfo.available) {
+                  return null;
+                }
+
+                return null;
+              })()}
+            </div>
+          )}
         </div>
       </div>
     </div>

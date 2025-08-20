@@ -1,101 +1,48 @@
-import { useProductStore } from "../../store/productStore";
-import { useCollectionStore } from "../../store/collectionStore";
 import { useEffect } from "react";
+import { useCollectionStore } from "../../store/collectionStore";
 
-export const useCollectionProducts = (
-  collectionName: string = "Core Collection"
-) => {
+export const useCollectionProducts = (collectionSlug: string) => {
   const {
-    coreCollectionProducts,
-    limitedDropProducts,
-    isLoadingCoreCollection,
-    isLoadingLimitedDrop,
-
-    fetchCoreCollectionProducts,
-    fetchLimitedDropProducts,
-  } = useProductStore();
-
-  useEffect(() => {
-    if (
-      collectionName === "Core Collection" &&
-      coreCollectionProducts.length === 0
-    ) {
-      fetchCoreCollectionProducts();
-    } else if (
-      collectionName === "Limited Drop" &&
-      limitedDropProducts.length === 0
-    ) {
-      fetchLimitedDropProducts();
-    }
-  }, [
-    collectionName,
-    coreCollectionProducts.length,
-    limitedDropProducts.length,
-    fetchCoreCollectionProducts,
-    fetchLimitedDropProducts,
-  ]);
-
-  const getCollectionData = () => {
-    switch (collectionName) {
-      case "Limited Drop":
-        return {
-          products: limitedDropProducts,
-          isLoading: isLoadingLimitedDrop,
-          error: null,
-        };
-      case "Core Collection":
-      default:
-        return {
-          products: coreCollectionProducts,
-          isLoading: isLoadingCoreCollection,
-          error: null,
-        };
-    }
-  };
-
-  const { products, isLoading, error } = getCollectionData();
-
-  return {
-    products,
-    isLoading,
-    isError: error,
-    refetch:
-      collectionName === "Core Collection"
-        ? fetchCoreCollectionProducts
-        : fetchLimitedDropProducts,
-  };
-};
-
-export const useCollection = (collectionName: string = "Core Collection") => {
-  const {
-    collections,
-    fetchCollections,
-    setCurrentCollection,
-    currentCollection,
+    fetchCollectionProducts,
+    getCollectionProducts,
+    isCollectionProductsLoading,
+    error,
   } = useCollectionStore();
 
   useEffect(() => {
-    if (collections.length === 0) {
-      fetchCollections();
+    if (collectionSlug) {
+      // This will only fetch if not already cached
+      fetchCollectionProducts(collectionSlug);
     }
-    setCurrentCollection(collectionName.toLowerCase().replace(" ", "-"));
-  }, [
-    collectionName,
-    collections.length,
-    fetchCollections,
-    setCurrentCollection,
-  ]);
+  }, [collectionSlug, fetchCollectionProducts]);
 
   return {
-    collection: currentCollection || {
-      id: collectionName.toLowerCase().replace(" ", "-"),
-      name: collectionName,
-      description:
-        collectionName === "Core Collection"
-          ? "Essential pieces for everyday wear"
-          : "Exclusive limited edition items",
-    },
-    isLoading: false,
-    isError: null,
+    products: getCollectionProducts(collectionSlug),
+    isLoading: isCollectionProductsLoading(collectionSlug),
+    isError: error,
+    refetch: () => fetchCollectionProducts(collectionSlug, true), // Force refresh on retry
+  };
+};
+
+export const useCollection = (collectionSlug: string) => {
+  const { 
+    collections, 
+    fetchCollections, 
+    isLoading: isLoadingCollections,
+    error,
+  } = useCollectionStore();
+
+  useEffect(() => {
+    // Fetch collections if not already loaded
+    fetchCollections();
+  }, [fetchCollections]);
+
+  // Find the collection by slug
+  const collection = collections.find((coll) => coll.slug === collectionSlug) || null;
+
+  return {
+    collection,
+    isLoading: isLoadingCollections,
+    isError: !collection && collections.length > 0 ? `Collection with slug "${collectionSlug}" not found` : error,
   };
 };

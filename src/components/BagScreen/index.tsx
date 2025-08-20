@@ -1,63 +1,35 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { ShoppingBag, Minus, Plus, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCartStore } from "../../store/cartStore";
 import { BottomNavigation } from "../BottomNavigation";
 
-// Function to fetch random dog image
-const fetchRandomDogImage = async (): Promise<string> => {
-  try {
-    const response = await fetch("https://dog.ceo/api/breeds/image/random");
-    const data = await response.json();
-    return data.message;
-  } catch (error) {
-    console.error("Failed to fetch random dog image:", error);
-    return "";
-  }
-};
-
-// Component for displaying random dog images for products
-const ProductImage: React.FC<{ productId: string; productName: string }> = ({
-  productId,
-  productName,
-}) => {
-  const [imageUrl, setImageUrl] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Check if we already have an image cached in localStorage
-    const cachedImage = localStorage.getItem(`product-image-${productId}`);
-    if (cachedImage) {
-      setImageUrl(cachedImage);
-      setIsLoading(false);
-    } else {
-      // Fetch new random image and cache it
-      fetchRandomDogImage().then((url) => {
-        if (url) {
-          setImageUrl(url);
-          localStorage.setItem(`product-image-${productId}`, url);
-        }
-        setIsLoading(false);
-      });
-    }
-  }, [productId]);
-
-  if (isLoading) {
+// Simple placeholder component for product images in cart
+const ProductImagePlaceholder: React.FC<{
+  productName: string;
+  productImage?: string;
+}> = ({ productName, productImage }) => {
+  if (productImage) {
     return (
-      <div className="w-full h-full bg-gray-300 dark:bg-gray-600 animate-pulse rounded-lg"></div>
+      <img
+        src={productImage}
+        alt={productName}
+        className="w-full h-full object-cover"
+        onError={(e) => {
+          // Show placeholder if image fails to load
+          e.currentTarget.style.display = "none";
+        }}
+      />
     );
   }
 
+  // Default placeholder for missing images
   return (
-    <img
-      src={imageUrl}
-      alt={productName}
-      className="w-full h-full object-cover"
-      onError={(e) => {
-        // Fallback for broken images
-        e.currentTarget.style.display = "none";
-      }}
-    />
+    <div className="w-full h-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
+      <span className="text-gray-500 dark:text-gray-400 text-xs text-center px-2">
+        No Image
+      </span>
+    </div>
   );
 };
 
@@ -93,7 +65,7 @@ export const BagScreen: React.FC = () => {
               onClick={() => navigate("/explore")}
               className="w-full py-4 bg-black dark:bg-white text-white dark:text-black rounded-full font-semibold text-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
             >
-              Explore store
+              Explore
             </button>
           </div>
         </div>
@@ -127,9 +99,9 @@ export const BagScreen: React.FC = () => {
                 className="bg-gray-200 dark:bg-gray-700 rounded-lg flex-shrink-0 aspect-square overflow-hidden"
                 style={{ flexBasis: "40%" }}
               >
-                <ProductImage
-                  productId={item.productId}
+                <ProductImagePlaceholder
                   productName={item.productName}
+                  productImage={item.productImage}
                 />
               </div>
 
@@ -139,7 +111,7 @@ export const BagScreen: React.FC = () => {
                   {item.productName}
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  ${item.productPrice.toFixed(2)}
+                  {item.productPrice} WLD
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                   Size: {item.size}
@@ -197,10 +169,13 @@ export const BagScreen: React.FC = () => {
               Total:
             </span>
             <span className="text-xl font-bold text-gray-900 dark:text-gray-100">
-              ${getCartTotal().toFixed(2)}
+              {getCartTotal().toFixed(2)} WLD
             </span>
           </div>
-          <button className="w-full py-4 bg-black dark:bg-white text-white dark:text-black rounded-full font-semibold text-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors">
+          <button
+            onClick={() => navigate("/checkout")}
+            className="w-full py-4 bg-black dark:bg-white text-white dark:text-black rounded-full font-semibold text-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
+          >
             Checkout
           </button>
         </div>

@@ -1,22 +1,25 @@
 import { Home, ShoppingBag } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useCartStore } from "../store/cartStore";
 
 export function BottomNavigation() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const { getCartItemCount } = useCartStore();
 
   const isExploreActive = location.pathname === "/explore";
+  const isBagActive = location.pathname === "/bag";
   const cartItemCount = getCartItemCount();
 
   return (
-    <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+    <div className="fixed bottom-0 left-0 right-0 w-full bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
       <div className="flex items-center justify-around py-2">
         {/* Explore Tab */}
         <button
           onClick={() => navigate("/explore")}
-          className={`flex flex-col items-center gap-1 py-2 px-4 min-w-0 transition-opacity ${
+          className={`flex flex-col items-center gap-1 py-2 px-3 min-w-0 transition-opacity ${
             isExploreActive ? "opacity-100" : "opacity-70"
           }`}
         >
@@ -24,15 +27,15 @@ export function BottomNavigation() {
             <Home className="w-5 h-5 text-gray-900 dark:text-gray-100" />
           </div>
           <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
-            Explore
+            {t("explore")}
           </span>
         </button>
 
         {/* Bag Tab */}
         <button
           onClick={() => navigate("/bag")}
-          className={`flex flex-col items-center gap-1 py-2 px-4 min-w-0 relative transition-opacity ${
-            location.pathname === "/bag" ? "opacity-100" : "opacity-70"
+          className={`flex flex-col items-center gap-1 py-2 px-3 min-w-0 relative transition-opacity ${
+            isBagActive ? "opacity-100" : "opacity-70"
           }`}
         >
           <div className="p-2 relative">
@@ -47,7 +50,7 @@ export function BottomNavigation() {
             )}
           </div>
           <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
-            Bag
+            {t("bag")}
           </span>
         </button>
       </div>

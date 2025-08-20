@@ -4,6 +4,9 @@ import { useAuthWorld } from "../store/authStore";
 // WLD token contract address on World Chain
 const WLD_CONTRACT_ADDRESS = "0x2cfc85d8e48f8eab294be644d9e25c3030863003";
 
+// API base URL from environment variable
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8086";
+
 interface TokenBalance {
   contract_decimals: number;
   contract_name: string;
@@ -20,7 +23,9 @@ interface TokenBalance {
 }
 
 interface BalanceResponse {
-  data: TokenBalance[];
+  success: boolean;
+  data: TokenBalance;
+  statusCode: number;
 }
 
 /**
@@ -45,14 +50,10 @@ export function useWLDBalance() {
       setError(null);
 
       try {
-        // Use different endpoints for development vs production
-        const isDev = import.meta.env.DEV;
-        const apiUrl = isDev
-          ? `/api/cms/api/user-balance/chain/480/wallet/${address}`
-          : `/api/balance?address=${address}`;
-
-        // Fetch balance from HoldStation API
-        const response = await fetch(apiUrl);
+        // Fetch balance from API
+        const response = await fetch(
+          `${API_BASE_URL}/api/user-balance/${address}`
+        );
 
         console.log("response", response);
 
@@ -62,23 +63,22 @@ export function useWLDBalance() {
 
         const data: BalanceResponse = await response.json();
 
-        // Find WLD token in the response
-        const wldToken = data.data.find(
-          (token) =>
-            token.contract_address.toLowerCase() ===
+        // Check if the response is successful and contains WLD token data
+        if (
+          data.success &&
+          data.data &&
+          data.data.contract_address.toLowerCase() ===
             WLD_CONTRACT_ADDRESS.toLowerCase()
-        );
-
-        if (wldToken) {
+        ) {
           // Convert balance from wei to WLD (18 decimals)
-          const balanceInWei = BigInt(wldToken.balance);
-          const decimals = BigInt(wldToken.contract_decimals);
+          const balanceInWei = BigInt(data.data.balance);
+          const decimals = BigInt(data.data.contract_decimals);
           const balanceInWLD =
             Number(balanceInWei) / Math.pow(10, Number(decimals));
 
           setBalance(balanceInWLD);
         } else {
-          // WLD token not found, balance is 0
+          // WLD token not found or request failed, balance is 0
           setBalance(0);
         }
       } catch (err) {
@@ -102,14 +102,10 @@ export function useWLDBalance() {
         setError(null);
 
         try {
-          // Use different endpoints for development vs production
-          const isDev = import.meta.env.DEV;
-          const apiUrl = isDev
-            ? `/api/cms/api/user-balance/chain/480/wallet/${address}`
-            : `/api/balance?address=${address}`;
-
-          // Fetch balance from HoldStation API
-          const response = await fetch(apiUrl);
+          // Fetch balance from API
+          const response = await fetch(
+            `${API_BASE_URL}/api/user-balance/${address}`
+          );
 
           console.log(response);
 
@@ -119,23 +115,22 @@ export function useWLDBalance() {
 
           const data: BalanceResponse = await response.json();
 
-          // Find WLD token in the response
-          const wldToken = data.data.find(
-            (token) =>
-              token.contract_address.toLowerCase() ===
+          // Check if the response is successful and contains WLD token data
+          if (
+            data.success &&
+            data.data &&
+            data.data.contract_address.toLowerCase() ===
               WLD_CONTRACT_ADDRESS.toLowerCase()
-          );
-
-          if (wldToken) {
+          ) {
             // Convert balance from wei to WLD (18 decimals)
-            const balanceInWei = BigInt(wldToken.balance);
-            const decimals = BigInt(wldToken.contract_decimals);
+            const balanceInWei = BigInt(data.data.balance);
+            const decimals = BigInt(data.data.contract_decimals);
             const balanceInWLD =
               Number(balanceInWei) / Math.pow(10, Number(decimals));
 
             setBalance(balanceInWLD);
           } else {
-            // WLD token not found, balance is 0
+            // WLD token not found or request failed, balance is 0
             setBalance(0);
           }
         } catch (err) {

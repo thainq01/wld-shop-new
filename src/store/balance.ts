@@ -4,6 +4,9 @@ import { useShallow } from "zustand/react/shallow";
 import { BigNumber } from "bignumber.js";
 import { useAuthWorld } from "./authStore";
 
+// API base URL from environment variable
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8086";
+
 export interface Token {
   decimals: number;
   name: string;
@@ -110,13 +113,7 @@ export const useBalance = create<BalanceStore & Actions>()(
           state.error = null;
         });
 
-        // Use different endpoints for development vs production
-        const isDev = import.meta.env.DEV;
-        const apiUrl = isDev
-          ? `/api/cms/api/user-balance/chain/480/wallet/${address}`
-          : `/api/balance?address=${address}`;
-
-        const url = new URL(apiUrl, window.location.origin);
+        const url = new URL(`/api/user-balance/${address}`, API_BASE_URL);
         url.searchParams.set("t", Date.now().toString());
         const response = await fetch(url.toString());
 
@@ -127,27 +124,33 @@ export const useBalance = create<BalanceStore & Actions>()(
         }
 
         const resp = await response.json();
-        const temp = resp.data as TokenHoldstation[];
 
-        // Convert HoldStation format to our Token format
-        const tokens: Token[] = temp.map((item) => {
-          const isZero = new BigNumber(item.balance)
-            .dividedBy(10 ** item.contract_decimals)
-            .lt(0.00001);
+        // Check if response is successful and contains data
+        if (!resp.success || !resp.data) {
+          throw new Error("Invalid response format");
+        }
 
-          return {
-            decimals: item.contract_decimals,
-            name: item.contract_name,
-            symbol: item.contract_ticker_symbol,
-            address: item.contract_address,
-            logo_url: item.logo_url || "",
-            native_token: item.native_token,
-            balance: isZero ? "0" : item.balance,
-            quote_rate: item.quote_rate,
-            quote: isZero ? "0" : item.quote,
-            type: item.type,
-          };
-        });
+        const item = resp.data as TokenHoldstation;
+
+        // Convert single token to our Token format
+        const isZero = new BigNumber(item.balance)
+          .dividedBy(10 ** item.contract_decimals)
+          .lt(0.00001);
+
+        const token: Token = {
+          decimals: item.contract_decimals,
+          name: item.contract_name,
+          symbol: item.contract_ticker_symbol,
+          address: item.contract_address,
+          logo_url: item.logo_url || "",
+          native_token: item.native_token,
+          balance: isZero ? "0" : item.balance,
+          quote_rate: item.quote_rate,
+          quote: isZero ? "0" : item.quote,
+          type: item.type,
+        };
+
+        const tokens: Token[] = [token];
 
         // Update store with fetched balances
         get().setBalances(tokens);

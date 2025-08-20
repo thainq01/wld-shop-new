@@ -22,6 +22,9 @@ import { useAuthWorld } from "../../store/authStore";
 // WLD token contract address on World Chain
 const WLD_CONTRACT_ADDRESS = "0x2cfc85d8e48f8eab294be644d9e25c3030863003";
 
+// API base URL from environment variable
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8086";
+
 interface TokenBalance {
   contract_decimals: number;
   contract_name: string;
@@ -38,7 +41,9 @@ interface TokenBalance {
 }
 
 interface BalanceResponse {
-  data: TokenBalance[];
+  success: boolean;
+  data: TokenBalance;
+  statusCode: number;
 }
 
 // Fetcher function for SWR
@@ -51,22 +56,21 @@ const fetcher = async (url: string): Promise<number> => {
 
   const data: BalanceResponse = await response.json();
 
-  // Find WLD token in the response
-  const wldToken = data.data.find(
-    (token) =>
-      token.contract_address.toLowerCase() ===
+  // Check if the response is successful and contains WLD token data
+  if (
+    data.success &&
+    data.data &&
+    data.data.contract_address.toLowerCase() ===
       WLD_CONTRACT_ADDRESS.toLowerCase()
-  );
-
-  if (wldToken) {
+  ) {
     // Convert balance from wei to WLD (18 decimals)
-    const balanceInWei = BigInt(wldToken.balance);
-    const decimals = BigInt(wldToken.contract_decimals);
+    const balanceInWei = BigInt(data.data.balance);
+    const decimals = BigInt(data.data.contract_decimals);
     const balanceInWLD = Number(balanceInWei) / Math.pow(10, Number(decimals));
 
     return balanceInWLD;
   } else {
-    // WLD token not found, balance is 0
+    // WLD token not found or request failed, balance is 0
     return 0;
   }
 };
@@ -82,22 +86,20 @@ export function RightSidebar({ isOpen, onClose }: RightSidebarProps) {
     useLanguageStore();
   const { username, profile_picture_url, address } = useAuthWorld();
 
-  // Use different endpoints for development vs production
-  const isDev = import.meta.env.DEV;
-  const getApiUrl = (address: string) =>
-    isDev
-      ? `/api/cms/api/user-balance/chain/480/wallet/${address}`
-      : `/api/balance?address=${address}`;
-
+  // Use SWR to fetch WLD balance
   const {
     data: wldBalance,
     isLoading: isBalanceLoading,
     error,
-  } = useSWR(address ? getApiUrl(address) : null, fetcher, {
-    refreshInterval: 30000,
-    revalidateOnFocus: false,
-    errorRetryCount: 3,
-  });
+  } = useSWR(
+    address ? `${API_BASE_URL}/api/user-balance/${address}` : null,
+    fetcher,
+    {
+      refreshInterval: 30000, // Refresh every 30 seconds
+      revalidateOnFocus: false,
+      errorRetryCount: 3,
+    }
+  );
 
   const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
   const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);

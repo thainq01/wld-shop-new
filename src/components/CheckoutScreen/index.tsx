@@ -219,7 +219,7 @@ export const CheckoutScreen: React.FC = () => {
   });
 
   const subtotal = totalAmount || 0;
-  const shipping = 16.99; // Worldwide flat rate
+  const shipping = 0.01; // Worldwide flat rate
   const total = subtotal + shipping;
 
   // Balance validation logic
@@ -545,7 +545,7 @@ export const CheckoutScreen: React.FC = () => {
             Order summary
           </h2>
 
-                     {items?.map((item) => (
+          {items?.map((item) => (
             <div
               key={`${item.productId}-${item.size}`}
               className="flex items-center gap-4 mb-4"

@@ -14,6 +14,9 @@ import {
   UpdateProductRequest,
 } from "../../../types";
 import { ProductModal } from "./ProductModal";
+import { CMSLanguageFilter } from "../LanguageFilter/CMSLanguageFilter";
+import { useCMSStore } from "../../../store/cmsStore";
+import { languages } from "../../../store/languageStore";
 
 export function ProductsManager() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -22,14 +25,22 @@ export function ProductsManager() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
+  const { selectedLanguage, setSelectedLanguage, getLanguageFilter } = useCMSStore();
+
+  const getLanguageDisplay = (langCode: string) => {
+    const language = languages.find(lang => lang.code === langCode);
+    return language ? `${language.flag} ${language.name}` : langCode;
+  };
+
   useEffect(() => {
     loadProducts();
-  }, []);
+  }, [selectedLanguage]);
 
   const loadProducts = async () => {
     setLoading(true);
     try {
-      const data = await productsApi.getAll();
+      const languageFilter = getLanguageFilter();
+      const data = await productsApi.getAll(languageFilter ? { lang: languageFilter } : undefined);
       setProducts(data);
     } catch (error) {
       console.error("Failed to load products:", error);
@@ -120,16 +131,22 @@ export function ProductsManager() {
             Manage your product catalog
           </p>
         </div>
-        <button
-          onClick={() => {
-            setEditingProduct(null);
-            setModalOpen(true);
-          }}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Add Product
-        </button>
+        <div className="flex items-center gap-3">
+          <CMSLanguageFilter
+            selectedLanguage={selectedLanguage}
+            onLanguageChange={setSelectedLanguage}
+          />
+          <button
+            onClick={() => {
+              setEditingProduct(null);
+              setModalOpen(true);
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Product
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -158,6 +175,9 @@ export function ProductsManager() {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Price
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Language
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Status
@@ -211,6 +231,11 @@ export function ProductsManager() {
                     <div className="text-sm font-medium text-gray-900 dark:text-white">
                       ${product.price}
                     </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 px-2 py-1 rounded">
+                      {getLanguageDisplay(product.language)}
+                    </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-2">

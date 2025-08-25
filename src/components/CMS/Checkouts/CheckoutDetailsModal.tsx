@@ -87,9 +87,14 @@ export function CheckoutDetailsModal({ checkout, products, onClose }: CheckoutDe
                   </div>
                   <div className="flex items-center gap-2">
                     <Wallet className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm font-mono text-gray-900 dark:text-white">
+                    <a
+                      href={`https://worldscan.org/address/${checkout.walletAddress}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-mono text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 cursor-pointer"
+                    >
                       {formatWalletAddress(checkout.walletAddress)}
-                    </span>
+                    </a>
                   </div>
                 </div>
               </div>

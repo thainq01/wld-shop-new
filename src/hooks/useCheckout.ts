@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { checkoutApi } from "../utils/api";
+import { generateOrderId } from "../utils/orderIdGenerator";
 import type { 
   CreateCheckoutRequest, 
   Checkout, 
-  CheckoutProductResponse 
+  CheckoutProductResponse,
+  OrderSuccessResponse
 } from "../types";
 
 interface UseCheckoutReturn {
@@ -11,11 +13,12 @@ interface UseCheckoutReturn {
   isLoading: boolean;
   error: string | null;
   checkout: Checkout | null;
+  orderSuccess: OrderSuccessResponse | null;
   checkouts: Checkout[];
   checkoutProducts: CheckoutProductResponse[];
 
   // Actions
-  createCheckout: (data: CreateCheckoutRequest) => Promise<Checkout | null>;
+  createCheckout: (data: CreateCheckoutRequest) => Promise<OrderSuccessResponse | null>;
   getCheckout: (id: number) => Promise<Checkout | null>;
   getAllCheckouts: (params?: { page?: number; size?: number }) => Promise<void>;
   getCheckoutProducts: (id: number) => Promise<CheckoutProductResponse[] | null>;
@@ -27,17 +30,24 @@ export function useCheckout(): UseCheckoutReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checkout, setCheckout] = useState<Checkout | null>(null);
+  const [orderSuccess, setOrderSuccess] = useState<OrderSuccessResponse | null>(null);
   const [checkouts, setCheckouts] = useState<Checkout[]>([]);
   const [checkoutProducts, setCheckoutProducts] = useState<CheckoutProductResponse[]>([]);
 
-  const createCheckout = async (data: CreateCheckoutRequest): Promise<Checkout | null> => {
+  const createCheckout = async (data: CreateCheckoutRequest): Promise<OrderSuccessResponse | null> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      console.log("Creating checkout with data:", data);
-      const result = await checkoutApi.create(data);
-      setCheckout(result);
+      // Generate orderId if not provided
+      const checkoutData = {
+        ...data,
+        orderId: data.orderId || generateOrderId()
+      };
+
+      console.log("Creating checkout with data:", checkoutData);
+      const result = await checkoutApi.create(checkoutData);
+      setOrderSuccess(result);
       console.log("Checkout created successfully:", result);
       return result;
     } catch (err) {
@@ -114,6 +124,7 @@ export function useCheckout(): UseCheckoutReturn {
 
   const clearCheckout = () => {
     setCheckout(null);
+    setOrderSuccess(null);
     setCheckouts([]);
     setCheckoutProducts([]);
     setError(null);
@@ -124,6 +135,7 @@ export function useCheckout(): UseCheckoutReturn {
     isLoading,
     error,
     checkout,
+    orderSuccess,
     checkouts,
     checkoutProducts,
 

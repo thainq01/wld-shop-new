@@ -12,7 +12,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { ExpandableSection } from "./types";
-import { useCartStore } from "../../store/cartStore";
+import { useCart } from "../../hooks/useCart";
 import { useProductStore } from "../../store/productStore";
 import { type ProductImage, type ProductSize } from "../../types";
 
@@ -396,7 +396,7 @@ export const ProductDetailScreen: React.FC = () => {
     error,
     fetchProductDetail,
   } = useProductStore();
-  const { addToCart, getCartItemCount } = useCartStore();
+  const { addToCart, totalQuantity, hasWallet } = useCart();
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
@@ -536,11 +536,13 @@ export const ProductDetailScreen: React.FC = () => {
 
     setIsAddingToCart(true);
     try {
-      addToCart({
+      if (!hasWallet) {
+        toast.error("Please connect your wallet to add items to cart");
+        return;
+      }
+      
+      await addToCart({
         productId: productDetail.id.toString(),
-        productName: productDetail.name,
-        productPrice: productDetail.price,
-        productImage: cartImage,
         size: selectedSize,
       });
       toast.success(`${productDetail.name} added to bag!`);
@@ -560,7 +562,7 @@ export const ProductDetailScreen: React.FC = () => {
       />
     );
 
-  const cartItemCount = getCartItemCount();
+  const cartItemCount = totalQuantity;
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">

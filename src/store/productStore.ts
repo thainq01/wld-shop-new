@@ -1,5 +1,8 @@
 import { create } from "zustand";
-import { productsApi, collectionsApi, type Product } from "../utils/api";
+import { subscribeWithSelector } from "zustand/middleware";
+import { productsApi, collectionsApi } from "../utils/api";
+import { Product } from "../types";
+import { useLanguageStore } from "./languageStore";
 
 interface ProductState {
   currentProduct: Product | null;
@@ -19,10 +22,12 @@ interface ProductState {
   fetchCoreCollectionProducts: () => Promise<void>;
   fetchLimitedDropProducts: () => Promise<void>;
   fetchSliderProducts: () => Promise<void>;
+  refreshAllProductData: () => Promise<void>;
   clearError: () => void;
 }
 
-export const useProductStore = create<ProductState>((set) => ({
+export const useProductStore = create<ProductState>()(
+  subscribeWithSelector((set, get) => ({
   currentProduct: null,
   isLoading: false,
   error: null,
@@ -39,7 +44,9 @@ export const useProductStore = create<ProductState>((set) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const product = await productsApi.getById(productId);
+      // Get current language from language store
+      const currentLanguage = useLanguageStore.getState().currentLanguage;
+      const product = await productsApi.getById(productId, { lang: currentLanguage });
       set({ currentProduct: product, isLoading: false });
     } catch (error) {
       set({
@@ -55,7 +62,9 @@ export const useProductStore = create<ProductState>((set) => ({
     set({ isLoadingCoreCollection: true, error: null });
 
     try {
-      const products = await collectionsApi.getProducts("core-collection");
+      // Get current language from language store
+      const currentLanguage = useLanguageStore.getState().currentLanguage;
+      const products = await collectionsApi.getProducts("core-collection", { lang: currentLanguage });
       set({
         coreCollectionProducts: products,
         isLoadingCoreCollection: false,
@@ -75,7 +84,9 @@ export const useProductStore = create<ProductState>((set) => ({
     set({ isLoadingLimitedDrop: true, error: null });
 
     try {
-      const products = await collectionsApi.getProducts("limited-drop");
+      // Get current language from language store
+      const currentLanguage = useLanguageStore.getState().currentLanguage;
+      const products = await collectionsApi.getProducts("limited-drop", { lang: currentLanguage });
       set({
         limitedDropProducts: products,
         isLoadingLimitedDrop: false,
@@ -95,8 +106,10 @@ export const useProductStore = create<ProductState>((set) => ({
     set({ isLoadingSlider: true, error: null });
 
     try {
+      // Get current language from language store
+      const currentLanguage = useLanguageStore.getState().currentLanguage;
       // For slider, fetch featured products or mix from both collections
-      const products = await productsApi.getAll({ limit: 6 });
+      const products = await productsApi.getAll({ limit: 6, lang: currentLanguage });
       set({
         sliderProducts: products,
         isLoadingSlider: false,
@@ -112,5 +125,33 @@ export const useProductStore = create<ProductState>((set) => ({
     }
   },
 
+  refreshAllProductData: async () => {
+    // Clear current product
+    set({ currentProduct: null });
+    
+    // Refetch all product collections
+    const state = get();
+    await Promise.all([
+      state.fetchCoreCollectionProducts(),
+      state.fetchLimitedDropProducts(),
+      state.fetchSliderProducts(),
+    ]);
+  },
+
   clearError: () => set({ error: null }),
-}));
+})));
+
+// Subscribe to language changes and refresh product data when language changes
+let previousLanguageForProducts = useLanguageStore.getState().currentLanguage;
+
+useLanguageStore.subscribe((state) => {
+  const currentLanguage = state.currentLanguage;
+  // Only refresh if language actually changed
+  if (currentLanguage !== previousLanguageForProducts) {
+    console.log(`Language changed, refreshing product data...`);
+    previousLanguageForProducts = currentLanguage;
+    
+    // Refresh all product data
+    useProductStore.getState().refreshAllProductData();
+  }
+});

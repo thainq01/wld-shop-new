@@ -10,4 +10,3 @@ export { CheckoutDetailsModal } from "./Checkouts/CheckoutDetailsModal";
 export { UsersManager } from "./Users/UsersManager";
 export { UserModal } from "./Users/UserModal";
 export { CMSSettings } from "./Settings/CMSSettings";
-export { CMSDebug } from "./Debug/CMSDebug";

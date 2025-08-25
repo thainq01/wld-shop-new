@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { X, Package, Save, Plus, Trash2 } from "lucide-react";
+import { X, Package, Save, Plus, Trash2, Globe } from "lucide-react";
 import {
   Product,
   CreateProductRequest,
@@ -9,6 +9,8 @@ import {
   ProductVariant,
 } from "../../../types";
 import { collectionsApi } from "../../../utils/api";
+import { languages } from "../../../store/languageStore";
+import { useCMSStore } from "../../../store/cmsStore";
 
 interface ProductModalProps {
   isOpen: boolean;
@@ -25,17 +27,25 @@ export function ProductModal({
   product,
   onSubmit,
 }: ProductModalProps) {
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    price: 0,
-    collectionId: 0,
-    category: "",
-    material: "",
-    madeBy: "",
-    inStock: "In Stock",
-    featured: false,
-    otherDetails: "",
+  const { selectedLanguage, getLanguageFilter } = useCMSStore();
+  const isEditing = !!product;
+
+  const [formData, setFormData] = useState(() => {
+    // Initialize with current CMS language (or "en" if "all" is selected)
+    const defaultLanguage = selectedLanguage === "all" ? "en" : selectedLanguage;
+    return {
+      name: "",
+      description: "",
+      price: 0,
+      collectionId: 0,
+      category: "",
+      material: "",
+      madeBy: "",
+      inStock: "In Stock",
+      featured: false,
+      language: defaultLanguage,
+      otherDetails: "",
+    };
   });
 
   const [productImages, setProductImages] = useState<ProductImage[]>([]);
@@ -44,11 +54,11 @@ export function ProductModal({
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const isEditing = !!product;
-
   const loadCollections = useCallback(async () => {
     try {
-      const data = await collectionsApi.getAll();
+      // Load collections filtered by currently selected CMS language
+      const languageFilter = getLanguageFilter();
+      const data = await collectionsApi.getAll(languageFilter ? { lang: languageFilter } : undefined);
       setCollections(data);
       if (data.length > 0 && !product) {
         setFormData((prev) => ({ ...prev, collectionId: data[0].id }));
@@ -56,13 +66,31 @@ export function ProductModal({
     } catch (error) {
       console.error("Failed to load collections:", error);
     }
-  }, [product]);
+  }, [product, getLanguageFilter]);
 
   useEffect(() => {
     if (isOpen) {
       loadCollections();
     }
   }, [isOpen, loadCollections]);
+
+  // Reload collections when language filter changes (only for new products)
+  useEffect(() => {
+    if (isOpen && !isEditing) {
+      loadCollections();
+    }
+  }, [selectedLanguage, isOpen, loadCollections, isEditing]);
+
+  // Update language when CMS language filter changes (only for new products)
+  useEffect(() => {
+    if (!isEditing && isOpen) {
+      const defaultLanguage = selectedLanguage === "all" ? "en" : selectedLanguage;
+      setFormData(prev => ({
+        ...prev,
+        language: defaultLanguage
+      }));
+    }
+  }, [selectedLanguage, isEditing, isOpen]);
 
   useEffect(() => {
     if (product) {
@@ -76,6 +104,7 @@ export function ProductModal({
         madeBy: product.madeBy,
         inStock: product.inStock,
         featured: product.featured,
+        language: product.language || "en",
         otherDetails: product.otherDetails || "",
       });
       setProductImages(product.images || []);
@@ -88,6 +117,8 @@ export function ProductModal({
         })) || []
       );
     } else {
+      // For new products, auto-select the current CMS language (or "en" if "all" is selected)
+      const defaultLanguage = selectedLanguage === "all" ? "en" : selectedLanguage;
       setFormData({
         name: "",
         description: "",
@@ -98,13 +129,14 @@ export function ProductModal({
         madeBy: "",
         inStock: "In Stock",
         featured: false,
+        language: defaultLanguage,
         otherDetails: "",
       });
       setProductImages([]);
       setProductVariants([]);
     }
     setErrors({});
-  }, [product, isOpen]);
+  }, [product, isOpen, selectedLanguage]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -122,7 +154,9 @@ export function ProductModal({
     }
 
     if (formData.collectionId === 0) {
-      newErrors.collectionId = "Please select a collection";
+      newErrors.collectionId = collections.length === 0 
+        ? "No collections available in selected language. Please create a collection first or change language filter."
+        : "Please select a collection";
     }
 
     if (!formData.category.trim()) {
@@ -374,7 +408,11 @@ export function ProductModal({
                           : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-400"
                       }`}
                     >
-                      <option value={0}>Select a collection</option>
+                      <option value={0}>
+                        {collections.length === 0
+                          ? "No collections available in selected language"
+                          : "Select a collection"}
+                      </option>
                       {collections.map((collection) => (
                         <option key={collection.id} value={collection.id}>
                           {collection.name}
@@ -384,6 +422,11 @@ export function ProductModal({
                     {errors.collectionId && (
                       <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                         {errors.collectionId}
+                      </p>
+                    )}
+                    {!isEditing && (
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Collections filtered by selected language ({selectedLanguage === "all" ? "all languages" : languages.find(l => l.code === selectedLanguage)?.name || selectedLanguage})
                       </p>
                     )}
                   </div>
@@ -492,6 +535,30 @@ export function ProductModal({
                       <option value="∞">∞ (Unlimited)</option>
                     </select>
                   </div>
+                </div>
+
+                {/* Language Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Language
+                  </label>
+                  <div className="relative">
+                    <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+                    <select
+                      value={formData.language}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, language: e.target.value }))}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
+                    >
+                      {languages.map((lang) => (
+                        <option key={lang.code} value={lang.code}>
+                          {lang.flag} {lang.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Content language for this product
+                  </p>
                 </div>
 
                 {/* Featured and Other Details */}

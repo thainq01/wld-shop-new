@@ -16,6 +16,10 @@ import type {
   CheckoutResponse,
   CheckoutListResponse,
   CheckoutProductResponse,
+  OrderSuccessResponse,
+  CartResponse,
+  AddToCartRequest,
+  UpdateCartItemRequest,
 } from "../types";
 
 interface ApiResponse<T> {
@@ -90,13 +94,21 @@ async function apiDelete(endpoint: string): Promise<DeleteResponse> {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const result: DeleteResponse = await response.json();
-
-    if (!result.success) {
-      throw new Error(result.message || "Delete operation failed");
+    // Check if response has content
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      const result: DeleteResponse = await response.json();
+      if (!result.success) {
+        throw new Error(result.message || "Delete operation failed");
+      }
+      return result;
+    } else {
+      // If no JSON response, assume success for 2xx status codes
+      return {
+        success: true,
+        message: "Item deleted successfully",
+      };
     }
-
-    return result;
   } catch (error) {
     console.error(`Delete API Error for ${endpoint}:`, error);
     throw error instanceof Error ? error : new Error("Unknown delete error");
@@ -104,10 +116,21 @@ async function apiDelete(endpoint: string): Promise<DeleteResponse> {
 }
 
 export const collectionsApi = {
-  getAll: () => apiFetch<Collection[]>("/api/collections"),
+  getAll: (params?: { lang?: string }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.lang) searchParams.append("lang", params.lang);
+    
+    const query = searchParams.toString();
+    return apiFetch<Collection[]>(`/api/collections${query ? `?${query}` : ""}`);
+  },
 
-  getProducts: (slug: string) =>
-    apiFetch<Product[]>(`/api/collections/${slug}/products`),
+  getProducts: (slug: string, params?: { lang?: string }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.lang) searchParams.append("lang", params.lang);
+    
+    const query = searchParams.toString();
+    return apiFetch<Product[]>(`/api/collections/${slug}/products${query ? `?${query}` : ""}`);
+  },
 
   // CMS operations
   create: (data: CreateCollectionRequest) =>
@@ -126,18 +149,26 @@ export const collectionsApi = {
 };
 
 export const productsApi = {
-  getAll: (params?: { collection?: string; limit?: number; page?: number }) => {
+  getAll: (params?: { collection?: string; limit?: number; page?: number; lang?: string }) => {
     const searchParams = new URLSearchParams();
     if (params?.collection)
       searchParams.append("collection", params.collection);
     if (params?.limit) searchParams.append("limit", params.limit.toString());
     if (params?.page) searchParams.append("page", params.page.toString());
+    if (params?.lang) searchParams.append("lang", params.lang);
 
     const query = searchParams.toString();
     return apiFetch<Product[]>(`/api/products${query ? `?${query}` : ""}`);
   },
 
-  getById: (id: string | number) => apiFetch<Product>(`/api/products?id=${id}`),
+  getById: (id: string | number, params?: { lang?: string }) => {
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", id.toString());
+    if (params?.lang) searchParams.append("lang", params.lang);
+    
+    const query = searchParams.toString();
+    return apiFetch<Product>(`/api/products?${query}`);
+  },
 
   // CMS operations
   create: (data: CreateProductRequest) =>
@@ -294,7 +325,7 @@ export const usersApi = {
 export const checkoutApi = {
   // Create a new checkout
   create: (data: CreateCheckoutRequest) =>
-    apiFetch<Checkout>("/api/checkout", {
+    apiFetch<OrderSuccessResponse>("/api/checkout", {
       method: "POST",
       body: JSON.stringify(data),
     }),
@@ -319,4 +350,42 @@ export const checkoutApi = {
   // Get products for a specific checkout
   getProducts: (id: number) =>
     apiFetch<CheckoutProductResponse[]>(`/api/checkout/${id}/products`),
+
+  // Update checkout status
+  updateStatus: (orderId: string, status: string) =>
+    apiFetch<{ success: boolean; message: string }>(
+      `/api/checkout/order/${orderId}/status?status=${status}`,
+      {
+        method: "PATCH",
+      }
+    ),
+};
+
+// Cart API functions
+export const cartApi = {
+          // Get all cart items for a specific wallet
+        getCart: (walletAddress: string, language?: string) => {
+          const url = language 
+            ? `/api/cart/${walletAddress}?lang=${language}`
+            : `/api/cart/${walletAddress}`;
+          return apiFetch<CartResponse>(url);
+        },
+
+        // Add a product to cart
+        addToCart: (walletAddress: string, data: AddToCartRequest) =>
+          apiFetch<CartResponse>(`/api/cart/${walletAddress}`, {
+            method: "POST",
+            body: JSON.stringify(data),
+          }),
+
+  // Update a cart item
+  updateCartItem: (walletAddress: string, itemId: number, data: UpdateCartItemRequest) =>
+    apiFetch<CartResponse>(`/api/cart/${walletAddress}/items/${itemId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  // Remove a specific item from cart
+  removeCartItem: (walletAddress: string, itemId: number) =>
+    apiDelete(`/api/cart/${walletAddress}/items/${itemId}`),
 };

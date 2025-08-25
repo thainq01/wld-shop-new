@@ -1,5 +1,5 @@
 import { MiniKit } from "@worldcoin/minikit-js";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useShallow } from "zustand/react/shallow";
 import { KEY_AUTH_WORLDAPP, useAuthWorld } from "../store/authStore";
@@ -9,17 +9,21 @@ import { usersApi } from "../utils/api";
 const WEEKEND_MILISECOND = 7 * 24 * 60 * 60 * 1000;
 const DAY_MILISECOND = 24 * 60 * 60 * 1000;
 
-export default function Loading() {
+interface LoginButtonProps {
+  compact?: boolean;
+}
+
+export function LoginButton({ compact = false }: LoginButtonProps) {
   const [loading, setLoading] = useState(false);
-  const [setUserInfo] = useAuthWorld(
-    useShallow((state) => [state.setUserInfo])
+  const [setUserInfo, setAddress] = useAuthWorld(
+    useShallow((state) => [state.setUserInfo, state.setAddress])
   );
   const { t } = useTranslation();
 
   const login = useCallback(async () => {
     try {
       if (!MiniKit.isInstalled()) {
-        console.log("Minikit not install");
+        console.log("MiniKit not installed");
         return;
       }
       setLoading(true);
@@ -37,10 +41,8 @@ export default function Loading() {
       if (finalPayload.status !== "success") {
         if (!finalPayload.details) {
           const msg = ErrorMessage(finalPayload.error_code);
-
           throw new Error(msg || "Sign-in failed");
         }
-
         throw new Error(finalPayload.details);
       }
 
@@ -50,6 +52,7 @@ export default function Loading() {
         throw new Error("Userinfo not found");
       }
 
+      setAddress(data.walletAddress);
       setUserInfo({
         address: data.walletAddress,
         profile_picture_url: data.profilePictureUrl ?? "",
@@ -66,26 +69,22 @@ export default function Loading() {
 
       localStorage.setItem(KEY_AUTH_WORLDAPP, data.walletAddress);
     } catch (error) {
-      console.log("error", error);
+      console.log("Login error:", error);
     } finally {
       setLoading(false);
     }
-  }, [setUserInfo]);
-
-  useEffect(() => {
-    login();
-  }, [login]);
+  }, [setUserInfo, setAddress]);
 
   return (
-    <div className="h-screen splash overscroll-none flex flex-col-reverse py-8 px-4">
-      <button
-        data-action="walletAuth"
-        disabled={loading}
-        onClick={login}
-        className="text-base text-background font-medium h-14 px-4 rounded-full bg-primary w-full disabled:opacity-50"
-      >
-        {t("Sign in")}
-      </button>
-    </div>
+    <button
+      data-action="walletAuth"
+      disabled={loading}
+      onClick={login}
+      className={`text-sm font-medium px-3 py-2 rounded-lg bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 transition-colors ${
+        compact ? "h-8 text-xs px-2 py-1" : "h-14 px-4 text-base w-full"
+      }`}
+    >
+      {loading ? t("Signing in...") : t("Sign in")}
+    </button>
   );
 }

@@ -19,14 +19,14 @@ import {
   UsersManager,
   CMSSettings,
   CheckoutsManager,
-  CMSDebug,
 } from "./components/CMS";
 import { LoginScreen } from "./components/LoginScreen";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import MiniKitProvider from "./components/minikit-provider/minikit-provider";
 import { Container } from "./container";
 import { CheckoutScreen } from "./components/CheckoutScreen";
-import { CheckoutTest } from "./components/CheckoutTest";
+import OrderSuccessScreen from "./components/OrderSuccessScreen";
+import HistoryScreen from "./components/HistoryScreen";
 
 function App() {
   return (
@@ -51,7 +51,6 @@ function App() {
             <Route path="checkouts" element={<CheckoutsManager />} />
             <Route path="users" element={<UsersManager />} />
             <Route path="settings" element={<CMSSettings />} />
-            <Route path="debug" element={<CMSDebug />} />
           </Route>
 
           {/* Main app routes with layout */}
@@ -76,8 +75,9 @@ function App() {
                         element={<ProductDetailScreen />}
                       />
                       <Route path="/bag" element={<BagScreen />} />
+                      <Route path="/history" element={<HistoryScreen />} />
                       <Route path="/checkout" element={<CheckoutScreen />} />
-                      <Route path="/checkout-test" element={<CheckoutTest />} />
+                      <Route path="/order-success" element={<OrderSuccessScreen />} />
                     </Routes>
                   </MainLayout>
                 </Container>

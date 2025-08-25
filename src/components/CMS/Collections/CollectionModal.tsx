@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { X, Tag, Save } from "lucide-react";
+import { X, Tag, Save, Globe } from "lucide-react";
 import { Collection, CreateCollectionRequest, UpdateCollectionRequest } from "../../../types";
+import { languages } from "../../../store/languageStore";
+import { useCMSStore } from "../../../store/cmsStore";
 
 interface CollectionModalProps {
   isOpen: boolean;
@@ -15,16 +17,22 @@ export function CollectionModal({
   collection,
   onSubmit,
 }: CollectionModalProps) {
-  const [formData, setFormData] = useState({
-    name: "",
-    slug: "",
-    description: "",
-    isActive: true,
+  const { selectedLanguage } = useCMSStore();
+  const isEditing = !!collection;
+  
+  const [formData, setFormData] = useState(() => {
+    // Initialize with current CMS language (or "en" if "all" is selected)
+    const defaultLanguage = selectedLanguage === "all" ? "en" : selectedLanguage;
+    return {
+      name: "",
+      slug: "",
+      description: "",
+      isActive: true,
+      language: defaultLanguage,
+    };
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const isEditing = !!collection;
 
   useEffect(() => {
     if (collection) {
@@ -33,17 +41,32 @@ export function CollectionModal({
         slug: collection.slug,
         description: collection.description || "",
         isActive: collection.isActive,
+        language: collection.language || "en",
       });
     } else {
+      // For new collections, auto-select the current CMS language (or "en" if "all" is selected)
+      const defaultLanguage = selectedLanguage === "all" ? "en" : selectedLanguage;
       setFormData({
         name: "",
         slug: "",
         description: "",
         isActive: true,
+        language: defaultLanguage,
       });
     }
     setErrors({});
-  }, [collection, isOpen]);
+  }, [collection, isOpen, selectedLanguage]);
+
+  // Update language when CMS language filter changes (only for new collections)
+  useEffect(() => {
+    if (!isEditing && isOpen) {
+      const defaultLanguage = selectedLanguage === "all" ? "en" : selectedLanguage;
+      setFormData(prev => ({
+        ...prev,
+        language: defaultLanguage
+      }));
+    }
+  }, [selectedLanguage, isEditing, isOpen]);
 
   // Auto-generate slug from name
   const handleNameChange = (name: string) => {
@@ -183,6 +206,30 @@ export function CollectionModal({
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
               />
+            </div>
+
+            {/* Language Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Language
+              </label>
+              <div className="relative">
+                <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+                <select
+                  value={formData.language}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, language: e.target.value }))}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
+                >
+                  {languages.map((lang) => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.flag} {lang.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Content language for this collection
+              </p>
             </div>
 
             {/* Active Status */}

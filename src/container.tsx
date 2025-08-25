@@ -1,13 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ReactNode, useEffect } from "react";
 import { useAuthWorld } from "./store/authStore";
-import Loading from "./pages/loading";
+import { useAutoLogin } from "./store/authStore";
 // import ReactGA from "react-ga4";
 
 // ReactGA.initialize("G-D2M0P7D0B8");
 
 export function Container({ children }: { children: ReactNode }) {
   const { address } = useAuthWorld();
+  
+  // Auto-login hook - this will handle login automatically
+  useAutoLogin();
 
   useEffect(() => {
     function listen(event: any) {
@@ -35,9 +38,6 @@ export function Container({ children }: { children: ReactNode }) {
     return () => document.removeEventListener("click", listen);
   }, []);
 
-  if (!address) {
-    return <Loading />;
-  }
-
+  // Always render children - no more loading screen blocking
   return children;
 }

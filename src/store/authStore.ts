@@ -199,7 +199,7 @@ export async function getUser(address: string) {
 }
 
 export function useAutoLogin() {
-  const [setUserInfo, username, address, syncUserToBackend, user] =
+  const [setUserInfo, username, address, syncUserToBackend, user, setAddress] =
     useAuthWorld(
       useShallow((state) => [
         state.setUserInfo,
@@ -207,6 +207,7 @@ export function useAutoLogin() {
         state.address,
         state.syncUserToBackend,
         state.user,
+        state.setAddress,
       ])
     );
 
@@ -217,41 +218,83 @@ export function useAutoLogin() {
   });
 
   useEffect(() => {
-    async function fetchUser() {
+    async function autoLogin() {
       try {
+        // Check if user is already logged in
         const storedAddress = localStorage.getItem(KEY_AUTH_WORLDAPP);
+        if (storedAddress && address === storedAddress) {
+          console.log("User already logged in with address:", storedAddress);
+          return;
+        }
+
+        // If no stored address, try to auto-login
         if (!storedAddress) {
-          return;
+          console.log("No stored address, attempting auto-login...");
+          
+          if (!MiniKit.isInstalled()) {
+            console.log("MiniKit not installed, skipping auto-login");
+            return;
+          }
+
+          const nonce = crypto.randomUUID().replace(/-/g, "");
+          const WEEKEND_MILISECOND = 7 * 24 * 60 * 60 * 1000;
+          const DAY_MILISECOND = 24 * 60 * 60 * 1000;
+
+          const { finalPayload } = await MiniKit.commandsAsync.walletAuth({
+            nonce: nonce,
+            requestId: "0",
+            expirationTime: new Date(new Date().getTime() + WEEKEND_MILISECOND),
+            notBefore: new Date(new Date().getTime() - DAY_MILISECOND),
+            statement: "",
+          });
+
+          if (finalPayload.status === "success") {
+            const walletAddress = finalPayload.address;
+            console.log("Auto-login successful, wallet address:", walletAddress);
+            
+            // Set the address first
+            setAddress(walletAddress);
+            localStorage.setItem(KEY_AUTH_WORLDAPP, walletAddress);
+
+            // Then fetch user info
+            const data = await MiniKit.getUserInfo(walletAddress);
+            if (data) {
+              const userInfo = {
+                address: data.walletAddress || walletAddress,
+                profile_picture_url: data.profilePictureUrl ?? "",
+                username: data.username || "Unknown",
+              };
+
+              console.log("Setting user info from auto-login:", userInfo);
+              setUserInfo(userInfo);
+            }
+          } else {
+            console.log("Auto-login failed:", finalPayload.error_code);
+          }
+        } else {
+          // We have a stored address but it's different from current address
+          console.log("Stored address found, fetching user info:", storedAddress);
+          setAddress(storedAddress);
+          
+          const data = await MiniKit.getUserInfo(storedAddress);
+          if (data) {
+            const userInfo = {
+              address: data.walletAddress || storedAddress,
+              profile_picture_url: data.profilePictureUrl ?? "",
+              username: data.username || "Unknown",
+            };
+
+            console.log("Setting user info from stored address:", userInfo);
+            setUserInfo(userInfo);
+          }
         }
-
-        // Skip if we already have user info for this address
-        if (username && address === storedAddress) {
-          return;
-        }
-
-        console.log("Fetching user info for address:", storedAddress);
-        const data = await MiniKit.getUserInfo(storedAddress);
-
-        if (!data) {
-          console.log("No user data received from MiniKit");
-          return;
-        }
-
-        const userInfo = {
-          address: data.walletAddress || storedAddress,
-          profile_picture_url: data.profilePictureUrl ?? "",
-          username: data.username || "Unknown",
-        };
-
-        console.log("Setting user info:", userInfo);
-        setUserInfo(userInfo);
       } catch (error) {
-        console.error("Failed to get user info from MiniKit:", error);
+        console.error("Auto-login failed:", error);
       }
     }
 
-    fetchUser();
-  }, [setUserInfo, address, username, syncUserToBackend]);
+    autoLogin();
+  }, [setUserInfo, setAddress, address, username]);
 
   // Separate effect to sync user to backend after user info is set
   useEffect(() => {

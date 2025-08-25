@@ -1,6 +1,8 @@
 import { create } from "zustand";
+import { subscribeWithSelector } from "zustand/middleware";
 import { collectionsApi, productsApi } from "../utils/api";
 import { Product, Collection } from "../types";
+import { useLanguageStore } from "./languageStore";
 
 interface CollectionState {
   collections: Collection[];
@@ -39,7 +41,8 @@ interface CollectionState {
   }; // Debug method
 }
 
-export const useCollectionStore = create<CollectionState>((set, get) => ({
+export const useCollectionStore = create<CollectionState>()(
+  subscribeWithSelector((set, get) => ({
   collections: [],
   currentCollection: null,
   isLoading: false,
@@ -58,7 +61,9 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
 
     set({ isLoading: true, error: null });
     try {
-      const collections = await collectionsApi.getAll();
+      // Get current language from language store
+      const currentLanguage = useLanguageStore.getState().currentLanguage;
+      const collections = await collectionsApi.getAll({ lang: currentLanguage });
       set({ collections, isLoading: false });
     } catch (error) {
       set({
@@ -103,7 +108,9 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
     });
 
     try {
-      const products = await collectionsApi.getProducts(collectionSlug);
+      // Get current language from language store
+      const currentLanguage = useLanguageStore.getState().currentLanguage;
+      const products = await collectionsApi.getProducts(collectionSlug, { lang: currentLanguage });
       set((state) => ({
         collectionProducts: {
           ...state.collectionProducts,
@@ -164,7 +171,9 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
     set({ featuredProductsLoading: true, error: null });
 
     try {
-      const allProducts = await productsApi.getAll();
+      // Get current language from language store
+      const currentLanguage = useLanguageStore.getState().currentLanguage;
+      const allProducts = await productsApi.getAll({ lang: currentLanguage });
       const featured = allProducts.filter((product) => product.featured);
 
       set({
@@ -285,4 +294,19 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
 
     return status;
   },
-}));
+})));
+
+// Subscribe to language changes and refresh data when language changes
+let previousLanguage = useLanguageStore.getState().currentLanguage;
+
+useLanguageStore.subscribe((state) => {
+  const currentLanguage = state.currentLanguage;
+  // Only refresh if language actually changed
+  if (currentLanguage !== previousLanguage) {
+    console.log(`Language changed from ${previousLanguage} to ${currentLanguage}, refreshing data...`);
+    previousLanguage = currentLanguage;
+    
+    // Clear cache and refresh all data
+    useCollectionStore.getState().refreshAllData();
+  }
+});

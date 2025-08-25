@@ -9,6 +9,7 @@ const resources = {
       // Navigation
       explore: "Explore",
       bag: "Bag",
+      history: "History",
       settings: "Settings",
       
       // Settings screen
@@ -46,6 +47,15 @@ const resources = {
       emptyBag: "Your bag is empty",
       continueShopping: "Continue Shopping",
       
+      // History
+      orderHistory: "Order History",
+      noOrdersYet: "No Orders Yet",
+      noOrdersMessage: "You haven't placed any orders yet. Start shopping to see your order history here.",
+      startShopping: "Start Shopping",
+      orderId: "Order #",
+      totalAmount: "Total Amount",
+      loadingOrderHistory: "Loading order history...",
+      
       // Common
       back: "Back",
       cancel: "Cancel",
@@ -61,6 +71,7 @@ const resources = {
       // Navigation
       explore: "สำรวจ",
       bag: "กระเป๋า",
+      history: "ประวัติ",
       settings: "การตั้งค่า",
       
       // Settings screen
@@ -98,6 +109,15 @@ const resources = {
       emptyBag: "กระเป๋าของคุณว่างเปล่า",
       continueShopping: "ช้อปปิ้งต่อ",
       
+      // History
+      orderHistory: "ประวัติการสั่งซื้อ",
+      noOrdersYet: "ยังไม่มีคำสั่งซื้อ",
+      noOrdersMessage: "คุณยังไม่ได้สั่งซื้ออะไรเลย เริ่มช้อปปิ้งเพื่อดูประวัติการสั่งซื้อของคุณที่นี่",
+      startShopping: "เริ่มช้อปปิ้ง",
+      orderId: "คำสั่งซื้อ #",
+      totalAmount: "จำนวนเงินรวม",
+      loadingOrderHistory: "กำลังโหลดประวัติการสั่งซื้อ...",
+      
       // Common
       back: "กลับ",
       cancel: "ยกเลิก",
@@ -113,6 +133,7 @@ const resources = {
       // Navigation
       explore: "Terokai",
       bag: "Beg",
+      history: "Sejarah",
       settings: "Tetapan",
       
       // Settings screen
@@ -150,6 +171,15 @@ const resources = {
       emptyBag: "Beg anda kosong",
       continueShopping: "Teruskan Membeli-belah",
       
+      // History
+      orderHistory: "Sejarah Pesanan",
+      noOrdersYet: "Belum Ada Pesanan",
+      noOrdersMessage: "Anda belum membuat pesanan. Mulakan membeli-belah untuk melihat sejarah pesanan anda di sini.",
+      startShopping: "Mulakan Membeli-belah",
+      orderId: "Pesanan #",
+      totalAmount: "Jumlah Keseluruhan",
+      loadingOrderHistory: "Memuat sejarah pesanan...",
+      
       // Common
       back: "Kembali",
       cancel: "Batal",
@@ -165,6 +195,7 @@ const resources = {
       // Navigation
       explore: "Tuklasin",
       bag: "Bag",
+      history: "Kasaysayan",
       settings: "Mga Setting",
       
       // Settings screen
@@ -202,6 +233,15 @@ const resources = {
       emptyBag: "Walang laman ang inyong bag",
       continueShopping: "Magpatuloy sa Pamimili",
       
+      // History
+      orderHistory: "Kasaysayan ng Order",
+      noOrdersYet: "Walang Order Pa",
+      noOrdersMessage: "Hindi ka pa nag-order ng kahit ano. Magsimula sa pamimili para makita ang kasaysayan ng iyong order dito.",
+      startShopping: "Magsimula sa Pamimili",
+      orderId: "Order #",
+      totalAmount: "Kabuuang Halaga",
+      loadingOrderHistory: "Naglo-load ng kasaysayan ng order...",
+      
       // Common
       back: "Balik",
       cancel: "Kanselahin",
@@ -217,6 +257,7 @@ const resources = {
       // Navigation
       explore: "Jelajahi",
       bag: "Tas",
+      history: "Riwayat",
       settings: "Pengaturan",
       
       // Settings screen
@@ -253,6 +294,15 @@ const resources = {
       checkout: "Checkout",
       emptyBag: "Tas anda kosong",
       continueShopping: "Lanjut Berbelanja",
+      
+      // History
+      orderHistory: "Riwayat Pesanan",
+      noOrdersYet: "Belum Ada Pesanan",
+      noOrdersMessage: "Anda belum membuat pesanan. Mulai berbelanja untuk melihat riwayat pesanan anda di sini.",
+      startShopping: "Mulai Berbelanja",
+      orderId: "Pesanan #",
+      totalAmount: "Total Jumlah",
+      loadingOrderHistory: "Memuat riwayat pesanan...",
       
       // Common
       back: "Kembali",

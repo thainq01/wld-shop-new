@@ -16,6 +16,9 @@ import {
   UpdateCollectionRequest,
 } from "../../../types";
 import { CollectionModal } from "./CollectionModal";
+import { CMSLanguageFilter } from "../LanguageFilter/CMSLanguageFilter";
+import { useCMSStore } from "../../../store/cmsStore";
+import { languages } from "../../../store/languageStore";
 
 export function CollectionsManager() {
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -26,14 +29,22 @@ export function CollectionsManager() {
     null
   );
 
+  const { selectedLanguage, setSelectedLanguage, getLanguageFilter } = useCMSStore();
+
+  const getLanguageDisplay = (langCode: string) => {
+    const language = languages.find(lang => lang.code === langCode);
+    return language ? `${language.flag} ${language.name}` : langCode;
+  };
+
   useEffect(() => {
     loadCollections();
-  }, []);
+  }, [selectedLanguage]);
 
   const loadCollections = async () => {
     setLoading(true);
     try {
-      const data = await collectionsApi.getAll();
+      const languageFilter = getLanguageFilter();
+      const data = await collectionsApi.getAll(languageFilter ? { lang: languageFilter } : undefined);
       setCollections(data);
     } catch (error) {
       console.error("Failed to load collections:", error);
@@ -132,16 +143,22 @@ export function CollectionsManager() {
             Manage your product collections
           </p>
         </div>
-        <button
-          onClick={() => {
-            setEditingCollection(null);
-            setModalOpen(true);
-          }}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Add Collection
-        </button>
+        <div className="flex items-center gap-3">
+          <CMSLanguageFilter
+            selectedLanguage={selectedLanguage}
+            onLanguageChange={setSelectedLanguage}
+          />
+          <button
+            onClick={() => {
+              setEditingCollection(null);
+              setModalOpen(true);
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Collection
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -228,15 +245,20 @@ export function CollectionsManager() {
 
               {/* Status and metadata */}
               <div className="mt-4 flex items-center justify-between">
-                <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    collection.isActive
-                      ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
-                      : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300"
-                  }`}
-                >
-                  {collection.isActive ? "Active" : "Inactive"}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      collection.isActive
+                        ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300"
+                    }`}
+                  >
+                    {collection.isActive ? "Active" : "Inactive"}
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 px-2 py-1 rounded">
+                    {getLanguageDisplay(collection.language)}
+                  </span>
+                </div>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
                   ID: {collection.id}
                 </span>

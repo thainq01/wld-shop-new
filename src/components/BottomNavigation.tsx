@@ -1,17 +1,18 @@
-import { Home, ShoppingBag } from "lucide-react";
+import { Home, ShoppingBag, Clock } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useCartStore } from "../store/cartStore";
+import { useCart } from "../hooks/useCart";
 
 export function BottomNavigation() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const { getCartItemCount } = useCartStore();
+  const { totalQuantity } = useCart();
 
   const isExploreActive = location.pathname === "/explore";
   const isBagActive = location.pathname === "/bag";
-  const cartItemCount = getCartItemCount();
+  const isHistoryActive = location.pathname === "/history";
+  const cartItemCount = totalQuantity || 0;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 w-full bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
@@ -51,6 +52,21 @@ export function BottomNavigation() {
           </div>
           <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
             {t("bag")}
+          </span>
+        </button>
+
+        {/* History Tab */}
+        <button
+          onClick={() => navigate("/history")}
+          className={`flex flex-col items-center gap-1 py-2 px-3 min-w-0 transition-opacity ${
+            isHistoryActive ? "opacity-100" : "opacity-70"
+          }`}
+        >
+          <div className="p-2">
+            <Clock className="w-5 h-5 text-gray-900 dark:text-gray-100" />
+          </div>
+          <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
+            {t("history")}
           </span>
         </button>
       </div>

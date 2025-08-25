@@ -7,6 +7,7 @@ export interface Collection {
   slug: string;
   description: string;
   isActive: boolean;
+  language: string;
   createdAt: string;
 }
 
@@ -46,6 +47,7 @@ export interface Product {
   madeBy: string;
   inStock: string;
   featured: boolean;
+  language: string;
   images: ProductImage[] | null;
   sizes: ProductSize[] | null;
   otherDetails: string;
@@ -58,6 +60,7 @@ export interface CreateCollectionRequest {
   slug: string;
   description: string;
   isActive: boolean;
+  language?: string; // Optional, defaults to "en" on backend
 }
 
 export interface UpdateCollectionRequest {
@@ -65,6 +68,7 @@ export interface UpdateCollectionRequest {
   slug?: string;
   description?: string;
   isActive?: boolean;
+  language?: string; // Optional, preserves existing if not provided
 }
 
 export interface CreateProductRequest {
@@ -77,6 +81,7 @@ export interface CreateProductRequest {
   madeBy: string;
   inStock: string;
   featured: boolean;
+  language?: string; // Optional, defaults to "en" on backend
   otherDetails: string;
   productVariants: ProductVariant[];
   productImages: ProductImage[];
@@ -92,14 +97,45 @@ export interface UpdateProductRequest {
   madeBy?: string;
   inStock?: string;
   featured?: boolean;
+  language?: string; // Optional, preserves existing if not provided
   otherDetails?: string;
   productVariants?: ProductVariant[];
   productImages?: ProductImage[];
 }
 
+// Cart API Types
 export interface CartItem {
-  product: Product;
+  id: number;
+  walletAddress: string;
+  productId: string;
+  productName: string;
+  productPrice: number;
+  productImage: string;
+  size: string;
   quantity: number;
+  lineTotal: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CartResponse {
+  walletAddress: string;
+  items: CartItem[];
+  totalItems: number;
+  totalQuantity: number;
+  totalAmount: number;
+}
+
+export interface AddToCartRequest {
+  productId: string;
+  size: string;
+  quantity: number;
+  language: string;
+}
+
+export interface UpdateCartItemRequest {
+  quantity?: number;
+  size?: string;
 }
 
 // User Management Types
@@ -138,6 +174,7 @@ export interface CheckoutProduct {
 }
 
 export interface CreateCheckoutRequest {
+  orderId?: string; // Optional - will be auto-generated if not provided
   walletAddress: string;
   email: string;
   country: string;
@@ -160,6 +197,8 @@ export interface CheckoutProductResponse {
 
 export interface Checkout {
   id: number;
+  orderId?: string;
+  status?: string; // "pending", "paid", "out for delivery", "delivered"
   walletAddress: string;
   email: string;
   country: string;
@@ -191,4 +230,42 @@ export interface CheckoutListResponse {
     number: number;
   };
   message?: string;
+}
+
+// Order Success Types
+export interface OrderSuccessProduct {
+  id: number;
+  checkoutId: number;
+  product: Product;
+  quantity: number;
+  priceAtPurchase: number;
+  lineTotal: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OrderSuccessData {
+  id: number;
+  orderId: string;
+  walletAddress: string;
+  email: string;
+  country: string;
+  firstName: string;
+  lastName: string;
+  address: string;
+  apartment: string;
+  city: string;
+  postcode: string;
+  phone: string;
+  totalAmount: number;
+  status: string; // "pending", "paid", "out for delivery", "delivered"
+  products: OrderSuccessProduct[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OrderSuccessResponse {
+  success: boolean;
+  data: OrderSuccessData;
+  statusCode: number;
 }

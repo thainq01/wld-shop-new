@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Filter,
   X,
+  Edit,
 } from "lucide-react";
 import { toast } from "sonner";
 import { checkoutApi } from "../../../utils/api";
@@ -39,6 +40,19 @@ export function CheckoutsManager() {
   const [dateFilter, setDateFilter] = useState("");
   const [countryFilter, setCountryFilter] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+
+  // Status update
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [selectedCheckoutForStatus, setSelectedCheckoutForStatus] = useState<Checkout | null>(null);
+  const [newStatus, setNewStatus] = useState("");
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+
+  const statusOptions = [
+    { value: "pending", label: "Pending", color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200" },
+    { value: "paid", label: "Paid", color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" },
+    { value: "out for delivery", label: "Out for Delivery", color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" },
+    { value: "delivered", label: "Delivered", color: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200" },
+  ];
 
   useEffect(() => {
     loadCheckouts();
@@ -108,6 +122,48 @@ export function CheckoutsManager() {
     setCheckoutProducts([]);
   };
 
+  const handleStatusUpdate = (checkout: Checkout) => {
+    setSelectedCheckoutForStatus(checkout);
+    setNewStatus(checkout.status || "pending");
+    setShowStatusModal(true);
+  };
+
+  const handleUpdateStatus = async () => {
+    if (!selectedCheckoutForStatus || !newStatus) return;
+
+    try {
+      setUpdatingStatus(true);
+      const orderId = selectedCheckoutForStatus.orderId || selectedCheckoutForStatus.id.toString();
+      await checkoutApi.updateStatus(orderId, newStatus);
+      
+      toast.success("Status updated successfully");
+      
+      // Update the local state
+      setCheckouts(prevCheckouts => 
+        prevCheckouts.map(checkout => 
+          checkout.id === selectedCheckoutForStatus.id 
+            ? { ...checkout, status: newStatus }
+            : checkout
+        )
+      );
+      
+      setShowStatusModal(false);
+      setSelectedCheckoutForStatus(null);
+      setNewStatus("");
+    } catch (error) {
+      console.error("Failed to update status:", error);
+      toast.error("Failed to update status");
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  const handleCloseStatusModal = () => {
+    setShowStatusModal(false);
+    setSelectedCheckoutForStatus(null);
+    setNewStatus("");
+  };
+
   const handlePageChange = (newPage: number) => {
     if (newPage >= 0 && newPage < totalPages) {
       setCurrentPage(newPage);
@@ -121,7 +177,8 @@ export function CheckoutsManager() {
       checkout.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       checkout.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       checkout.walletAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      checkout.id.toString().includes(searchTerm);
+      checkout.id.toString().includes(searchTerm) ||
+      (checkout.orderId && checkout.orderId.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const matchesDate =
       !dateFilter ||
@@ -146,6 +203,11 @@ export function CheckoutsManager() {
 
   const formatWalletAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  const getStatusDisplay = (status: string | undefined) => {
+    const statusOption = statusOptions.find(option => option.value === status);
+    return statusOption || statusOptions[0]; // Default to pending if status not found
   };
 
   const clearFilters = () => {
@@ -291,7 +353,7 @@ export function CheckoutsManager() {
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
         <input
           type="text"
-          placeholder="Search by email, name, wallet address, or checkout ID..."
+          placeholder="Search by email, name, wallet address, checkout ID, or order ID..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -328,6 +390,12 @@ export function CheckoutsManager() {
                     Checkout ID
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Order ID
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Customer
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -345,49 +413,66 @@ export function CheckoutsManager() {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredCheckouts?.map((checkout) => (
-                  <tr
-                    key={checkout.id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        #{checkout.id}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        {checkout.firstName} {checkout.lastName}
-                      </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {checkout.email}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {formatDate(checkout.createdAt)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {checkout.country}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <Wallet className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm font-mono text-gray-500 dark:text-gray-400">
-                          {formatWalletAddress(checkout.walletAddress)}
+                {filteredCheckouts?.map((checkout) => {
+                  const statusDisplay = getStatusDisplay(checkout.status);
+                                     return (
+                     <tr
+                       key={checkout.id}
+                       className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                       onClick={() => handleViewDetails(checkout)}
+                     >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                          #{checkout.id}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white uppercase">
+                          {`#${checkout.orderId}` || `#${checkout.id}`}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusDisplay.color}`}>
+                          {statusDisplay.label}
                         </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleViewDetails(checkout)}
-                        className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 inline-flex items-center gap-1"
-                      >
-                        <Eye className="w-4 h-4" />
-                        View Details
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                          {checkout.firstName} {checkout.lastName}
+                        </div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          {checkout.email}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        {formatDate(checkout.createdAt)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        {checkout.country}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <Wallet className="w-4 h-4 text-gray-400" />
+                          <span className="text-sm font-mono text-gray-500 dark:text-gray-400">
+                            {formatWalletAddress(checkout.walletAddress)}
+                          </span>
+                        </div>
+                      </td>
+                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                         <button
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             handleStatusUpdate(checkout);
+                           }}
+                           className="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 inline-flex items-center gap-1"
+                         >
+                           <Edit className="w-4 h-4" />
+                           Edit Status
+                         </button>
+                       </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -476,6 +561,75 @@ export function CheckoutsManager() {
           products={checkoutProducts}
           onClose={handleCloseModal}
         />
+      )}
+
+      {/* Status Update Modal */}
+      {showStatusModal && selectedCheckoutForStatus && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                Update Order Status
+              </h3>
+              <button
+                onClick={handleCloseStatusModal}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                Order: <span className="font-medium">{selectedCheckoutForStatus.orderId || `#${selectedCheckoutForStatus.id}`}</span>
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Customer: <span className="font-medium">{selectedCheckoutForStatus.firstName} {selectedCheckoutForStatus.lastName}</span>
+              </p>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Status
+              </label>
+              <select
+                value={newStatus}
+                onChange={(e) => setNewStatus(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                {statusOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={handleCloseStatusModal}
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                disabled={updatingStatus}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateStatus}
+                disabled={updatingStatus}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+              >
+                {updatingStatus ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Updating...
+                  </>
+                ) : (
+                  "Update Status"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

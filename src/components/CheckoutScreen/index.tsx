@@ -1,12 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ChevronDown, HelpCircle, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useCartStore } from "../../store/cartStore";
+import { useCart } from "../../hooks/useCart";
 import { BottomNavigation } from "../BottomNavigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useWLDBalance } from "../../hooks/useWLDBalance";
 import { useCheckout } from "../../hooks/useCheckout";
 import { useAuthWorld } from "../../store/authStore";
+import { generateOrderId } from "../../utils/orderIdGenerator";
 import type { CreateCheckoutRequest } from "../../types";
 
 interface ShippingAddress {
@@ -174,7 +175,7 @@ const CountrySelector = ({
 
 export const CheckoutScreen: React.FC = () => {
   const navigate = useNavigate();
-  const { items, getCartTotal, clearCart } = useCartStore();
+  const { items, totalAmount, clearCart } = useCart();
   const {
     balance: wldBalance,
     isLoading: isBalanceLoading,
@@ -188,6 +189,7 @@ export const CheckoutScreen: React.FC = () => {
   } = useCheckout();
 
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [generatedOrderId, setGeneratedOrderId] = useState<string>("");
 
   // Available countries for shipping
   const availableCountries = [
@@ -196,6 +198,12 @@ export const CheckoutScreen: React.FC = () => {
     "Philippines",
     "Indonesia",
   ];
+
+  // Generate order ID when component mounts
+  useEffect(() => {
+    const orderId = generateOrderId();
+    setGeneratedOrderId(orderId);
+  }, []);
 
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
     email: "",
@@ -210,7 +218,7 @@ export const CheckoutScreen: React.FC = () => {
     saveForNextTime: false,
   });
 
-  const subtotal = getCartTotal();
+  const subtotal = totalAmount || 0;
   const shipping = 16.99; // Worldwide flat rate
   const total = subtotal + shipping;
 
@@ -251,6 +259,7 @@ export const CheckoutScreen: React.FC = () => {
     try {
       // Prepare checkout data according to API specification
       const checkoutData: CreateCheckoutRequest = {
+        orderId: generatedOrderId, // Include the generated order ID
         walletAddress: address,
         email: shippingAddress.email,
         country: shippingAddress.country,
@@ -270,13 +279,13 @@ export const CheckoutScreen: React.FC = () => {
       console.log("Creating checkout with data:", checkoutData);
 
       // Create checkout via API
-      const checkout = await createCheckout(checkoutData);
+      const orderResponse = await createCheckout(checkoutData);
 
-      if (!checkout) {
+      if (!orderResponse) {
         throw new Error(checkoutError || "Failed to create checkout");
       }
 
-      console.log("Checkout created successfully:", checkout);
+      console.log("Checkout created successfully:", orderResponse);
 
       // TODO: Integrate with World ID and WLD payment processing
       // For now, simulate payment processing
@@ -286,8 +295,7 @@ export const CheckoutScreen: React.FC = () => {
       clearCart();
       navigate("/order-success", {
         state: {
-          checkoutId: checkout.id,
-          orderTotal: total,
+          orderData: orderResponse,
         },
       });
     } catch (error) {
@@ -314,7 +322,7 @@ export const CheckoutScreen: React.FC = () => {
     return formFieldsValid && canProceedWithPayment;
   };
 
-  if (items.length === 0) {
+  if (!items || items.length === 0) {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
@@ -340,6 +348,18 @@ export const CheckoutScreen: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             Checkout
           </h2>
+          {generatedOrderId && (
+            <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Order ID:
+                </span>
+                <span className="text-sm font-mono font-medium text-gray-900 dark:text-gray-100">
+                  {generatedOrderId}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Error Display */}
@@ -525,7 +545,7 @@ export const CheckoutScreen: React.FC = () => {
             Order summary
           </h2>
 
-          {items.map((item) => (
+                     {items?.map((item) => (
             <div
               key={`${item.productId}-${item.size}`}
               className="flex items-center gap-4 mb-4"

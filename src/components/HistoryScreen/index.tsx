@@ -16,7 +16,12 @@ import { useTranslation } from "react-i18next";
 import { useAuthWorld } from "../../store/authStore";
 import { LoginButton } from "../LoginButton";
 import { checkoutApi } from "../../utils/api";
-import type { ProductSize, ProductImage } from "../../types";
+import type {
+  ProductSize,
+  ProductImage,
+  Checkout,
+  CheckoutProductResponse,
+} from "../../types";
 
 interface OrderHistoryProduct {
   id: number;
@@ -86,57 +91,110 @@ const HistoryScreen: React.FC = () => {
 
     try {
       setLoading(true);
+      setError(null); // Clear any previous errors
       const result = await checkoutApi.getByWalletAddress(walletAddress);
 
-      // Check if result and data exist and have the expected structure
-      if (!result || !result.data || !result.data.content) {
+      console.log("API Result:", result);
+      console.log("API Result Data:", result?.data);
+      console.log("API Result Content:", result?.data?.content);
+
+      // Check different possible response structures
+      let checkouts: Checkout[] = [];
+
+      if (result?.data?.content && Array.isArray(result.data.content)) {
+        // Standard paginated response
+        checkouts = result.data.content;
+        console.log("Using paginated response structure");
+      } else if (result?.data && Array.isArray(result.data)) {
+        // Direct array response
+        checkouts = result.data;
+        console.log("Using direct array response structure");
+      } else if (result && Array.isArray(result)) {
+        // Direct array result
+        checkouts = result;
+        console.log("Using direct array result structure");
+      } else {
         console.warn("API returned unexpected data structure:", result);
+        console.warn("No recognizable checkout data found");
+        setOrders([]);
+        return;
+      }
+
+      console.log("Found checkouts:", checkouts);
+      console.log("Number of checkouts:", checkouts.length);
+
+      if (checkouts.length === 0) {
+        console.log("No checkouts found, setting empty orders");
         setOrders([]);
         return;
       }
 
       // Map Checkout[] to OrderHistoryItem[]
-      const mappedOrders: OrderHistoryItem[] = result.data.content.map(
-        (checkout) => ({
-          id: checkout.id,
-          orderId: checkout.orderId || checkout.id.toString(),
-          walletAddress: checkout.walletAddress,
-          email: checkout.email,
-          country: checkout.country,
-          firstName: checkout.firstName,
-          lastName: checkout.lastName,
-          address: checkout.address,
-          apartment: checkout.apartment || null,
-          city: checkout.city,
-          postcode: checkout.postcode,
-          phone: checkout.phone,
-          totalAmount:
-            checkout.products?.reduce((total, product) => {
+      const mappedOrders: OrderHistoryItem[] = checkouts.map((checkout) => ({
+        id: checkout.id,
+        orderId: checkout.orderId || checkout.id.toString(),
+        walletAddress: checkout.walletAddress,
+        email: checkout.email,
+        country: checkout.country,
+        firstName: checkout.firstName,
+        lastName: checkout.lastName,
+        address: checkout.address,
+        apartment: checkout.apartment || null,
+        city: checkout.city,
+        postcode: checkout.postcode,
+        phone: checkout.phone,
+        totalAmount:
+          checkout.products?.reduce(
+            (total: number, product: CheckoutProductResponse) => {
               return total + product.product.price * product.quantity;
-            }, 0) || 0,
-          status: checkout.status || "pending",
-          products:
-            checkout.products?.map((product) => ({
-              id: product.id,
-              checkoutId: checkout.id,
-              product: product.product,
-              quantity: product.quantity,
-              priceAtPurchase: product.product.price,
-              lineTotal: product.product.price * product.quantity,
-              createdAt: checkout.createdAt,
-              updatedAt: checkout.updatedAt,
-            })) || [],
-          createdAt: checkout.createdAt,
-          updatedAt: checkout.updatedAt,
-        })
-      );
+            },
+            0
+          ) || 0,
+        status: checkout.status || "pending",
+        products:
+          checkout.products?.map((product: CheckoutProductResponse) => ({
+            id: product.id,
+            checkoutId: checkout.id,
+            product: product.product,
+            quantity: product.quantity,
+            priceAtPurchase: product.product.price,
+            lineTotal: product.product.price * product.quantity,
+            createdAt: checkout.createdAt,
+            updatedAt: checkout.updatedAt,
+          })) || [],
+        createdAt: checkout.createdAt,
+        updatedAt: checkout.updatedAt,
+      }));
+
+      console.log("Mapped Orders:", mappedOrders);
+      console.log("Number of orders:", mappedOrders.length);
 
       setOrders(mappedOrders);
+
+      console.log("Orders state should be updated now");
     } catch (err) {
       console.error("Error fetching order history:", err);
-      setError(
-        err instanceof Error ? err.message : "Failed to fetch order history"
-      );
+
+      // Provide more detailed error information
+      let errorMessage = "Failed to fetch order history";
+      if (err instanceof Error) {
+        errorMessage = err.message;
+
+        // Add more context for common errors
+        if (
+          err.message.includes("Failed to fetch") ||
+          err.message.includes("fetch")
+        ) {
+          errorMessage =
+            "Network error. Please check your connection and try again.";
+        } else if (err.message.includes("404")) {
+          errorMessage = "Order history service is temporarily unavailable.";
+        } else if (err.message.includes("500")) {
+          errorMessage = "Server error. Please try again later.";
+        }
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -247,32 +305,56 @@ const HistoryScreen: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-          <div className="px-4 py-4 flex items-center justify-between">
-            <button
-              onClick={() => navigate("/explore")}
-              className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
+        {/* Header */}
+        <div className="px-4 pt-6">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              {t("orderHistory")}
+            </h2>
           </div>
         </div>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
-            <button
-              onClick={fetchOrderHistory}
-              className="bg-black dark:bg-white text-white dark:text-black px-6 py-3 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
-            >
-              {t("tryAgain")}
-            </button>
+
+        {/* Error state - centered and styled like empty state */}
+        <div className="flex-1 flex items-center justify-center px-4 pb-20">
+          <div className="text-center max-w-sm">
+            {/* Error icon */}
+            <div className="w-32 h-32 mx-auto mb-8 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
+              <Clock className="w-16 h-16 text-red-600 dark:text-red-400" />
+            </div>
+
+            {/* Error title */}
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+              Error Loading History
+            </h2>
+
+            {/* Error message */}
+            <p className="text-gray-500 dark:text-gray-400 text-lg mb-12">
+              {error}
+            </p>
+
+            {/* Action buttons */}
+            <div className="space-y-3">
+              <button
+                onClick={fetchOrderHistory}
+                disabled={loading}
+                className="w-full py-4 bg-black dark:bg-white text-white dark:text-black rounded-full font-semibold text-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? "Retrying..." : t("tryAgain")}
+              </button>
+            </div>
           </div>
         </div>
+
         <BottomNavigation />
       </div>
     );
   }
+
+  console.log("Rendering HistoryScreen with orders:", orders);
+  console.log("Orders length:", orders.length);
+  console.log("Loading state:", loading);
+  console.log("Error state:", error);
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
@@ -328,12 +410,12 @@ const HistoryScreen: React.FC = () => {
             </div>
           </div>
 
-          <div className="max-w-2xl mx-auto px-4 py-6 pb-10 space-y-4">
+          <div className="w-full mx-auto py-6 pb-10 space-y-4 px-4">
             <div className="space-y-4">
               {orders.map((order) => (
                 <div
                   key={order.id}
-                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden w-full"
                 >
                   <div className="p-6">
                     {/* Order Header */}

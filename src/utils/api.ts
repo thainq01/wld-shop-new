@@ -359,6 +359,18 @@ export const checkoutApi = {
         method: "PATCH",
       }
     ),
+
+  // Get checkouts by wallet address
+  getByWalletAddress: (walletAddress: string, params?: { page?: number; size?: number }) => {
+    const searchParams = new URLSearchParams();
+    searchParams.append("walletAddress", walletAddress);
+    if (params?.page !== undefined)
+      searchParams.append("page", params.page.toString());
+    if (params?.size !== undefined)
+      searchParams.append("size", params.size.toString());
+
+    return apiFetch<CheckoutListResponse>(`/api/checkout?${searchParams.toString()}`);
+  },
 };
 
 // Cart API functions

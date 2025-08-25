@@ -7,7 +7,6 @@ import {
   Phone,
   Mail,
   ArrowLeft,
-  Calendar,
   DollarSign,
   Hash,
 } from "lucide-react";
@@ -16,6 +15,8 @@ import { BottomNavigation } from "../BottomNavigation";
 import { useTranslation } from "react-i18next";
 import { useAuthWorld } from "../../store/authStore";
 import { LoginButton } from "../LoginButton";
+import { checkoutApi } from "../../utils/api";
+import type { ProductSize, ProductImage } from "../../types";
 
 interface OrderHistoryProduct {
   id: number;
@@ -40,9 +41,9 @@ interface OrderHistoryProduct {
     inStock: string;
     featured: boolean;
     otherDetails: string;
-    language: string | null;
-    sizes: any;
-    images: any;
+      language: string | null;
+  sizes: ProductSize[] | null;
+  images: ProductImage[] | null;
     createdAt: string;
   };
   quantity: number;
@@ -72,19 +73,7 @@ interface OrderHistoryItem {
   updatedAt: string;
 }
 
-interface OrderHistoryResponse {
-  success: boolean;
-  data: OrderHistoryItem[];
-  statusCode: number;
-  pagination: {
-    page: number;
-    size: number;
-    totalElements: number;
-    totalPages: number;
-    first: boolean;
-    last: boolean;
-  };
-}
+
 
 const HistoryScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -106,29 +95,41 @@ const HistoryScreen: React.FC = () => {
 
     try {
       setLoading(true);
-      const response = await fetch(
-        `http://localhost:8086/api/checkout?walletAddress=${encodeURIComponent(
-          walletAddress
-        )}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            "ngrok-skip-browser-warning": "true",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result: OrderHistoryResponse = await response.json();
-
-      if (result.success) {
-        setOrders(result.data);
-      } else {
-        setError("Failed to fetch order history");
-      }
+      const result = await checkoutApi.getByWalletAddress(walletAddress);
+      
+      // Map Checkout[] to OrderHistoryItem[] 
+      const mappedOrders: OrderHistoryItem[] = result.data.content.map((checkout) => ({
+        id: checkout.id,
+        orderId: checkout.orderId || checkout.id.toString(),
+        walletAddress: checkout.walletAddress,
+        email: checkout.email,
+        country: checkout.country,
+        firstName: checkout.firstName,
+        lastName: checkout.lastName,
+        address: checkout.address,
+        apartment: checkout.apartment || null,
+        city: checkout.city,
+        postcode: checkout.postcode,
+        phone: checkout.phone,
+        totalAmount: checkout.products?.reduce((total, product) => {
+          return total + (product.product.price * product.quantity);
+        }, 0) || 0,
+        status: checkout.status || "pending",
+        products: checkout.products?.map((product) => ({
+          id: product.id,
+          checkoutId: checkout.id,
+          product: product.product,
+          quantity: product.quantity,
+          priceAtPurchase: product.product.price,
+          lineTotal: product.product.price * product.quantity,
+          createdAt: checkout.createdAt,
+          updatedAt: checkout.updatedAt,
+        })) || [],
+        createdAt: checkout.createdAt,
+        updatedAt: checkout.updatedAt,
+      }));
+      
+      setOrders(mappedOrders);
     } catch (err) {
       console.error("Error fetching order history:", err);
       setError(

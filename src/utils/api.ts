@@ -13,7 +13,6 @@ import type {
   UserApiResponse,
   CreateCheckoutRequest,
   Checkout,
-  CheckoutResponse,
   CheckoutListResponse,
   CheckoutProductResponse,
   OrderSuccessResponse,
@@ -119,17 +118,21 @@ export const collectionsApi = {
   getAll: (params?: { lang?: string }) => {
     const searchParams = new URLSearchParams();
     if (params?.lang) searchParams.append("lang", params.lang);
-    
+
     const query = searchParams.toString();
-    return apiFetch<Collection[]>(`/api/collections${query ? `?${query}` : ""}`);
+    return apiFetch<Collection[]>(
+      `/api/collections${query ? `?${query}` : ""}`
+    );
   },
 
   getProducts: (slug: string, params?: { lang?: string }) => {
     const searchParams = new URLSearchParams();
     if (params?.lang) searchParams.append("lang", params.lang);
-    
+
     const query = searchParams.toString();
-    return apiFetch<Product[]>(`/api/collections/${slug}/products${query ? `?${query}` : ""}`);
+    return apiFetch<Product[]>(
+      `/api/collections/${slug}/products${query ? `?${query}` : ""}`
+    );
   },
 
   // CMS operations
@@ -149,7 +152,12 @@ export const collectionsApi = {
 };
 
 export const productsApi = {
-  getAll: (params?: { collection?: string; limit?: number; page?: number; lang?: string }) => {
+  getAll: (params?: {
+    collection?: string;
+    limit?: number;
+    page?: number;
+    lang?: string;
+  }) => {
     const searchParams = new URLSearchParams();
     if (params?.collection)
       searchParams.append("collection", params.collection);
@@ -165,7 +173,7 @@ export const productsApi = {
     const searchParams = new URLSearchParams();
     searchParams.append("id", id.toString());
     if (params?.lang) searchParams.append("lang", params.lang);
-    
+
     const query = searchParams.toString();
     return apiFetch<Product>(`/api/products?${query}`);
   },
@@ -361,7 +369,10 @@ export const checkoutApi = {
     ),
 
   // Get checkouts by wallet address
-  getByWalletAddress: (walletAddress: string, params?: { page?: number; size?: number }) => {
+  getByWalletAddress: (
+    walletAddress: string,
+    params?: { page?: number; size?: number }
+  ) => {
     const searchParams = new URLSearchParams();
     searchParams.append("walletAddress", walletAddress);
     if (params?.page !== undefined)
@@ -369,29 +380,35 @@ export const checkoutApi = {
     if (params?.size !== undefined)
       searchParams.append("size", params.size.toString());
 
-    return apiFetch<CheckoutListResponse>(`/api/checkout?${searchParams.toString()}`);
+    return apiFetch<CheckoutListResponse>(
+      `/api/checkout?${searchParams.toString()}`
+    );
   },
 };
 
 // Cart API functions
 export const cartApi = {
-          // Get all cart items for a specific wallet
-        getCart: (walletAddress: string, language?: string) => {
-          const url = language 
-            ? `/api/cart/${walletAddress}?lang=${language}`
-            : `/api/cart/${walletAddress}`;
-          return apiFetch<CartResponse>(url);
-        },
+  // Get all cart items for a specific wallet
+  getCart: (walletAddress: string, language?: string) => {
+    const url = language
+      ? `/api/cart/${walletAddress}?lang=${language}`
+      : `/api/cart/${walletAddress}`;
+    return apiFetch<CartResponse>(url);
+  },
 
-        // Add a product to cart
-        addToCart: (walletAddress: string, data: AddToCartRequest) =>
-          apiFetch<CartResponse>(`/api/cart/${walletAddress}`, {
-            method: "POST",
-            body: JSON.stringify(data),
-          }),
+  // Add a product to cart
+  addToCart: (walletAddress: string, data: AddToCartRequest) =>
+    apiFetch<CartResponse>(`/api/cart/${walletAddress}`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 
   // Update a cart item
-  updateCartItem: (walletAddress: string, itemId: number, data: UpdateCartItemRequest) =>
+  updateCartItem: (
+    walletAddress: string,
+    itemId: number,
+    data: UpdateCartItemRequest
+  ) =>
     apiFetch<CartResponse>(`/api/cart/${walletAddress}/items/${itemId}`, {
       method: "PUT",
       body: JSON.stringify(data),

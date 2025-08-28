@@ -67,8 +67,7 @@ export function useWLDBalance() {
         if (
           data.success &&
           data.data &&
-          data.data.contract_address.toLowerCase() ===
-            WLD_CONTRACT_ADDRESS.toLowerCase()
+          data.data.contract_address === WLD_CONTRACT_ADDRESS
         ) {
           // Convert balance from wei to WLD (18 decimals)
           const balanceInWei = BigInt(data.data.balance);
@@ -119,8 +118,7 @@ export function useWLDBalance() {
           if (
             data.success &&
             data.data &&
-            data.data.contract_address.toLowerCase() ===
-              WLD_CONTRACT_ADDRESS.toLowerCase()
+            data.data.contract_address === WLD_CONTRACT_ADDRESS
           ) {
             // Convert balance from wei to WLD (18 decimals)
             const balanceInWei = BigInt(data.data.balance);

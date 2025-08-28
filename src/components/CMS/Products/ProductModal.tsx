@@ -9,7 +9,7 @@ import {
   ProductVariant,
 } from "../../../types";
 import { collectionsApi } from "../../../utils/api";
-import { languages } from "../../../store/languageStore";
+import { cmsLanguages } from "../../../store/languageStore";
 import { useCMSStore } from "../../../store/cmsStore";
 
 interface ProductModalProps {
@@ -31,8 +31,9 @@ export function ProductModal({
   const isEditing = !!product;
 
   const [formData, setFormData] = useState(() => {
-    // Initialize with current CMS language (or "en" if "all" is selected)
-    const defaultLanguage = selectedLanguage === "all" ? "en" : selectedLanguage;
+    // Initialize with current CMS language (or "th" if "all" is selected)
+    const defaultLanguage =
+      selectedLanguage === "all" ? "th" : selectedLanguage;
     return {
       name: "",
       description: "",
@@ -58,7 +59,9 @@ export function ProductModal({
     try {
       // Load collections filtered by currently selected CMS language
       const languageFilter = getLanguageFilter();
-      const data = await collectionsApi.getAll(languageFilter ? { lang: languageFilter } : undefined);
+      const data = await collectionsApi.getAll(
+        languageFilter ? { lang: languageFilter } : undefined
+      );
       setCollections(data);
       if (data.length > 0 && !product) {
         setFormData((prev) => ({ ...prev, collectionId: data[0].id }));
@@ -84,10 +87,11 @@ export function ProductModal({
   // Update language when CMS language filter changes (only for new products)
   useEffect(() => {
     if (!isEditing && isOpen) {
-      const defaultLanguage = selectedLanguage === "all" ? "en" : selectedLanguage;
-      setFormData(prev => ({
+      const defaultLanguage =
+        selectedLanguage === "all" ? "th" : selectedLanguage;
+      setFormData((prev) => ({
         ...prev,
-        language: defaultLanguage
+        language: defaultLanguage,
       }));
     }
   }, [selectedLanguage, isEditing, isOpen]);
@@ -104,7 +108,7 @@ export function ProductModal({
         madeBy: product.madeBy,
         inStock: product.inStock,
         featured: product.featured,
-        language: product.language || "en",
+        language: product.language || "th",
         otherDetails: product.otherDetails || "",
       });
       setProductImages(product.images || []);
@@ -118,7 +122,8 @@ export function ProductModal({
       );
     } else {
       // For new products, auto-select the current CMS language (or "en" if "all" is selected)
-      const defaultLanguage = selectedLanguage === "all" ? "en" : selectedLanguage;
+      const defaultLanguage =
+        selectedLanguage === "all" ? "th" : selectedLanguage;
       setFormData({
         name: "",
         description: "",
@@ -154,9 +159,10 @@ export function ProductModal({
     }
 
     if (formData.collectionId === 0) {
-      newErrors.collectionId = collections.length === 0 
-        ? "No collections available in selected language. Please create a collection first or change language filter."
-        : "Please select a collection";
+      newErrors.collectionId =
+        collections.length === 0
+          ? "No collections available in selected language. Please create a collection first or change language filter."
+          : "Please select a collection";
     }
 
     if (!formData.category.trim()) {
@@ -426,7 +432,12 @@ export function ProductModal({
                     )}
                     {!isEditing && (
                       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        Collections filtered by selected language ({selectedLanguage === "all" ? "all languages" : languages.find(l => l.code === selectedLanguage)?.name || selectedLanguage})
+                        Collections filtered by selected language (
+                        {selectedLanguage === "all"
+                          ? "all languages"
+                          : cmsLanguages.find((l) => l.code === selectedLanguage)
+                              ?.name || selectedLanguage}
+                        )
                       </p>
                     )}
                   </div>
@@ -532,7 +543,6 @@ export function ProductModal({
                       <option value="In Stock">In Stock</option>
                       <option value="Low Stock">Low Stock</option>
                       <option value="Out of Stock">Out of Stock</option>
-                      <option value="∞">∞ (Unlimited)</option>
                     </select>
                   </div>
                 </div>
@@ -546,10 +556,15 @@ export function ProductModal({
                     <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                     <select
                       value={formData.language}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, language: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          language: e.target.value,
+                        }))
+                      }
                       className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
                     >
-                      {languages.map((lang) => (
+                      {cmsLanguages.map((lang) => (
                         <option key={lang.code} value={lang.code}>
                           {lang.flag} {lang.name}
                         </option>

@@ -18,7 +18,7 @@ import {
 import { CollectionModal } from "./CollectionModal";
 import { CMSLanguageFilter } from "../LanguageFilter/CMSLanguageFilter";
 import { useCMSStore } from "../../../store/cmsStore";
-import { languages } from "../../../store/languageStore";
+import { cmsLanguages } from "../../../store/languageStore";
 
 export function CollectionsManager() {
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -29,10 +29,11 @@ export function CollectionsManager() {
     null
   );
 
-  const { selectedLanguage, setSelectedLanguage, getLanguageFilter } = useCMSStore();
+  const { selectedLanguage, setSelectedLanguage, getLanguageFilter } =
+    useCMSStore();
 
   const getLanguageDisplay = (langCode: string) => {
-    const language = languages.find(lang => lang.code === langCode);
+    const language = cmsLanguages.find((lang) => lang.code === langCode);
     return language ? `${language.flag} ${language.name}` : langCode;
   };
 
@@ -44,7 +45,9 @@ export function CollectionsManager() {
     setLoading(true);
     try {
       const languageFilter = getLanguageFilter();
-      const data = await collectionsApi.getAll(languageFilter ? { lang: languageFilter } : undefined);
+      const data = await collectionsApi.getAll(
+        languageFilter ? { lang: languageFilter } : undefined
+      );
       setCollections(data);
     } catch (error) {
       console.error("Failed to load collections:", error);

@@ -1,6 +1,8 @@
 import React from "react";
 import { ShoppingBag, Minus, Plus, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { MiniKit } from "@worldcoin/minikit-js";
 import { useCart } from "../../hooks/useCart";
 import { BottomNavigation } from "../BottomNavigation";
 import { LoginButton } from "../LoginButton";
@@ -51,27 +53,7 @@ export const BagScreen: React.FC = () => {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
         {/* Content centered in screen */}
-        <div className="flex-1 flex items-center justify-center px-4 pb-20">
-          <div className="text-center max-w-sm">
-            {/* Shopping bag icon */}
-            <div className="w-32 h-32 mx-auto mb-8 bg-gray-400 rounded-full flex items-center justify-center">
-              <ShoppingBag className="w-16 h-16 text-white" />
-            </div>
-
-            {/* Login required text */}
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-              Login Required
-            </h2>
-
-            {/* Description text */}
-            <p className="text-gray-500 dark:text-gray-400 text-lg mb-12">
-              Please sign in with your World ID to view your bag
-            </p>
-
-            {/* Login button */}
-            <LoginButton />
-          </div>
-        </div>
+       <LoginButton/>
 
         {/* Bottom Navigation */}
         <BottomNavigation />
@@ -102,7 +84,7 @@ export const BagScreen: React.FC = () => {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
         <div className="flex-1 flex items-center justify-center px-4 pb-20">
-          <div className="text-center max-w-sm">
+          <div className="text-center max-w-md">
             <div className="w-32 h-32 mx-auto mb-8 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
               <ShoppingBag className="w-16 h-16 text-red-600 dark:text-red-400" />
             </div>
@@ -131,7 +113,7 @@ export const BagScreen: React.FC = () => {
       <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
         {/* Content centered in screen */}
         <div className="flex-1 flex items-center justify-center px-4 pb-20">
-          <div className="text-center max-w-sm">
+          <div className="text-center max-w-md">
             {/* Shopping bag icon */}
             <div className="w-32 h-32 mx-auto mb-8 bg-gray-400 rounded-full flex items-center justify-center">
               <ShoppingBag className="w-16 h-16 text-white" />
@@ -220,7 +202,10 @@ export const BagScreen: React.FC = () => {
                               await updateQuantity(item.id, item.quantity - 1);
                             }
                           } catch (error) {
-                            console.error("Error in cart operation:", error);
+                            console.error("Error in cart operation (decrease):", error);
+                            const errorMessage = error instanceof Error ? error.message : "Failed to update cart";
+                            console.log("🔔 Showing decrease toast:", errorMessage);
+                            toast.error(errorMessage);
                           }
                         }}
                         disabled={isLoading}
@@ -246,7 +231,10 @@ export const BagScreen: React.FC = () => {
                           try {
                             await updateQuantity(item.id, item.quantity + 1);
                           } catch (error) {
-                            console.error("Error in cart operation:", error);
+                            console.error("Error in cart operation (increase):", error);
+                            const errorMessage = error instanceof Error ? error.message : "Failed to update cart";
+                            console.log("🔔 Showing increase toast:", errorMessage);
+                            toast.error(errorMessage);
                           }
                         }}
                         disabled={isLoading}
@@ -265,7 +253,7 @@ export const BagScreen: React.FC = () => {
             ) : (
               // Empty state within cart layout
               <div className="flex items-center justify-center px-4 py-12">
-                <div className="text-center max-w-sm">
+                <div className="text-center max-w-md">
                   <ShoppingBag className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                     No items yet

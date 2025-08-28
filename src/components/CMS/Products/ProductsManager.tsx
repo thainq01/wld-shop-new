@@ -4,7 +4,8 @@ import {
   Plus,
   Search,
   Edit,
-  Trash2,
+  Eye,
+  EyeOff,
   MoreVertical,
 } from "lucide-react";
 import { productsApi } from "../../../utils/api";
@@ -16,7 +17,7 @@ import {
 import { ProductModal } from "./ProductModal";
 import { CMSLanguageFilter } from "../LanguageFilter/CMSLanguageFilter";
 import { useCMSStore } from "../../../store/cmsStore";
-import { languages } from "../../../store/languageStore";
+import { cmsLanguages } from "../../../store/languageStore";
 
 export function ProductsManager() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -25,10 +26,11 @@ export function ProductsManager() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
-  const { selectedLanguage, setSelectedLanguage, getLanguageFilter } = useCMSStore();
+  const { selectedLanguage, setSelectedLanguage, getLanguageFilter } =
+    useCMSStore();
 
   const getLanguageDisplay = (langCode: string) => {
-    const language = languages.find(lang => lang.code === langCode);
+    const language = cmsLanguages.find((lang) => lang.code === langCode);
     return language ? `${language.flag} ${language.name}` : langCode;
   };
 
@@ -40,7 +42,9 @@ export function ProductsManager() {
     setLoading(true);
     try {
       const languageFilter = getLanguageFilter();
-      const data = await productsApi.getAll(languageFilter ? { lang: languageFilter } : undefined);
+      const data = await productsApi.getAll(
+        languageFilter ? { lang: languageFilter } : undefined
+      );
       setProducts(data);
     } catch (error) {
       console.error("Failed to load products:", error);
@@ -74,14 +78,21 @@ export function ProductsManager() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this product?")) return;
+  const handleToggleActive = async (id: number, currentActive: boolean) => {
+    const newActiveState = !currentActive;
+    const action = newActiveState ? "activate" : "deactivate";
+
+    if (!confirm(`Are you sure you want to ${action} this product?`)) return;
 
     try {
-      await productsApi.delete(id);
-      setProducts((prev) => prev.filter((p) => p.id !== id));
+      const updatedProduct = await productsApi.toggleActive(id, newActiveState);
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === id ? { ...p, active: updatedProduct.active } : p
+        )
+      );
     } catch (error) {
-      console.error("Failed to delete product:", error);
+      console.error(`Failed to ${action} product:`, error);
     }
   };
 
@@ -241,8 +252,17 @@ export function ProductsManager() {
                     <div className="flex items-center gap-2">
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          product.inStock !== "Out of Stock"
+                          product.active
                             ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
+                            : "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-300"
+                        }`}
+                      >
+                        {product.active ? "Active" : "Inactive"}
+                      </span>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          product.inStock !== "Out of Stock"
+                            ? "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"
                             : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300"
                         }`}
                       >
@@ -267,10 +287,25 @@ export function ProductsManager() {
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleDelete(product.id)}
-                        className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        onClick={() =>
+                          handleToggleActive(product.id, product.active)
+                        }
+                        className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+                          product.active
+                            ? "text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
+                            : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                        }`}
+                        title={
+                          product.active
+                            ? "Deactivate product"
+                            : "Activate product"
+                        }
                       >
-                        <Trash2 className="w-4 h-4" />
+                        {product.active ? (
+                          <Eye className="w-4 h-4" />
+                        ) : (
+                          <EyeOff className="w-4 h-4" />
+                        )}
                       </button>
                       <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                         <MoreVertical className="w-4 h-4" />
@@ -322,8 +357,17 @@ export function ProductsManager() {
                     <div className="flex items-center gap-2 mt-1">
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                          product.inStock !== "Out of Stock"
+                          product.active
                             ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
+                            : "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-300"
+                        }`}
+                      >
+                        {product.active ? "Active" : "Inactive"}
+                      </span>
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                          product.inStock !== "Out of Stock"
+                            ? "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"
                             : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300"
                         }`}
                       >
@@ -350,10 +394,23 @@ export function ProductsManager() {
                     <Edit className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={() => handleDelete(product.id)}
-                    className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    onClick={() =>
+                      handleToggleActive(product.id, product.active)
+                    }
+                    className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+                      product.active
+                        ? "text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
+                        : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    }`}
+                    title={
+                      product.active ? "Deactivate product" : "Activate product"
+                    }
                   >
-                    <Trash2 className="w-4 h-4" />
+                    {product.active ? (
+                      <Eye className="w-4 h-4" />
+                    ) : (
+                      <EyeOff className="w-4 h-4" />
+                    )}
                   </button>
                   <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                     <MoreVertical className="w-4 h-4" />

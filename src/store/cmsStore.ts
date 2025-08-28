@@ -12,21 +12,21 @@ export const useCMSStore = create<CMSState>()(
   subscribeWithSelector(
     persist(
       (set, get) => ({
-      selectedLanguage: "all", // Default to show all languages
-      
-      setSelectedLanguage: (language: string) => {
-        set({ selectedLanguage: language });
-      },
-      
-      shouldFilterByLanguage: () => {
-        return get().selectedLanguage !== "all";
-      },
-      
-      getLanguageFilter: () => {
-        const { selectedLanguage } = get();
-        return selectedLanguage === "all" ? undefined : selectedLanguage;
-      },
-    }),
+        selectedLanguage: "th", // Default to Thai since we don't have English products
+
+        setSelectedLanguage: (language: string) => {
+          set({ selectedLanguage: language });
+        },
+
+        shouldFilterByLanguage: () => {
+          return get().selectedLanguage !== "all";
+        },
+
+        getLanguageFilter: () => {
+          const { selectedLanguage } = get();
+          return selectedLanguage === "all" ? undefined : selectedLanguage;
+        },
+      }),
       {
         name: "cms-language-storage",
       }

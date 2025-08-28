@@ -47,6 +47,7 @@ export interface Product {
   madeBy: string;
   inStock: string;
   featured: boolean;
+  active: boolean;
   language: string;
   images: ProductImage[] | null;
   sizes: ProductSize[] | null;
@@ -170,6 +171,7 @@ export interface UserApiResponse<T> {
 // Checkout Types
 export interface CheckoutProduct {
   productId: number;
+  size: string;
   quantity: number;
 }
 
@@ -185,6 +187,7 @@ export interface CreateCheckoutRequest {
   city: string;
   postcode: string;
   phone: string;
+  status?: string; // Optional - defaults to "pending"
   products: CheckoutProduct[];
 }
 

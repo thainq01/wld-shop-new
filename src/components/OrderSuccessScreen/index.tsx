@@ -9,65 +9,28 @@ const OrderSuccessScreen: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Get order data from location state or use mock data for demo
-  const orderData: OrderSuccessResponse = location.state?.orderData || {
-    success: true,
-    data: {
-      id: 21,
-      orderId: "th0469826a",
-      walletAddress: "0x5744c7c3b2825f6478673676015657a9c81594ba",
-      email: "123@gmail.com",
-      country: "Thailand",
-      firstName: "123",
-      lastName: "123",
-      address: "123",
-      apartment: "123",
-      city: "123",
-      postcode: "123",
-      phone: "123",
-             totalAmount: 12.00,
-       status: "paid",
-       products: [
-        {
-          id: 8,
-          checkoutId: 21,
-          product: {
-            id: 4,
-            name: "thai123",
-            description: "thai123",
-            price: 12.00,
-            collection: {
-              id: 3,
-              name: "thai123",
-              slug: "thai123",
-              description: "thai123",
-              isActive: true,
-              language: null,
-              createdAt: "2025-08-23T19:59:48Z"
-            },
-            category: "thai123",
-            material: "thai123",
-            madeBy: "thai123",
-            inStock: "In Stock",
-            featured: false,
-            otherDetails: "thai123",
-            language: null,
-            sizes: null,
-            images: null,
-            createdAt: "2025-08-23T19:59:59Z"
-          },
-          quantity: 1,
-          priceAtPurchase: 12.00,
-          lineTotal: 12.00,
-          createdAt: "2025-08-24T18:27:01.6168549",
-          updatedAt: "2025-08-24T18:27:01.6168549"
-        }
-      ],
-      createdAt: "2025-08-24T18:27:01.6118874",
-      updatedAt: "2025-08-24T18:27:01.6118874"
-    },
-    statusCode: 200
+  // Get order data from location state
+  const getOrderData = (): OrderSuccessResponse | null => {
+    // First try location state
+    if (location.state?.orderData) {
+      return location.state.orderData;
+    }
+    
+    // No localStorage fallback needed for smooth navigation
+    
+    // No order data found, return null
+    console.error("❌ No order data found");
+    return null;
   };
+
+  const orderData: OrderSuccessResponse | null = getOrderData();
+
+  // If no order data, redirect to explore
+  if (!orderData) {
+    console.log("🔄 No order data found, redirecting to explore...");
+    navigate("/explore", { replace: true });
+    return null;
+  }
 
 
 
@@ -149,19 +112,7 @@ const OrderSuccessScreen: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="px-4 py-4 flex items-center justify-between">
-          <button
-            onClick={() => navigate('/explore')}
-            className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6 pt-10">
         {/* Success Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

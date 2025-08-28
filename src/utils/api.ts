@@ -27,10 +27,20 @@ interface ApiResponse<T> {
   message?: string;
 }
 
+// API Validation Error interface
+interface ApiValidationError {
+  success: false;
+  data: null;
+  message?: string;
+  validation?: Record<string, string>;
+  statusCode?: number;
+}
+
 // API Error interface
 interface ApiError {
   success: false;
-  error: {
+  message?: string; // Direct message field (used by cart API)
+  error?: {
     code: string;
     message: string;
     details?: string;
@@ -62,11 +72,25 @@ async function apiFetch<T>(
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const result: ApiResponse<T> | ApiError = await response.json();
+    const result: ApiResponse<T> | ApiError | ApiValidationError = await response.json();
 
     if (!result.success) {
+      // Handle validation errors (like the checkout API response)
+      if ('validation' in result && result.validation) {
+        const errorMessage = result.message || "Validation failed";
+        const validationErrors = Object.entries(result.validation)
+          .map(([field, error]) => `${field}: ${error}`)
+          .join(", ");
+        throw new Error(
+          `${errorMessage}. Validation errors: ${validationErrors}`
+        );
+      }
+      
+      // Handle regular API errors
       const error = result as ApiError;
-      throw new Error(error.error.message || "API request failed");
+      const errorMessage = error.message || error.error?.message || "API request failed";
+      console.log("🔍 Extracted error message from API:", errorMessage);
+      throw new Error(errorMessage);
     }
 
     return (result as ApiResponse<T>).data;
@@ -125,9 +149,11 @@ export const collectionsApi = {
     );
   },
 
-  getProducts: (slug: string, params?: { lang?: string }) => {
+  getProducts: (slug: string, params?: { lang?: string; active?: boolean }) => {
     const searchParams = new URLSearchParams();
     if (params?.lang) searchParams.append("lang", params.lang);
+    if (params?.active !== undefined)
+      searchParams.append("active", params.active.toString());
 
     const query = searchParams.toString();
     return apiFetch<Product[]>(
@@ -157,6 +183,7 @@ export const productsApi = {
     limit?: number;
     page?: number;
     lang?: string;
+    active?: boolean;
   }) => {
     const searchParams = new URLSearchParams();
     if (params?.collection)
@@ -164,6 +191,8 @@ export const productsApi = {
     if (params?.limit) searchParams.append("limit", params.limit.toString());
     if (params?.page) searchParams.append("page", params.page.toString());
     if (params?.lang) searchParams.append("lang", params.lang);
+    if (params?.active !== undefined)
+      searchParams.append("active", params.active.toString());
 
     const query = searchParams.toString();
     return apiFetch<Product[]>(`/api/products${query ? `?${query}` : ""}`);
@@ -191,7 +220,10 @@ export const productsApi = {
       body: JSON.stringify(data),
     }),
 
-  delete: (id: number) => apiDelete(`/api/products/${id}`),
+  toggleActive: (id: number, active: boolean) =>
+    apiFetch<Product>(`/api/products/${id}/active?active=${active}`, {
+      method: "PUT",
+    }),
 };
 
 async function userApiFetch<T>(

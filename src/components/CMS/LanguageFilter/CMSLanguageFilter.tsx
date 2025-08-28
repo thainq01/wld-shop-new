@@ -1,6 +1,10 @@
 import React from "react";
 import { ChevronDown, Globe } from "lucide-react";
-import { useLanguageStore, languages, type Language } from "../../../store/languageStore";
+import {
+  useLanguageStore,
+  cmsLanguages,
+  type Language,
+} from "../../../store/languageStore";
 
 interface CMSLanguageFilterProps {
   selectedLanguage: string;
@@ -17,13 +21,22 @@ export const CMSLanguageFilter: React.FC<CMSLanguageFilterProps> = ({
 
   const getLanguageLabel = (code: string) => {
     if (code === "all") return "All Languages";
-    const language = languages.find(lang => lang.code === code);
+    const language = cmsLanguages.find((lang) => lang.code === code);
     return language ? `${language.flag} ${language.name}` : code;
   };
 
   const options = [
-    ...(showAllOption ? [{ code: "all", name: "All Languages", nativeName: "All Languages", flag: "🌐" }] : []),
-    ...languages
+    ...(showAllOption
+      ? [
+          {
+            code: "all",
+            name: "All Languages",
+            nativeName: "All Languages",
+            flag: "🌐",
+          },
+        ]
+      : []),
+    ...cmsLanguages,
   ];
 
   return (
@@ -36,7 +49,11 @@ export const CMSLanguageFilter: React.FC<CMSLanguageFilterProps> = ({
         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
           {getLanguageLabel(selectedLanguage)}
         </span>
-        <ChevronDown className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown
+          className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
       </button>
 
       {isOpen && (

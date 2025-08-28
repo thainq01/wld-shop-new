@@ -80,9 +80,7 @@ export function LoginButton({ compact = false }: LoginButtonProps) {
       data-action="walletAuth"
       disabled={loading}
       onClick={login}
-      className={`text-sm font-medium px-3 py-2 rounded-lg bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 transition-colors ${
-        compact ? "h-8 text-xs px-2 py-1" : "h-14 px-4 text-base w-full"
-      }`}
+      className={`w-full py-4 bg-black dark:bg-white text-white dark:text-black rounded-full font-semibold text-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors`}
     >
       {loading ? t("Signing in...") : t("Sign in")}
     </button>

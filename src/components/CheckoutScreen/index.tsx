@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from "react";
-import { ChevronDown, HelpCircle, Check } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useMemo } from "react";
+import { ChevronDown, HelpCircle, Check, Lock } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { toast } from "sonner";
 import { useCart } from "../../hooks/useCart";
 import { BottomNavigation } from "../BottomNavigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useWLDBalance } from "../../hooks/useWLDBalance";
 import { useCheckout } from "../../hooks/useCheckout";
 import { useAuthWorld } from "../../store/authStore";
+import { useLanguageStore } from "../../store/languageStore";
 import { generateOrderId } from "../../utils/orderIdGenerator";
+import { usePaymentService } from "../../hooks/usePaymentService";
 import type { CreateCheckoutRequest } from "../../types";
 
 interface ShippingAddress {
@@ -28,10 +31,14 @@ const CountrySelector = ({
   countries,
   selectedCountry,
   onCountryChange,
+  disabled = false,
+  reason,
 }: {
   countries: string[];
   selectedCountry: string;
   onCountryChange: (country: string) => void;
+  disabled?: boolean;
+  reason?: string;
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -44,23 +51,40 @@ const CountrySelector = ({
     <>
       {/* Country Selector Button */}
       <motion.button
-        onClick={() => setIsModalOpen(true)}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
+        onClick={() => !disabled && setIsModalOpen(true)}
+        whileHover={disabled ? {} : { scale: 1.02 }}
+        whileTap={disabled ? {} : { scale: 0.98 }}
+        className={`w-full px-4 py-4 border rounded-lg flex items-center justify-between focus:outline-none focus:ring-2 ${
+          disabled
+            ? "border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+            : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-black dark:focus:ring-white"
+        }`}
+        disabled={disabled}
       >
-        <span>{selectedCountry || "Select Country"}</span>
-        <motion.div
-          animate={{ rotate: isModalOpen ? 180 : 0 }}
-          transition={{ duration: 0.2, ease: "easeInOut" }}
-        >
-          <ChevronDown className="w-5 h-5 text-gray-400" />
-        </motion.div>
+        <div className="flex items-center gap-2">
+          {disabled && <Lock className="w-4 h-4" />}
+          <span>{selectedCountry || "Select Country"}</span>
+        </div>
+        {!disabled && (
+          <motion.div
+            animate={{ rotate: isModalOpen ? 180 : 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+          >
+            <ChevronDown className="w-5 h-5 text-gray-400" />
+          </motion.div>
+        )}
       </motion.button>
+
+      {/* Disabled reason message */}
+      {disabled && reason && (
+        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+          {reason}
+        </p>
+      )}
 
       {/* Country Selection Modal */}
       <AnimatePresence mode="wait">
-        {isModalOpen && (
+        {isModalOpen && !disabled && (
           <motion.div
             initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
             animate={{ opacity: 1, backdropFilter: "blur(8px)" }}
@@ -173,23 +197,39 @@ const CountrySelector = ({
   );
 };
 
+// Language to country mapping - moved outside component to prevent re-creation
+const languageToCountry: Record<string, string> = {
+  th: "Thailand",
+  ms: "Malaysia",
+  ph: "Philippines",
+  id: "Indonesia",
+  en: "Thailand", // Default to Thailand for English
+};
+
 export const CheckoutScreen: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { items, totalAmount, clearCart } = useCart();
-  const {
-    balance: wldBalance,
-    isLoading: isBalanceLoading,
-    error: balanceError,
-  } = useWLDBalance();
+  const { balance: wldBalance, error: balanceError } = useWLDBalance();
   const { address } = useAuthWorld();
+  const { currentLanguage } = useLanguageStore();
   const {
     createCheckout,
     isLoading: isCheckoutLoading,
     error: checkoutError,
   } = useCheckout();
 
+  const {
+    processPayment,
+    isProcessing: isPaymentProcessing,
+    error: paymentError,
+  } = usePaymentService();
+
+  console.log(location, paymentError);
+
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [generatedOrderId, setGeneratedOrderId] = useState<string>("");
+  const [checkoutCompleted, setCheckoutCompleted] = useState(false);
 
   // Available countries for shipping
   const availableCountries = [
@@ -199,11 +239,12 @@ export const CheckoutScreen: React.FC = () => {
     "Indonesia",
   ];
 
-  // Generate order ID when component mounts
-  useEffect(() => {
-    const orderId = generateOrderId();
-    setGeneratedOrderId(orderId);
-  }, []);
+  // Get auto-selected country based on current language
+  const autoSelectedCountry = languageToCountry[currentLanguage] || "Thailand";
+  const isCountryAutoSelected = Boolean(languageToCountry[currentLanguage]);
+  const countryDisabledReason = isCountryAutoSelected
+    ? `Country automatically selected based on your product`
+    : undefined;
 
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
     email: "",
@@ -214,13 +255,28 @@ export const CheckoutScreen: React.FC = () => {
     city: "",
     postalCode: "",
     phone: "",
-    country: "Thailand",
+    country: autoSelectedCountry,
     saveForNextTime: false,
   });
 
+  // Generate order ID when component mounts or language changes
+  useEffect(() => {
+    const orderId = generateOrderId();
+    setGeneratedOrderId(orderId);
+  }, [currentLanguage]);
+
+  // Update country when language changes
+  useEffect(() => {
+    const newCountry = languageToCountry[currentLanguage] || "Thailand";
+    setShippingAddress((prev) => ({
+      ...prev,
+      country: newCountry,
+    }));
+  }, [currentLanguage]);
+
   const subtotal = totalAmount || 0;
-  const shipping = 0.01; // Worldwide flat rate
-  const total = subtotal + shipping;
+  const shipping = "Freeship"; // Worldwide flat rate
+  const total = subtotal;
 
   // Balance validation logic
   const hasInsufficientBalance = wldBalance !== null && wldBalance < total;
@@ -257,9 +313,27 @@ export const CheckoutScreen: React.FC = () => {
     setIsProcessingPayment(true);
 
     try {
-      // Prepare checkout data according to API specification
+      console.log("🚀 Starting checkout and payment process...");
+
+      // Step 1: Process payment through PaymentService first
+      console.log("💳 Processing WLD payment...");
+      const paymentResult = await processPayment({
+        orderId: generatedOrderId,
+        amount: total,
+        walletAddress: address,
+      });
+
+      if (!paymentResult.success) {
+        throw new Error(paymentResult.error || "Payment failed");
+      }
+
+      console.log("✅ Payment successful:", paymentResult.transactionId);
+
+      // Step 2: Create checkout record after successful payment
+      // Backend will verify payment and update status from pending to paid
+      console.log("📝 Creating checkout record...");
       const checkoutData: CreateCheckoutRequest = {
-        orderId: generatedOrderId, // Include the generated order ID
+        orderId: generatedOrderId,
         walletAddress: address,
         email: shippingAddress.email,
         country: shippingAddress.country,
@@ -270,43 +344,104 @@ export const CheckoutScreen: React.FC = () => {
         city: shippingAddress.city,
         postcode: shippingAddress.postalCode,
         phone: shippingAddress.phone,
+        status: "pending", // Keep as pending, backend will verify and update
         products: items.map((item) => ({
           productId: parseInt(item.productId),
+          size: item.size || "Default",
           quantity: item.quantity,
         })),
       };
 
-      console.log("Creating checkout with data:", checkoutData);
-
-      // Create checkout via API
       const orderResponse = await createCheckout(checkoutData);
 
       if (!orderResponse) {
-        throw new Error(checkoutError || "Failed to create checkout");
+        const errorMsg = checkoutError || "Failed to create checkout record";
+        console.error("❌ Checkout creation failed:", errorMsg);
+        // Payment was successful but checkout creation failed
+        // This is a critical error that needs manual intervention
+        throw new Error(
+          `Payment submitted but failed to save order: ${errorMsg}. Transaction ID: ${paymentResult.transactionId}`
+        );
       }
 
-      console.log("Checkout created successfully:", orderResponse);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const orderData = orderResponse as any;
+      if (!orderData.id || !orderData.orderId) {
+        console.error("❌ Invalid checkout response structure:", orderResponse);
+        throw new Error(
+          `Payment submitted but received invalid order response. Transaction ID: ${paymentResult.transactionId}`
+        );
+      }
 
-      // TODO: Integrate with World ID and WLD payment processing
-      // For now, simulate payment processing
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      console.log("✅ Checkout created successfully:", orderResponse);
 
-      // Clear cart and redirect to success page
-      clearCart();
+      // Step 3: Mark checkout as completed and navigate to success
+      setCheckoutCompleted(true);
+
+      console.log("🔄 Navigating to success page...");
+
+      const successData = {
+        success: true,
+        data: {
+          ...orderResponse,
+          transactionId: paymentResult.transactionId,
+        },
+        statusCode: 200,
+      };
+
       navigate("/order-success", {
         state: {
-          orderData: orderResponse,
+          orderData: successData,
         },
+        replace: true,
       });
+
+      // Clear cart after navigation
+      setTimeout(() => {
+        console.log("🧹 Clearing cart...");
+        clearCart();
+      }, 200);
     } catch (error) {
-      console.error("Checkout failed:", error);
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Checkout failed. Please try again.";
-      alert(errorMessage);
+      console.error("❌ Checkout process failed:", error);
+
+      // Handle different types of errors
+      if (error instanceof Error) {
+        const errorMessage = error.message;
+
+        // Check if this is a payment vs checkout error
+        if (errorMessage.includes("Payment submitted but")) {
+          // Payment went through but checkout creation failed
+          toast.error(
+            "Payment submitted but order creation failed. Please contact support with your transaction details."
+          );
+        } else if (errorMessage.includes("Validation errors:")) {
+          // Parse validation errors
+          const validationPart = errorMessage.split("Validation errors: ")[1];
+          if (validationPart) {
+            const validationErrors = validationPart.split(", ");
+            validationErrors.forEach((errorStr) => {
+              const [field, message] = errorStr.split(": ");
+              if (field && message) {
+                toast.error(
+                  `${
+                    field.charAt(0).toUpperCase() + field.slice(1)
+                  }: ${message}`
+                );
+              }
+            });
+          } else {
+            toast.error(errorMessage);
+          }
+        } else {
+          toast.error(errorMessage);
+        }
+      } else {
+        toast.error("Checkout failed. Please try again.");
+      }
     } finally {
+      // Ensure processing state is always reset
       setIsProcessingPayment(false);
+      console.log("🔄 Payment processing state reset");
     }
   };
 
@@ -322,7 +457,27 @@ export const CheckoutScreen: React.FC = () => {
     return formFieldsValid && canProceedWithPayment;
   };
 
-  if (!items || items.length === 0) {
+  const buttonStatus = useMemo(() => {
+    if (isProcessingPayment || isPaymentProcessing || isCheckoutLoading) {
+      return "Processing WLD Payment...";
+    }
+    if (hasInsufficientBalance) {
+      return "Insufficient Balance";
+    }
+
+    if (balanceError) {
+      return "Error loading balance";
+    }
+    return "Pay now";
+  }, [
+    balanceError,
+    hasInsufficientBalance,
+    isCheckoutLoading,
+    isProcessingPayment,
+    isPaymentProcessing,
+  ]);
+
+  if ((!items || items.length === 0) && !checkoutCompleted) {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
@@ -348,32 +503,11 @@ export const CheckoutScreen: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             Checkout
           </h2>
-          {generatedOrderId && (
-            <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Order ID:
-                </span>
-                <span className="text-sm font-mono font-medium text-gray-900 dark:text-gray-100">
-                  {generatedOrderId}
-                </span>
-              </div>
-            </div>
-          )}
         </div>
-
-        {/* Error Display */}
-        {checkoutError && (
-          <div className="mb-4 p-4 bg-red-100 dark:bg-red-900 border border-red-300 dark:border-red-700 rounded-lg">
-            <p className="text-red-700 dark:text-red-300 text-sm">
-              {checkoutError}
-            </p>
-          </div>
-        )}
 
         {/* Contact Section */}
         <div className="pt-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
             Contact
           </h2>
           <input
@@ -386,7 +520,7 @@ export const CheckoutScreen: React.FC = () => {
         </div>
         {/* Delivery Section */}
         <div className="py-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
             Delivery
           </h2>
 
@@ -398,6 +532,8 @@ export const CheckoutScreen: React.FC = () => {
               onCountryChange={(country) =>
                 handleInputChange("country", country)
               }
+              disabled={isCountryAutoSelected}
+              reason={countryDisabledReason}
             />
           </div>
 
@@ -478,13 +614,13 @@ export const CheckoutScreen: React.FC = () => {
               Worldwide Flat Rate
             </span>
             <span className="font-medium text-gray-900 dark:text-gray-100">
-              {shipping.toFixed(2)} WLD
+              Freeship
             </span>
           </div>
         </div>
 
         {/* Balance Information */}
-        <div className="py-6 border-t border-gray-200 dark:border-gray-700">
+        {/* <div className="py-6 border-t border-gray-200 dark:border-gray-700">
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
             WLD Balance
           </h2>
@@ -537,7 +673,7 @@ export const CheckoutScreen: React.FC = () => {
               </>
             )}
           </div>
-        </div>
+        </div> */}
 
         {/* Order Summary */}
         <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
@@ -578,10 +714,10 @@ export const CheckoutScreen: React.FC = () => {
                 {subtotal} WLD
               </span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between pb-2">
               <span className="text-gray-600 dark:text-gray-400">Shipping</span>
               <span className="text-gray-900 dark:text-gray-100">
-                {shipping} WLD
+                {shipping}
               </span>
             </div>
 
@@ -597,18 +733,15 @@ export const CheckoutScreen: React.FC = () => {
         {/* Pay Now Button */}
         <button
           onClick={handlePayNow}
-          disabled={!isFormValid() || isProcessingPayment || isCheckoutLoading}
-          className={`w-full py-4 rounded-full font-semibold text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-6 ${
-            hasInsufficientBalance
-              ? "bg-red-600 dark:bg-red-700 text-white hover:bg-red-700 dark:hover:bg-red-800"
-              : "bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200"
-          }`}
+          disabled={
+            !isFormValid() ||
+            isProcessingPayment ||
+            isPaymentProcessing ||
+            isCheckoutLoading
+          }
+          className={`w-full py-4 rounded-full font-semibold text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-6 bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200`}
         >
-          {isProcessingPayment || isCheckoutLoading
-            ? "Processing WLD Payment..."
-            : hasInsufficientBalance
-            ? "Insufficient Balance"
-            : "Pay now"}
+          {buttonStatus}
         </button>
       </div>
 

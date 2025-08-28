@@ -179,11 +179,30 @@ When you submit a payment, you'll see detailed logs like:
 ### Look for Contract Whitelist Error
 
 If you see:
+
 ```
 🚨 CONTRACT WHITELIST ERROR:
 The PaymentService contract is not whitelisted in World Developer Portal
 ```
 
 This confirms you need to whitelist the contract address in the Developer Portal.
+
+### Look for Token Allowance Error
+
+If you see:
+
+```
+🚨 ERC20 ALLOWANCE ERROR:
+The PaymentService contract doesn't have permission to spend WLD tokens
+User needs to approve token spending first
+```
+
+This means:
+
+1. **Contract is whitelisted** ✅ (good progress!)
+2. **User needs to approve** WLD token spending first
+3. **Two-step process required**: Approve → Pay
+
+The app will automatically prompt the user to approve and retry the payment.
 
 This will help you see exactly what's happening during the payment flow on mobile devices!

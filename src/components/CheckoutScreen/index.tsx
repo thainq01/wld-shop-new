@@ -222,6 +222,7 @@ export const CheckoutScreen: React.FC = () => {
 
   const {
     processPayment,
+    processPaymentWithApproval,
     isProcessing: isPaymentProcessing,
     error: paymentError,
   } = usePaymentService();
@@ -434,6 +435,34 @@ export const CheckoutScreen: React.FC = () => {
             });
           } else {
             toast.error(errorMessage);
+          }
+        } else if (errorMessage === "insufficient_allowance") {
+          // Handle insufficient allowance error specifically
+          const friendlyMessage = ErrorMessage(errorMessage);
+          toast.error(friendlyMessage);
+
+          // Ask user if they want to approve and retry
+          const shouldRetry = window.confirm(
+            "You need to approve WLD spending first. Would you like to approve and retry the payment?"
+          );
+
+          if (shouldRetry) {
+            console.log("🔄 Retrying payment with approval...");
+            try {
+              const retryResult = await processPaymentWithApproval({
+                orderId: generatedOrderId,
+                amount: total,
+                walletAddress: address,
+              });
+
+              if (retryResult.success) {
+                // Continue with the checkout process
+                window.location.reload(); // Simple retry for now
+                return;
+              }
+            } catch (retryError) {
+              console.error("❌ Retry with approval failed:", retryError);
+            }
           }
         } else {
           // Use ErrorMessage function for standardized error handling

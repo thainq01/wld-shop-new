@@ -32,6 +32,58 @@ export const PAYMENT_SERVICE_ABI = [
   },
 ];
 
+// WLD Token ABI - for approve function
+export const WLD_TOKEN_ABI = [
+  {
+    type: "function",
+    name: "approve",
+    inputs: [
+      {
+        name: "spender",
+        type: "address",
+        internalType: "address",
+      },
+      {
+        name: "amount",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    outputs: [
+      {
+        name: "",
+        type: "bool",
+        internalType: "bool",
+      },
+    ],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "allowance",
+    inputs: [
+      {
+        name: "owner",
+        type: "address",
+        internalType: "address",
+      },
+      {
+        name: "spender",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+    outputs: [
+      {
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    stateMutability: "view",
+  },
+];
+
 // PaymentService contract addresses from CTO data
 export const PAYMENT_SERVICE_CONFIG = {
   // Use transparent proxy address for contract calls
@@ -167,13 +219,22 @@ export async function executePaymentService(
     if (response?.finalPayload) {
       console.log("📋 Final Payload Details:");
       console.log("   - Status:", response.finalPayload.status);
-      
+
       if (response.finalPayload.status === "success") {
-        const successPayload = response.finalPayload as { transaction_id?: string; app_id?: string };
-        console.log("   - Transaction ID:", successPayload.transaction_id || "N/A");
+        const successPayload = response.finalPayload as {
+          transaction_id?: string;
+          app_id?: string;
+        };
+        console.log(
+          "   - Transaction ID:",
+          successPayload.transaction_id || "N/A"
+        );
         console.log("   - App ID:", successPayload.app_id || "N/A");
       } else if (response.finalPayload.status === "error") {
-        const errorPayload = response.finalPayload as { error_code?: string; app_id?: string };
+        const errorPayload = response.finalPayload as {
+          error_code?: string;
+          app_id?: string;
+        };
         console.log("   - Error Code:", errorPayload.error_code || "N/A");
         console.log("   - App ID:", errorPayload.app_id || "N/A");
       }
@@ -232,6 +293,23 @@ export async function executePaymentService(
       throw new Error("user_rejected");
     }
 
+    if (errorMessage.includes("insufficient allowance")) {
+      console.error("🚨 ERC20 ALLOWANCE ERROR:");
+      console.error(
+        "The PaymentService contract doesn't have permission to spend WLD tokens"
+      );
+      console.error("User needs to approve token spending first");
+      console.error(
+        "WLD Token Address:",
+        PAYMENT_SERVICE_CONFIG.WLD_TOKEN_ADDRESS
+      );
+      console.error(
+        "PaymentService Address:",
+        PAYMENT_SERVICE_CONFIG.CONTRACT_ADDRESS
+      );
+      throw new Error("insufficient_allowance");
+    }
+
     if (errorMessage.includes("insufficient")) {
       throw new Error("insufficient_balance");
     }
@@ -261,6 +339,51 @@ export function wldToWei(wldAmount: number): string {
  */
 export function weiToWld(weiAmount: string): number {
   return Number(BigInt(weiAmount)) / 1e18;
+}
+
+/**
+ * Approve WLD token spending for PaymentService contract
+ * @param amount Amount in wei to approve
+ * @returns Transaction response from MiniKit
+ */
+export async function approveWLDSpending(amount: string) {
+  if (!MiniKit.isInstalled()) {
+    throw new Error("MiniKit is not installed");
+  }
+
+  console.log("💰 APPROVING WLD TOKEN SPENDING:");
+  console.log("================================");
+  console.log("Token Address:", PAYMENT_SERVICE_CONFIG.WLD_TOKEN_ADDRESS);
+  console.log(
+    "Spender (PaymentService):",
+    PAYMENT_SERVICE_CONFIG.CONTRACT_ADDRESS
+  );
+  console.log("Amount to approve (wei):", amount);
+
+  const payload: SendTransactionInput = {
+    transaction: [
+      {
+        address: PAYMENT_SERVICE_CONFIG.WLD_TOKEN_ADDRESS,
+        abi: WLD_TOKEN_ABI,
+        functionName: "approve",
+        args: [PAYMENT_SERVICE_CONFIG.CONTRACT_ADDRESS, amount],
+      },
+    ],
+  };
+
+  console.log("🔧 Approval Payload:", JSON.stringify(payload, null, 2));
+
+  try {
+    const response = await MiniKit.commandsAsync.sendTransaction(payload);
+    console.log(
+      "✅ TOKEN APPROVAL RESPONSE:",
+      JSON.stringify(response, null, 2)
+    );
+    return response;
+  } catch (error: unknown) {
+    console.error("❌ Token approval failed:", error);
+    throw error;
+  }
 }
 
 /**

@@ -29,6 +29,9 @@ export function ErrorMessage(error: string) {
     case "insufficient_balance":
       return t("Insufficient Balance");
 
+    case "insufficient_allowance":
+      return t("Token approval required. Please approve WLD spending first.");
+
     case "transaction_failed":
       return t("Transaction Failed");
 

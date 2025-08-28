@@ -5,19 +5,23 @@
 If you're getting the error "invalid contract", this means your PaymentService contract is not whitelisted in the World Developer Portal. This is **required** for all MiniKit apps that interact with smart contracts.
 
 ## Current Contract Address
+
 Your PaymentService contract address: `0x8f894C64de54bE90c256C7fbd51ff2240Ee82F1b`
 
 ## Step-by-Step Setup
 
 ### 1. Access World Developer Portal
+
 - Go to [https://developer.worldcoin.org/](https://developer.worldcoin.org/)
 - Log in with your World App credentials
 
 ### 2. Navigate to Your App
+
 - Select your app from the dashboard
 - If you don't have an app yet, create one first
 
 ### 3. Configure Contract Whitelist
+
 1. Go to **Configuration** section in the left sidebar
 2. Click on **Advanced** tab
 3. Find the **Smart Contract Whitelist** section
@@ -30,23 +34,29 @@ Your PaymentService contract address: `0x8f894C64de54bE90c256C7fbd51ff2240Ee82F1
 ### 4. Verify Other Configurations
 
 #### App URL Configuration
+
 Make sure your app URL is properly configured:
+
 - **Development**: `http://localhost:5173` (or your dev server port)
 - **Production**: Your deployed app URL
 
 #### Permissions
+
 Ensure your app has the following permissions:
+
 - ✅ `payment` - Required for WLD payments
 - ✅ `read_wallet` - Required to read user's wallet address
 
 ### 5. Contract Details to Whitelist
 
 **PaymentService Contract**
+
 - Address: `0x8f894C64de54bE90c256C7fbd51ff2240Ee82F1b`
 - Network: World Chain (Optimism-based)
 - Purpose: Handles WLD token payments for the e-commerce app
 
 **Related Addresses (for reference)**
+
 - WLD Token: `0x2cFc85d8E48F8EAB294be644d9E25C3030863003`
 - Recipient: `0x5744c7c3b2825f6478673676015657a9c81594ba`
 
@@ -76,12 +86,15 @@ After whitelisting the contract:
 ### Other Common Issues
 
 **"MiniKit is not installed"**
+
 - Open the app through World App, not directly in browser
 
 **"User rejected"**
+
 - User cancelled the transaction in World App
 
 **"Insufficient balance"**
+
 - User doesn't have enough WLD tokens
 
 ## Need Help?
@@ -93,8 +106,49 @@ After whitelisting the contract:
 ## Development Notes
 
 The error handling in this app will now provide detailed debugging information:
+
 - Contract addresses are logged for verification
 - Specific guidance is shown for whitelist errors
 - All validation errors include clear next steps
 
 When the contract is properly whitelisted, you should see successful payment transactions with transaction IDs logged to the console.
+
+## Mobile Debugging with Eruda
+
+### Development Mode
+
+Eruda is automatically enabled in development mode, giving you a mobile console to:
+
+- View console logs and errors
+- Run the diagnostic function: `window.diagnosticPaymentService()`
+- Inspect network requests
+- Debug the payment flow on mobile devices
+
+### Production Mode
+
+To enable Eruda in production for debugging:
+
+1. **Add environment variable** to your deployment:
+
+   ```bash
+   VITE_ENABLE_ERUDA=true
+   ```
+
+2. **Or temporarily enable** by adding to your `.env` file:
+
+   ```
+   VITE_ENABLE_ERUDA=true
+   ```
+
+3. **Access Eruda console**: Look for a floating button on the bottom right of your screen when the app loads.
+
+### Using Eruda for Contract Debugging
+
+1. **Open the app** in World App on your phone
+2. **Tap the Eruda button** (floating icon) if visible
+3. **Go to Console tab** in Eruda
+4. **Run diagnostic**: Type `diagnosticPaymentService()` and press enter
+5. **Try payment** and watch the detailed logs in real-time
+6. **Check for whitelist error**: Look for the "🚨 CONTRACT WHITELIST ERROR" message
+
+This will help you see exactly what's happening during the payment flow on mobile devices!

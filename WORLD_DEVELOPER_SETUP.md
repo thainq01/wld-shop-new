@@ -115,32 +115,27 @@ When the contract is properly whitelisted, you should see successful payment tra
 
 ## Mobile Debugging with Eruda
 
-### Development Mode
+### Always Available
 
-Eruda is automatically enabled in development mode, giving you a mobile console to:
+Eruda is **always enabled** in both development and production builds for debugging the payment flow. This gives you a mobile console to:
 
 - View console logs and errors
 - Run the diagnostic function: `window.diagnosticPaymentService()`
 - Inspect network requests
 - Debug the payment flow on mobile devices
+- See the detailed "🚨 CONTRACT WHITELIST ERROR" messages
 
-### Production Mode
+### How to Access Eruda
 
-To enable Eruda in production for debugging:
+1. **Look for the floating button** on the bottom right of your screen when the app loads
+2. **Tap the button** to open the Eruda developer tools
+3. **Navigate to Console tab** to see logs and run commands
 
-1. **Add environment variable** to your deployment:
+### No Configuration Needed
 
-   ```bash
-   VITE_ENABLE_ERUDA=true
-   ```
-
-2. **Or temporarily enable** by adding to your `.env` file:
-
-   ```
-   VITE_ENABLE_ERUDA=true
-   ```
-
-3. **Access Eruda console**: Look for a floating button on the bottom right of your screen when the app loads.
+- ✅ **Development**: Eruda loads automatically
+- ✅ **Production**: Eruda loads automatically for debugging
+- ✅ **Mobile**: Works perfectly in World App on phones
 
 ### Using Eruda for Contract Debugging
 

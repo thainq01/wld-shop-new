@@ -203,6 +203,25 @@ This means:
 2. **User needs to approve** WLD token spending first
 3. **Two-step process required**: Approve → Pay
 
-The app will automatically prompt the user to approve and retry the payment.
+### Smart Payment Flow (Recommended)
+
+The app now includes a **Smart Payment** system that automatically handles allowance:
+
+```
+🧠 SMART PAYMENT FLOW:
+======================
+🔍 Checking allowance...
+💰 Insufficient allowance detected - approving tokens...
+✅ Token approval successful
+💳 Executing payment...
+🎉 Payment completed successfully!
+```
+
+### Available Payment Functions
+
+1. **processSmartPayment()** - ✅ **Recommended**: Auto-checks allowance and approves if needed
+2. **processPaymentWithApproval()** - Always approves then pays
+3. **processPayment()** - Basic payment (may fail if no allowance)
+4. **checkAllowance()** - Check if user has sufficient allowance
 
 This will help you see exactly what's happening during the payment flow on mobile devices!

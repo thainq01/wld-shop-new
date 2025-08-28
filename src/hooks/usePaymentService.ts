@@ -2,8 +2,10 @@ import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import {
   executePaymentService,
+  executeSmartPayment,
   wldToWei,
   approveWLDSpending,
+  hassufficientAllowance,
   PAYMENT_SERVICE_CONFIG,
 } from "../utils/paymentService";
 import { waitForTransactionConfirmation } from "../utils/paymentVerification";
@@ -23,6 +25,8 @@ export interface PaymentResult {
 export interface UsePaymentServiceReturn {
   processPayment: (data: PaymentData) => Promise<PaymentResult>;
   processPaymentWithApproval: (data: PaymentData) => Promise<PaymentResult>;
+  processSmartPayment: (data: PaymentData) => Promise<PaymentResult>;
+  checkAllowance: (walletAddress: string, amount: number) => Promise<boolean>;
   isProcessing: boolean;
   error: string | null;
 }
@@ -242,9 +246,113 @@ export function usePaymentService(): UsePaymentServiceReturn {
     []
   );
 
+  const processSmartPayment = useCallback(
+    async (data: PaymentData): Promise<PaymentResult> => {
+      setIsProcessing(true);
+      setError(null);
+
+      try {
+        console.log("🧠 Starting smart PaymentService payment:", data);
+
+        // Step 1: Convert WLD amount to wei
+        const amountInWei = wldToWei(data.amount);
+        console.log(`💰 Amount: ${data.amount} WLD = ${amountInWei} wei`);
+
+        // Step 2: Use smart payment that handles allowance automatically
+        console.log("🎯 Using smart payment flow...");
+        const paymentResponse = await executeSmartPayment(
+          {
+            amount: amountInWei,
+            referenceId: data.orderId,
+          },
+          data.walletAddress
+        );
+
+        // Step 3: Check if payment was successful
+        if (paymentResponse.finalPayload.status === "error") {
+          const errorPayload = paymentResponse.finalPayload as {
+            error_code?: string;
+          };
+          console.error(
+            "❌ Smart PaymentService transaction failed:",
+            errorPayload.error_code
+          );
+
+          // Throw standardized error codes that can be handled by ErrorMessage function
+          if (errorPayload.error_code) {
+            throw new Error(errorPayload.error_code);
+          } else {
+            throw new Error("payment_failed");
+          }
+        }
+
+        const successPayload = paymentResponse.finalPayload as {
+          transaction_id?: string;
+        };
+        const transactionId = successPayload.transaction_id;
+        if (!transactionId) {
+          throw new Error("No transaction ID received from payment");
+        }
+
+        console.log("✅ Smart PaymentService transaction submitted:", transactionId);
+
+        // Step 4: Wait for transaction confirmation
+        console.log("⏳ Waiting for transaction confirmation...");
+        try {
+          await waitForTransactionConfirmation(transactionId);
+          console.log("✅ Transaction confirmed on blockchain");
+        } catch (confirmationError) {
+          console.warn(
+            "⚠️ Transaction confirmation timeout, but continuing...",
+            confirmationError
+          );
+          // Continue with the process even if confirmation times out
+          // The transaction might still be successful
+        }
+
+        console.log("🎉 Smart payment process completed successfully!");
+        toast.success("Payment successful!");
+
+        return {
+          success: true,
+          transactionId: transactionId,
+        };
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Payment processing failed";
+        console.error("❌ Smart payment process failed:", error);
+        setError(errorMessage);
+        toast.error(errorMessage);
+
+        return {
+          success: false,
+          error: errorMessage,
+        };
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    []
+  );
+
+  const checkAllowance = useCallback(
+    async (walletAddress: string, amount: number): Promise<boolean> => {
+      try {
+        const amountInWei = wldToWei(amount);
+        return await hassufficientAllowance(walletAddress, amountInWei);
+      } catch (error) {
+        console.error("❌ Failed to check allowance:", error);
+        return false;
+      }
+    },
+    []
+  );
+
   return {
     processPayment,
     processPaymentWithApproval,
+    processSmartPayment,
+    checkAllowance,
     isProcessing,
     error,
   };

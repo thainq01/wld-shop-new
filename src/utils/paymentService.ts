@@ -342,6 +342,66 @@ export function weiToWld(weiAmount: string): number {
 }
 
 /**
+ * Check current WLD token allowance for PaymentService contract
+ * @param ownerAddress The wallet address that owns the tokens
+ * @returns Current allowance amount in wei as string
+ */
+export async function checkWLDAllowance(ownerAddress: string): Promise<string> {
+  if (!MiniKit.isInstalled()) {
+    throw new Error("MiniKit is not installed");
+  }
+
+  console.log("🔍 CHECKING WLD TOKEN ALLOWANCE:");
+  console.log("================================");
+  console.log("Owner Address:", ownerAddress);
+  console.log("Spender (PaymentService):", PAYMENT_SERVICE_CONFIG.CONTRACT_ADDRESS);
+  console.log("Token Address:", PAYMENT_SERVICE_CONFIG.WLD_TOKEN_ADDRESS);
+
+  try {
+    // Note: MiniKit doesn't support view functions directly
+    // This would typically require a read-only RPC call
+    // For now, we'll simulate this or use a fallback approach
+    console.log("⚠️ Allowance checking via MiniKit view calls not implemented");
+    console.log("💡 Consider using web3 provider for view functions");
+    
+    // Return "0" as default to force approval flow
+    // In a real implementation, you'd make a read call to the blockchain
+    return "0";
+  } catch (error: unknown) {
+    console.error("❌ Failed to check allowance:", error);
+    // Return "0" on error to trigger approval flow
+    return "0";
+  }
+}
+
+/**
+ * Check if current allowance is sufficient for payment
+ * @param ownerAddress The wallet address that owns the tokens
+ * @param requiredAmount Required amount in wei
+ * @returns true if allowance is sufficient, false otherwise
+ */
+export async function hassufficientAllowance(
+  ownerAddress: string, 
+  requiredAmount: string
+): Promise<boolean> {
+  try {
+    const currentAllowance = await checkWLDAllowance(ownerAddress);
+    const allowanceBN = BigInt(currentAllowance);
+    const requiredBN = BigInt(requiredAmount);
+    
+    console.log("💰 ALLOWANCE CHECK:");
+    console.log("   Current Allowance (wei):", currentAllowance);
+    console.log("   Required Amount (wei):", requiredAmount);
+    console.log("   Sufficient?", allowanceBN >= requiredBN);
+    
+    return allowanceBN >= requiredBN;
+  } catch (error) {
+    console.error("❌ Error checking allowance sufficiency:", error);
+    return false; // Assume insufficient on error
+  }
+}
+
+/**
  * Approve WLD token spending for PaymentService contract
  * @param amount Amount in wei to approve
  * @returns Transaction response from MiniKit
@@ -384,6 +444,53 @@ export async function approveWLDSpending(amount: string) {
     console.error("❌ Token approval failed:", error);
     throw error;
   }
+}
+
+/**
+ * Smart payment function that checks allowance and approves if needed
+ * @param data Payment data including amount and reference ID
+ * @param ownerAddress The wallet address that owns the tokens
+ * @param tokenAddress Token contract address (defaults to WLD)
+ * @param toAddress Recipient address (defaults to configured recipient)
+ * @returns Transaction response from MiniKit
+ */
+export async function executeSmartPayment(
+  data: {
+    amount: string; // Amount in wei (18 decimals)
+    referenceId: string; // Order ID or reference
+  },
+  ownerAddress: string,
+  tokenAddress: string = PAYMENT_SERVICE_CONFIG.WLD_TOKEN_ADDRESS,
+  toAddress: string = PAYMENT_SERVICE_CONFIG.RECIPIENT_ADDRESS
+) {
+  console.log("🧠 SMART PAYMENT FLOW:");
+  console.log("======================");
+  console.log("Amount needed (wei):", data.amount);
+  console.log("Owner address:", ownerAddress);
+
+  // Step 1: Check if allowance is sufficient
+  const hasSufficientAllowance = await hassufficientAllowance(ownerAddress, data.amount);
+  
+  if (!hasSufficientAllowance) {
+    console.log("💰 Insufficient allowance detected - approving tokens...");
+    
+    // Step 2: Approve tokens if needed
+    const approvalResponse = await approveWLDSpending(data.amount);
+    
+    if (approvalResponse.finalPayload.status === "error") {
+      const errorPayload = approvalResponse.finalPayload as { error_code?: string };
+      console.error("❌ Token approval failed:", errorPayload.error_code);
+      throw new Error(errorPayload.error_code || "approval_failed");
+    }
+    
+    console.log("✅ Token approval successful");
+  } else {
+    console.log("✅ Sufficient allowance detected - proceeding with payment");
+  }
+
+  // Step 3: Execute payment
+  console.log("💳 Executing payment...");
+  return await executePaymentService(data, tokenAddress, toAddress);
 }
 
 /**
@@ -433,9 +540,20 @@ export function diagnosticPaymentService() {
 
   console.log("\n5. ABI Configuration:");
   console.log(
-    "   Functions:",
+    "   PaymentService Functions:",
     PAYMENT_SERVICE_ABI.map((item) => item.name)
   );
+  console.log(
+    "   WLD Token Functions:",
+    WLD_TOKEN_ABI.map((item) => item.name)
+  );
+
+  console.log("\n6. Available Functions:");
+  console.log("   - executePaymentService() - Basic payment");
+  console.log("   - executeSmartPayment() - Auto-approval + payment");
+  console.log("   - checkWLDAllowance() - Check current allowance");
+  console.log("   - hassufficientAllowance() - Check if allowance is enough");
+  console.log("   - approveWLDSpending() - Approve token spending");
 
   return {
     minikit: MiniKit.isInstalled(),

@@ -223,6 +223,8 @@ export const CheckoutScreen: React.FC = () => {
   const {
     processPayment,
     processPaymentWithApproval,
+    processSmartPayment,
+    checkAllowance,
     isProcessing: isPaymentProcessing,
     error: paymentError,
   } = usePaymentService();
@@ -317,9 +319,9 @@ export const CheckoutScreen: React.FC = () => {
     try {
       console.log("🚀 Starting checkout and payment process...");
 
-      // Step 1: Process payment through PaymentService first
-      console.log("💳 Processing WLD payment...");
-      const paymentResult = await processPayment({
+      // Step 1: Process payment through PaymentService (smart payment with auto-approval)
+      console.log("💳 Processing WLD payment with smart payment...");
+      const paymentResult = await processSmartPayment({
         orderId: generatedOrderId,
         amount: total,
         walletAddress: address,

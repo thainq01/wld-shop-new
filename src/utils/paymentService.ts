@@ -13,7 +13,7 @@ export const PAYMENT_SERVICE_ABI = [
       },
       {
         name: "to",
-        type: "address", 
+        type: "address",
         internalType: "address",
       },
       {
@@ -43,6 +43,31 @@ export const PAYMENT_SERVICE_CONFIG = {
 };
 
 /**
+ * Validate Ethereum address format
+ * @param address The address to validate
+ * @returns true if valid address format
+ */
+function isValidEthereumAddress(address: string): boolean {
+  return /^0x[a-fA-F0-9]{40}$/.test(address);
+}
+
+/**
+ * Validate payment service configuration
+ * @throws Error if any configuration is invalid
+ */
+function validatePaymentConfig(): void {
+  if (!isValidEthereumAddress(PAYMENT_SERVICE_CONFIG.CONTRACT_ADDRESS)) {
+    throw new Error("Invalid PaymentService contract address");
+  }
+  if (!isValidEthereumAddress(PAYMENT_SERVICE_CONFIG.WLD_TOKEN_ADDRESS)) {
+    throw new Error("Invalid WLD token address");
+  }
+  if (!isValidEthereumAddress(PAYMENT_SERVICE_CONFIG.RECIPIENT_ADDRESS)) {
+    throw new Error("Invalid recipient address");
+  }
+}
+
+/**
  * Execute payment through PaymentService contract
  * @param data Payment data including amount and reference ID
  * @param tokenAddress Token contract address (defaults to WLD)
@@ -50,15 +75,48 @@ export const PAYMENT_SERVICE_CONFIG = {
  * @returns Transaction response from MiniKit
  */
 export async function executePaymentService(
-  data: { 
+  data: {
     amount: string; // Amount in wei (18 decimals)
     referenceId: string; // Order ID or reference
   },
   tokenAddress: string = PAYMENT_SERVICE_CONFIG.WLD_TOKEN_ADDRESS,
   toAddress: string = PAYMENT_SERVICE_CONFIG.RECIPIENT_ADDRESS
 ) {
+  // Validate MiniKit installation
   if (!MiniKit.isInstalled()) {
     throw new Error("MiniKit is not installed");
+  }
+
+  // Validate payment configuration
+  try {
+    validatePaymentConfig();
+  } catch (error) {
+    console.error("❌ Payment configuration validation failed:", error);
+    throw error;
+  }
+
+  // Validate input parameters
+  if (!data.amount || data.amount === "0") {
+    throw new Error("Invalid payment amount");
+  }
+
+  if (!data.referenceId || data.referenceId.trim() === "") {
+    throw new Error("Invalid reference ID");
+  }
+
+  if (!isValidEthereumAddress(tokenAddress)) {
+    throw new Error("Invalid token address");
+  }
+
+  if (!isValidEthereumAddress(toAddress)) {
+    throw new Error("Invalid recipient address");
+  }
+
+  // Validate amount is a valid number string
+  try {
+    BigInt(data.amount);
+  } catch {
+    throw new Error("Invalid amount format");
   }
 
   const payload: SendTransactionInput = {
@@ -73,11 +131,53 @@ export async function executePaymentService(
   };
 
   console.log("PaymentService payload:", payload);
-  
-  const response = await MiniKit.commandsAsync.sendTransaction(payload);
-  console.log("PaymentService response:", response);
-  
-  return response;
+
+  try {
+    const response = await MiniKit.commandsAsync.sendTransaction(payload);
+    console.log("PaymentService response:", response);
+
+    // Validate response structure
+    if (!response || !response.finalPayload) {
+      throw new Error("Invalid response from MiniKit");
+    }
+
+    return response;
+  } catch (error: unknown) {
+    console.error("❌ PaymentService transaction failed:", error);
+
+    // Map specific MiniKit errors to user-friendly messages
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : typeof error === "string"
+        ? error
+        : "Unknown payment error";
+
+    if (
+      errorMessage.includes("invalid contract") ||
+      errorMessage.includes("Invalid contract")
+    ) {
+      throw new Error("invalid_contract");
+    }
+
+    if (
+      errorMessage.includes("user_rejected") ||
+      errorMessage.includes("User rejected")
+    ) {
+      throw new Error("user_rejected");
+    }
+
+    if (errorMessage.includes("insufficient")) {
+      throw new Error("insufficient_balance");
+    }
+
+    if (errorMessage.includes("network")) {
+      throw new Error("invalid_network");
+    }
+
+    // Re-throw the original error for other cases
+    throw error;
+  }
 }
 
 /**
@@ -86,7 +186,7 @@ export async function executePaymentService(
  * @returns Amount in wei as string
  */
 export function wldToWei(wldAmount: number): string {
-  return (BigInt(Math.floor(wldAmount * 1e18))).toString();
+  return BigInt(Math.floor(wldAmount * 1e18)).toString();
 }
 
 /**

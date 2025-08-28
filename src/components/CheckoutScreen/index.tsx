@@ -11,6 +11,7 @@ import { useAuthWorld } from "../../store/authStore";
 import { useLanguageStore } from "../../store/languageStore";
 import { generateOrderId } from "../../utils/orderIdGenerator";
 import { usePaymentService } from "../../hooks/usePaymentService";
+import { ErrorMessage } from "../../utils/error";
 import type { CreateCheckoutRequest } from "../../types";
 
 interface ShippingAddress {
@@ -324,7 +325,9 @@ export const CheckoutScreen: React.FC = () => {
       });
 
       if (!paymentResult.success) {
-        throw new Error(paymentResult.error || "Payment failed");
+        const errorCode = paymentResult.error || "payment_failed";
+        console.error("❌ Payment failed with error:", errorCode);
+        throw new Error(errorCode);
       }
 
       console.log("✅ Payment successful:", paymentResult.transactionId);
@@ -433,7 +436,9 @@ export const CheckoutScreen: React.FC = () => {
             toast.error(errorMessage);
           }
         } else {
-          toast.error(errorMessage);
+          // Use ErrorMessage function for standardized error handling
+          const friendlyMessage = ErrorMessage(errorMessage);
+          toast.error(friendlyMessage);
         }
       } else {
         toast.error("Checkout failed. Please try again.");

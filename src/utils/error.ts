@@ -88,6 +88,12 @@ export function ErrorMessage(error: string) {
     case "network_congestion":
       return t("network_congestion");
 
+    case "payment_failed":
+      return t("Payment failed");
+
+    case "contract_validation_failed":
+      return t("Contract validation failed");
+
     default:
       return error;
   }

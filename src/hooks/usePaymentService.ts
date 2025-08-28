@@ -58,10 +58,15 @@ export function usePaymentService(): UsePaymentServiceReturn {
 
         // Step 3: Check if payment was successful
         if (paymentResponse.finalPayload.status === "error") {
-          const errorMessage =
-            paymentResponse.finalPayload.error_code || "Payment failed";
-          console.error("❌ PaymentService transaction failed:", errorMessage);
-          throw new Error(`Payment failed: ${errorMessage}`);
+          const errorCode = paymentResponse.finalPayload.error_code;
+          console.error("❌ PaymentService transaction failed:", errorCode);
+
+          // Throw standardized error codes that can be handled by ErrorMessage function
+          if (errorCode) {
+            throw new Error(errorCode);
+          } else {
+            throw new Error("payment_failed");
+          }
         }
 
         const transactionId = paymentResponse.finalPayload.transaction_id;

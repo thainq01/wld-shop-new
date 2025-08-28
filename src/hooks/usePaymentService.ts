@@ -294,7 +294,10 @@ export function usePaymentService(): UsePaymentServiceReturn {
           throw new Error("No transaction ID received from payment");
         }
 
-        console.log("✅ Smart PaymentService transaction submitted:", transactionId);
+        console.log(
+          "✅ Smart PaymentService transaction submitted:",
+          transactionId
+        );
 
         // Step 4: Wait for transaction confirmation
         console.log("⏳ Waiting for transaction confirmation...");

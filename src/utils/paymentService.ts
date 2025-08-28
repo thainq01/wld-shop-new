@@ -293,6 +293,26 @@ export async function executePaymentService(
       throw new Error("user_rejected");
     }
 
+    if (errorMessage.includes("disallowed_operation")) {
+      console.error("🚨 TOKEN OPERATION NOT ALLOWED:");
+      console.error(
+        "ERC20 token operations (approve/transfer) are not whitelisted"
+      );
+      console.error(
+        "WLD Token Address:",
+        PAYMENT_SERVICE_CONFIG.WLD_TOKEN_ADDRESS
+      );
+      console.error("📋 To fix this:");
+      console.error("1. Go to https://developer.worldcoin.org/");
+      console.error("2. Navigate to Configuration → Advanced");
+      console.error("3. Add WLD token address to Smart Contract Whitelist:");
+      console.error("   " + PAYMENT_SERVICE_CONFIG.WLD_TOKEN_ADDRESS);
+      console.error(
+        "4. Ensure both approve() and transfer() functions are allowed"
+      );
+      throw new Error("disallowed_operation");
+    }
+
     if (errorMessage.includes("insufficient allowance")) {
       console.error("🚨 ERC20 ALLOWANCE ERROR:");
       console.error(
@@ -354,7 +374,10 @@ export async function checkWLDAllowance(ownerAddress: string): Promise<string> {
   console.log("🔍 CHECKING WLD TOKEN ALLOWANCE:");
   console.log("================================");
   console.log("Owner Address:", ownerAddress);
-  console.log("Spender (PaymentService):", PAYMENT_SERVICE_CONFIG.CONTRACT_ADDRESS);
+  console.log(
+    "Spender (PaymentService):",
+    PAYMENT_SERVICE_CONFIG.CONTRACT_ADDRESS
+  );
   console.log("Token Address:", PAYMENT_SERVICE_CONFIG.WLD_TOKEN_ADDRESS);
 
   try {
@@ -363,7 +386,7 @@ export async function checkWLDAllowance(ownerAddress: string): Promise<string> {
     // For now, we'll simulate this or use a fallback approach
     console.log("⚠️ Allowance checking via MiniKit view calls not implemented");
     console.log("💡 Consider using web3 provider for view functions");
-    
+
     // Return "0" as default to force approval flow
     // In a real implementation, you'd make a read call to the blockchain
     return "0";
@@ -381,19 +404,19 @@ export async function checkWLDAllowance(ownerAddress: string): Promise<string> {
  * @returns true if allowance is sufficient, false otherwise
  */
 export async function hassufficientAllowance(
-  ownerAddress: string, 
+  ownerAddress: string,
   requiredAmount: string
 ): Promise<boolean> {
   try {
     const currentAllowance = await checkWLDAllowance(ownerAddress);
     const allowanceBN = BigInt(currentAllowance);
     const requiredBN = BigInt(requiredAmount);
-    
+
     console.log("💰 ALLOWANCE CHECK:");
     console.log("   Current Allowance (wei):", currentAllowance);
     console.log("   Required Amount (wei):", requiredAmount);
     console.log("   Sufficient?", allowanceBN >= requiredBN);
-    
+
     return allowanceBN >= requiredBN;
   } catch (error) {
     console.error("❌ Error checking allowance sufficiency:", error);
@@ -469,20 +492,25 @@ export async function executeSmartPayment(
   console.log("Owner address:", ownerAddress);
 
   // Step 1: Check if allowance is sufficient
-  const hasSufficientAllowance = await hassufficientAllowance(ownerAddress, data.amount);
-  
+  const hasSufficientAllowance = await hassufficientAllowance(
+    ownerAddress,
+    data.amount
+  );
+
   if (!hasSufficientAllowance) {
     console.log("💰 Insufficient allowance detected - approving tokens...");
-    
+
     // Step 2: Approve tokens if needed
     const approvalResponse = await approveWLDSpending(data.amount);
-    
+
     if (approvalResponse.finalPayload.status === "error") {
-      const errorPayload = approvalResponse.finalPayload as { error_code?: string };
+      const errorPayload = approvalResponse.finalPayload as {
+        error_code?: string;
+      };
       console.error("❌ Token approval failed:", errorPayload.error_code);
       throw new Error(errorPayload.error_code || "approval_failed");
     }
-    
+
     console.log("✅ Token approval successful");
   } else {
     console.log("✅ Sufficient allowance detected - proceeding with payment");

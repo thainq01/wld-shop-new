@@ -25,9 +25,10 @@ Your PaymentService contract address: `0x8f894C64de54bE90c256C7fbd51ff2240Ee82F1
 1. Go to **Configuration** section in the left sidebar
 2. Click on **Advanced** tab
 3. Find the **Smart Contract Whitelist** section
-4. Add the following contract address:
+4. Add **BOTH** of these contract addresses:
    ```
-   0x8f894C64de54bE90c256C7fbd51ff2240Ee82F1b
+   PaymentService: 0x8f894C64de54bE90c256C7fbd51ff2240Ee82F1b
+   WLD Token: 0x2cFc85d8E48F8EAB294be644d9E25C3030863003
    ```
 5. Click **Save** or **Update**
 
@@ -55,10 +56,11 @@ Ensure your app has the following permissions:
 - Network: World Chain (Optimism-based)
 - Purpose: Handles WLD token payments for the e-commerce app
 
-**Related Addresses (for reference)**
+**BOTH Contracts Must Be Whitelisted**
 
-- WLD Token: `0x2cFc85d8E48F8EAB294be644d9E25C3030863003`
-- Recipient: `0x5744c7c3b2825f6478673676015657a9c81594ba`
+- PaymentService: `0x8f894C64de54bE90c256C7fbd51ff2240Ee82F1b` ✅ **Already added**
+- WLD Token: `0x2cFc85d8E48F8EAB294be644d9E25C3030863003` ❌ **ADD THIS TOO**
+- Recipient: `0x5744c7c3b2825f6478673676015657a9c81594ba` (for reference)
 
 ## Testing the Fix
 
@@ -187,6 +189,22 @@ The PaymentService contract is not whitelisted in World Developer Portal
 
 This confirms you need to whitelist the contract address in the Developer Portal.
 
+### Look for Token Operation Error
+
+If you see:
+
+```
+🚨 TOKEN OPERATION NOT ALLOWED:
+ERC20 token operations (approve/transfer) are not whitelisted
+WLD Token Address: 0x2cFc85d8E48F8EAB294be644d9E25C3030863003
+```
+
+This means:
+
+1. **PaymentService contract is whitelisted** ✅ (good progress!)
+2. **WLD Token contract is NOT whitelisted** ❌ (needs to be added)
+3. **Add WLD token address** to whitelist: `0x2cFc85d8E48F8EAB294be644d9E25C3030863003`
+
 ### Look for Token Allowance Error
 
 If you see:
@@ -199,7 +217,7 @@ User needs to approve token spending first
 
 This means:
 
-1. **Contract is whitelisted** ✅ (good progress!)
+1. **Both contracts are whitelisted** ✅ (excellent progress!)
 2. **User needs to approve** WLD token spending first
 3. **Two-step process required**: Approve → Pay
 

@@ -32,6 +32,11 @@ export function ErrorMessage(error: string) {
     case "insufficient_allowance":
       return t("Token approval required. Please approve WLD spending first.");
 
+    case "disallowed_operation":
+      return t(
+        "Token operations not whitelisted. Check Developer Portal setup."
+      );
+
     case "transaction_failed":
       return t("Transaction Failed");
 

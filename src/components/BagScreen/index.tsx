@@ -1,8 +1,7 @@
 import React from "react";
 import { ShoppingBag, Minus, Plus, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-import { MiniKit } from "@worldcoin/minikit-js";
+
 import { useCart } from "../../hooks/useCart";
 import { BottomNavigation } from "../BottomNavigation";
 import { LoginButton } from "../LoginButton";
@@ -53,7 +52,7 @@ export const BagScreen: React.FC = () => {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
         {/* Content centered in screen */}
-       <LoginButton/>
+        <LoginButton />
 
         {/* Bottom Navigation */}
         <BottomNavigation />
@@ -202,10 +201,18 @@ export const BagScreen: React.FC = () => {
                               await updateQuantity(item.id, item.quantity - 1);
                             }
                           } catch (error) {
-                            console.error("Error in cart operation (decrease):", error);
-                            const errorMessage = error instanceof Error ? error.message : "Failed to update cart";
-                            console.log("🔔 Showing decrease toast:", errorMessage);
-                            toast.error(errorMessage);
+                            console.error(
+                              "Error in cart operation (decrease):",
+                              error
+                            );
+                            const errorMessage =
+                              error instanceof Error
+                                ? error.message
+                                : "Failed to update cart";
+                            console.log(
+                              "🔔 Showing decrease toast:",
+                              errorMessage
+                            );
                           }
                         }}
                         disabled={isLoading}
@@ -231,10 +238,18 @@ export const BagScreen: React.FC = () => {
                           try {
                             await updateQuantity(item.id, item.quantity + 1);
                           } catch (error) {
-                            console.error("Error in cart operation (increase):", error);
-                            const errorMessage = error instanceof Error ? error.message : "Failed to update cart";
-                            console.log("🔔 Showing increase toast:", errorMessage);
-                            toast.error(errorMessage);
+                            console.error(
+                              "Error in cart operation (increase):",
+                              error
+                            );
+                            const errorMessage =
+                              error instanceof Error
+                                ? error.message
+                                : "Failed to update cart";
+                            console.log(
+                              "🔔 Showing increase toast:",
+                              errorMessage
+                            );
                           }
                         }}
                         disabled={isLoading}

@@ -71,7 +71,7 @@ export function ErrorMessage(error: string) {
       return t("unexpected_response");
 
     case "invalid_contract":
-      return t("Invalid Contract");
+      return t("Contract not whitelisted. Check Developer Portal setup.");
 
     case "simulation_failed":
       return t("simulation_failed");

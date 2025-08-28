@@ -87,6 +87,14 @@ export async function executePaymentService(
     throw new Error("MiniKit is not installed");
   }
 
+  // Log contract addresses for debugging
+  console.log("🔍 Contract Configuration Debug:");
+  console.log("Contract Address:", PAYMENT_SERVICE_CONFIG.CONTRACT_ADDRESS);
+  console.log("WLD Token Address:", PAYMENT_SERVICE_CONFIG.WLD_TOKEN_ADDRESS);
+  console.log("Recipient Address:", PAYMENT_SERVICE_CONFIG.RECIPIENT_ADDRESS);
+  console.log("Token Address (param):", tokenAddress);
+  console.log("To Address (param):", toAddress);
+
   // Validate payment configuration
   try {
     validatePaymentConfig();
@@ -157,6 +165,14 @@ export async function executePaymentService(
       errorMessage.includes("invalid contract") ||
       errorMessage.includes("Invalid contract")
     ) {
+      console.error("🚨 CONTRACT WHITELIST ERROR:");
+      console.error("The PaymentService contract is not whitelisted in World Developer Portal");
+      console.error("Contract Address:", PAYMENT_SERVICE_CONFIG.CONTRACT_ADDRESS);
+      console.error("📋 To fix this:");
+      console.error("1. Go to https://developer.worldcoin.org/");
+      console.error("2. Navigate to Configuration → Advanced");
+      console.error("3. Add this contract address to the whitelist:");
+      console.error("   " + PAYMENT_SERVICE_CONFIG.CONTRACT_ADDRESS);
       throw new Error("invalid_contract");
     }
 
@@ -196,4 +212,54 @@ export function wldToWei(wldAmount: number): string {
  */
 export function weiToWld(weiAmount: string): number {
   return Number(BigInt(weiAmount)) / 1e18;
+}
+
+/**
+ * Diagnostic function to check payment service configuration
+ * Call this in browser console to debug contract setup issues
+ */
+export function diagnosticPaymentService() {
+  console.log("🔍 PaymentService Diagnostic Report");
+  console.log("=====================================");
+  
+  // Check MiniKit installation
+  console.log("1. MiniKit Status:");
+  console.log("   Installed:", MiniKit.isInstalled());
+  
+  // Check contract addresses
+  console.log("\n2. Contract Configuration:");
+  console.log("   PaymentService:", PAYMENT_SERVICE_CONFIG.CONTRACT_ADDRESS);
+  console.log("   WLD Token:", PAYMENT_SERVICE_CONFIG.WLD_TOKEN_ADDRESS);
+  console.log("   Recipient:", PAYMENT_SERVICE_CONFIG.RECIPIENT_ADDRESS);
+  
+  // Validate addresses
+  console.log("\n3. Address Validation:");
+  const contractValid = isValidEthereumAddress(PAYMENT_SERVICE_CONFIG.CONTRACT_ADDRESS);
+  const tokenValid = isValidEthereumAddress(PAYMENT_SERVICE_CONFIG.WLD_TOKEN_ADDRESS);
+  const recipientValid = isValidEthereumAddress(PAYMENT_SERVICE_CONFIG.RECIPIENT_ADDRESS);
+  
+  console.log("   Contract Address Valid:", contractValid);
+  console.log("   Token Address Valid:", tokenValid);
+  console.log("   Recipient Address Valid:", recipientValid);
+  
+  // Check whitelist status
+  console.log("\n4. Whitelist Status:");
+  console.log("   ⚠️  Cannot check whitelist status programmatically");
+  console.log("   📋 Manual Check Required:");
+  console.log("   1. Go to https://developer.worldcoin.org/");
+  console.log("   2. Check Configuration → Advanced");
+  console.log("   3. Verify contract is whitelisted:", PAYMENT_SERVICE_CONFIG.CONTRACT_ADDRESS);
+  
+  console.log("\n5. ABI Configuration:");
+  console.log("   Functions:", PAYMENT_SERVICE_ABI.map(item => item.name));
+  
+  return {
+    minikit: MiniKit.isInstalled(),
+    addresses: {
+      contract: contractValid,
+      token: tokenValid,
+      recipient: recipientValid
+    },
+    config: PAYMENT_SERVICE_CONFIG
+  };
 }

@@ -237,9 +237,29 @@ The app now includes a **Smart Payment** system that automatically handles allow
 
 ### Available Payment Functions
 
-1. **processSmartPayment()** - ✅ **Recommended**: Auto-checks allowance and approves if needed
-2. **processPaymentWithApproval()** - Always approves then pays
-3. **processPayment()** - Basic payment (may fail if no allowance)
-4. **checkAllowance()** - Check if user has sufficient allowance
+1. **Two-Step Payment** - ✅ **NEW & Recommended**: Approve first, then transact
+   - `approveTokens()` - Step 1: Approve token spending
+   - `executePaymentOnly()` - Step 2: Execute payment after approval
+2. **processSmartPayment()** - Auto-checks allowance and approves if needed
+3. **processPaymentWithApproval()** - Always approves then pays
+4. **processPayment()** - Basic payment (may fail if no allowance)
+5. **checkAllowance()** - Check if user has sufficient allowance
+
+### Two-Step Payment UI
+
+The checkout now provides both options:
+
+```
+┌─────────────────────────────────────┐
+│ Two-Step Payment (Recommended)      │
+│                                     │
+│ [Step 1: Approve Tokens]           │
+│ [Step 2: Execute Payment]          │
+│                                     │
+│            OR                       │
+│                                     │
+│ [Pay Now (One-Click)]              │
+└─────────────────────────────────────┘
+```
 
 This will help you see exactly what's happening during the payment flow on mobile devices!

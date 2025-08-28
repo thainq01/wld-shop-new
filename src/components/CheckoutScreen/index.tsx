@@ -221,10 +221,10 @@ export const CheckoutScreen: React.FC = () => {
   } = useCheckout();
 
   const {
-    processPayment,
     processPaymentWithApproval,
     processSmartPayment,
-    checkAllowance,
+    approveTokens,
+    executePaymentOnly,
     isProcessing: isPaymentProcessing,
     error: paymentError,
   } = usePaymentService();
@@ -234,6 +234,8 @@ export const CheckoutScreen: React.FC = () => {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [generatedOrderId, setGeneratedOrderId] = useState<string>("");
   const [checkoutCompleted, setCheckoutCompleted] = useState(false);
+  const [tokensApproved, setTokensApproved] = useState(false);
+  const [approvalTxId, setApprovalTxId] = useState<string>("");
 
   // Available countries for shipping
   const availableCountries = [
@@ -295,6 +297,151 @@ export const CheckoutScreen: React.FC = () => {
       ...prev,
       [field]: value,
     }));
+  };
+
+  const handleApproveTokens = async () => {
+    if (!address) {
+      alert("Please connect your wallet to proceed.");
+      return;
+    }
+
+    setIsProcessingPayment(true);
+
+    try {
+      console.log("🚀 Starting token approval process...");
+
+      const approvalResult = await approveTokens(address, total);
+
+      if (!approvalResult.success) {
+        const errorCode = approvalResult.error || "approval_failed";
+        console.error("❌ Token approval failed with error:", errorCode);
+        throw new Error(errorCode);
+      }
+
+      console.log(
+        "✅ Token approval successful:",
+        approvalResult.transactionId
+      );
+      setTokensApproved(true);
+      setApprovalTxId(approvalResult.transactionId || "");
+    } catch (error) {
+      console.error("❌ Token approval process failed:", error);
+
+      if (error instanceof Error) {
+        const errorMessage = error.message;
+        const { ErrorMessage } = await import("../../utils/error");
+        const friendlyMessage = ErrorMessage(errorMessage);
+        toast.error(friendlyMessage);
+      } else {
+        toast.error("Token approval failed. Please try again.");
+      }
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
+  const handleExecutePayment = async () => {
+    if (!address) {
+      alert("Please connect your wallet to proceed.");
+      return;
+    }
+
+    if (!tokensApproved) {
+      alert("Please approve tokens first before executing payment.");
+      return;
+    }
+
+    setIsProcessingPayment(true);
+
+    try {
+      console.log("🚀 Starting payment execution (tokens already approved)...");
+
+      // Execute payment only (tokens already approved)
+      const paymentResult = await executePaymentOnly({
+        orderId: generatedOrderId,
+        amount: total,
+        walletAddress: address,
+      });
+
+      if (!paymentResult.success) {
+        const errorCode = paymentResult.error || "payment_failed";
+        console.error("❌ Payment failed with error:", errorCode);
+        throw new Error(errorCode);
+      }
+
+      console.log("✅ Payment successful:", paymentResult.transactionId);
+
+      // Continue with checkout creation
+      await createCheckoutAfterPayment(paymentResult.transactionId!);
+    } catch (error) {
+      console.error("❌ Payment execution failed:", error);
+
+      if (error instanceof Error) {
+        const errorMessage = error.message;
+        const { ErrorMessage } = await import("../../utils/error");
+        const friendlyMessage = ErrorMessage(errorMessage);
+        toast.error(friendlyMessage);
+      } else {
+        toast.error("Payment failed. Please try again.");
+      }
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
+  const createCheckoutAfterPayment = async (transactionId: string) => {
+    // Create checkout record after successful payment
+    console.log("📝 Creating checkout record...");
+    const checkoutData: CreateCheckoutRequest = {
+      orderId: generatedOrderId,
+      walletAddress: address!,
+      email: shippingAddress.email,
+      country: shippingAddress.country,
+      firstName: shippingAddress.firstName,
+      lastName: shippingAddress.lastName,
+      address: shippingAddress.address,
+      apartment: shippingAddress.apartment || undefined,
+      city: shippingAddress.city,
+      postcode: shippingAddress.postalCode,
+      phone: shippingAddress.phone,
+      status: "pending", // Keep as pending, backend will verify and update
+      products: items.map((item) => ({
+        productId: parseInt(item.productId),
+        size: item.size || "Default",
+        quantity: item.quantity,
+      })),
+    };
+
+    const orderResponse = await createCheckout(checkoutData);
+
+    if (!orderResponse) {
+      const errorMsg = checkoutError || "Failed to create checkout record";
+      console.error("❌ Checkout creation failed:", errorMsg);
+      throw new Error(
+        `Payment submitted but failed to save order: ${errorMsg}. Transaction ID: ${transactionId}`
+      );
+    }
+
+    // Navigate to success page
+    const successData = {
+      orderId: generatedOrderId,
+      transactionId: transactionId,
+      amount: total,
+      items: items,
+      shippingAddress: shippingAddress,
+      statusCode: 200,
+    };
+
+    navigate("/order-success", {
+      state: { orderData: successData },
+      replace: true,
+    });
+
+    // Clear cart after navigation
+    setTimeout(() => {
+      console.log("🧹 Clearing cart...");
+      clearCart();
+    }, 200);
   };
 
   const handlePayNow = async () => {
@@ -766,7 +913,72 @@ export const CheckoutScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* Pay Now Button */}
+        {/* Two-Step Payment Section */}
+        <div className="mb-6 p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
+            Two-Step Payment (Recommended)
+          </h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            For better control, you can approve tokens first, then execute
+            payment separately.
+          </p>
+
+          {/* Step 1: Approve Tokens */}
+          <div className="mb-3">
+            <button
+              onClick={handleApproveTokens}
+              disabled={
+                !isFormValid() ||
+                isProcessingPayment ||
+                isPaymentProcessing ||
+                tokensApproved
+              }
+              className={`w-full py-3 rounded-lg font-medium text-base transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                tokensApproved
+                  ? "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border border-green-300 dark:border-green-700"
+                  : "bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600"
+              }`}
+            >
+              {tokensApproved ? "✅ Tokens Approved" : "Step 1: Approve Tokens"}
+            </button>
+            {tokensApproved && approvalTxId && (
+              <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                Approval TX: {approvalTxId.slice(0, 10)}...
+                {approvalTxId.slice(-6)}
+              </p>
+            )}
+          </div>
+
+          {/* Step 2: Execute Payment */}
+          <button
+            onClick={handleExecutePayment}
+            disabled={
+              !isFormValid() ||
+              !tokensApproved ||
+              isProcessingPayment ||
+              isPaymentProcessing ||
+              isCheckoutLoading
+            }
+            className={`w-full py-3 rounded-lg font-medium text-base transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+              !tokensApproved
+                ? "bg-gray-400 dark:bg-gray-600 text-gray-200 dark:text-gray-400"
+                : "bg-green-600 dark:bg-green-500 text-white hover:bg-green-700 dark:hover:bg-green-600"
+            }`}
+          >
+            Step 2: Execute Payment
+          </button>
+        </div>
+
+        {/* OR Divider */}
+        <div className="flex items-center my-6">
+          <div className="flex-1 border-t border-gray-300 dark:border-gray-600"></div>
+          <span className="px-4 text-sm text-gray-500 dark:text-gray-400">
+            OR
+          </span>
+          <div className="flex-1 border-t border-gray-300 dark:border-gray-600"></div>
+        </div>
+
+        {/* One-Click Payment Button */}
         <button
           onClick={handlePayNow}
           disabled={
@@ -777,7 +989,7 @@ export const CheckoutScreen: React.FC = () => {
           }
           className={`w-full py-4 rounded-full font-semibold text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-6 bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200`}
         >
-          {buttonStatus}
+          {buttonStatus} (One-Click)
         </button>
       </div>
 

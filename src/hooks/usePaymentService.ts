@@ -47,6 +47,13 @@ export function usePaymentService(): UsePaymentServiceReturn {
 
         // Step 2: Execute payment through PaymentService contract
         console.log("📝 Executing PaymentService contract call...");
+        console.log("💡 PAYMENT PROCESS DETAILS:");
+        console.log("   Order ID:", data.orderId);
+        console.log("   Wallet Address:", data.walletAddress);
+        console.log("   Amount (WLD):", data.amount);
+        console.log("   Amount (wei):", amountInWei);
+        console.log("   Contract:", PAYMENT_SERVICE_CONFIG.CONTRACT_ADDRESS);
+        
         const paymentResponse = await executePaymentService(
           {
             amount: amountInWei,

@@ -144,6 +144,46 @@ Eruda is **always enabled** in both development and production builds for debugg
 3. **Go to Console tab** in Eruda
 4. **Run diagnostic**: Type `diagnosticPaymentService()` and press enter
 5. **Try payment** and watch the detailed logs in real-time
-6. **Check for whitelist error**: Look for the "🚨 CONTRACT WHITELIST ERROR" message
+
+### Expected Console Logs
+
+When you submit a payment, you'll see detailed logs like:
+
+```
+💡 PAYMENT PROCESS DETAILS:
+   Order ID: WLD_20241228_ABC123
+   Wallet Address: 0x1234...
+   Amount (WLD): 1.5
+   Amount (wei): 1500000000000000000
+   Contract: 0x8f894C64de54bE90c256C7fbd51ff2240Ee82F1b
+
+📝 SUBMITTING CONTRACT TRANSACTION:
+=====================================
+⏰ Submission Time: 2024-12-28T10:30:45.123Z
+🎯 Contract Address: 0x8f894C64de54bE90c256C7fbd51ff2240Ee82F1b
+⚡ Function: pay
+📊 Arguments:
+   - Token Address: 0x2cFc85d8E48F8EAB294be644d9E25C3030863003
+   - Recipient Address: 0x5744c7c3b2825f6478673676015657a9c81594ba
+   - Amount (wei): 1500000000000000000
+   - Reference ID: WLD_20241228_ABC123
+
+✅ CONTRACT SUBMISSION RESPONSE:
+=================================
+⏱️ Response Time: 1250ms
+📋 Final Payload Details:
+   - Status: error
+   - Error Code: invalid_contract
+```
+
+### Look for Contract Whitelist Error
+
+If you see:
+```
+🚨 CONTRACT WHITELIST ERROR:
+The PaymentService contract is not whitelisted in World Developer Portal
+```
+
+This confirms you need to whitelist the contract address in the Developer Portal.
 
 This will help you see exactly what's happening during the payment flow on mobile devices!

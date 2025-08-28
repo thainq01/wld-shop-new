@@ -138,15 +138,59 @@ export async function executePaymentService(
     ],
   };
 
-  console.log("PaymentService payload:", payload);
+  console.log("📝 SUBMITTING CONTRACT TRANSACTION:");
+  console.log("=====================================");
+  console.log("⏰ Submission Time:", new Date().toISOString());
+  console.log("🎯 Contract Address:", PAYMENT_SERVICE_CONFIG.CONTRACT_ADDRESS);
+  console.log("⚡ Function:", "pay");
+  console.log("📊 Arguments:");
+  console.log("   - Token Address:", tokenAddress);
+  console.log("   - Recipient Address:", toAddress);
+  console.log("   - Amount (wei):", data.amount);
+  console.log("   - Reference ID:", data.referenceId);
+  console.log("🔧 Full Payload:", JSON.stringify(payload, null, 2));
+
+  const startTime = performance.now();
 
   try {
     const response = await MiniKit.commandsAsync.sendTransaction(payload);
-    console.log("PaymentService response:", response);
+
+    const endTime = performance.now();
+    const duration = Math.round(endTime - startTime);
+
+    console.log("✅ CONTRACT SUBMISSION RESPONSE:");
+    console.log("=================================");
+    console.log("⏱️ Response Time:", duration + "ms");
+    console.log("⏰ Response Received:", new Date().toISOString());
+    console.log("📦 Raw Response:", JSON.stringify(response, null, 2));
+
+    if (response?.finalPayload) {
+      console.log("📋 Final Payload Details:");
+      console.log("   - Status:", response.finalPayload.status);
+      
+      if (response.finalPayload.status === "success") {
+        const successPayload = response.finalPayload as { transaction_id?: string; app_id?: string };
+        console.log("   - Transaction ID:", successPayload.transaction_id || "N/A");
+        console.log("   - App ID:", successPayload.app_id || "N/A");
+      } else if (response.finalPayload.status === "error") {
+        const errorPayload = response.finalPayload as { error_code?: string; app_id?: string };
+        console.log("   - Error Code:", errorPayload.error_code || "N/A");
+        console.log("   - App ID:", errorPayload.app_id || "N/A");
+      }
+    }
 
     // Validate response structure
     if (!response || !response.finalPayload) {
+      console.error("❌ INVALID RESPONSE STRUCTURE");
       throw new Error("Invalid response from MiniKit");
+    }
+
+    if (response.finalPayload.status === "success") {
+      console.log("🎉 CONTRACT SUBMISSION SUCCESSFUL!");
+    } else if (response.finalPayload.status === "error") {
+      console.error("🚨 CONTRACT SUBMISSION FAILED!");
+      const errorPayload = response.finalPayload as { error_code?: string };
+      console.error("Error Code:", errorPayload.error_code || "Unknown error");
     }
 
     return response;

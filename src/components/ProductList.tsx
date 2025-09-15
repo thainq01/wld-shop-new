@@ -69,7 +69,7 @@ export function ProductList() {
     );
   }
 
-  const activeCollections = collections.filter(
+  const activeCollections = collections?.filter(
     (collection) => collection.isActive
   );
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Plus,
   Edit,
@@ -11,70 +11,59 @@ import {
 } from "lucide-react";
 import { collectionsApi } from "../../../utils/api";
 import {
-  Collection,
-  CreateCollectionRequest,
-  UpdateCollectionRequest,
+  MultiLanguageCollection,
+  CreateMultiLanguageCollectionRequest,
+  UpdateMultiLanguageCollectionRequest,
 } from "../../../types";
-import { CollectionModal } from "./CollectionModal";
-import { CMSLanguageFilter } from "../LanguageFilter/CMSLanguageFilter";
-import { useCMSStore } from "../../../store/cmsStore";
-import { cmsLanguages } from "../../../store/languageStore";
+import { MultiLanguageCollectionModal } from "./MultiLanguageCollectionModal";
 
 export function CollectionsManager() {
-  const [collections, setCollections] = useState<Collection[]>([]);
+  const [collections, setCollections] = useState<MultiLanguageCollection[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingCollection, setEditingCollection] = useState<Collection | null>(
+  const [editingCollection, setEditingCollection] = useState<MultiLanguageCollection | null>(
     null
   );
 
-  const { selectedLanguage, setSelectedLanguage, getLanguageFilter } =
-    useCMSStore();
-
-  const getLanguageDisplay = (langCode: string) => {
-    const language = cmsLanguages.find((lang) => lang.code === langCode);
-    return language ? `${language.flag} ${language.name}` : langCode;
-  };
-
-  useEffect(() => {
-    loadCollections();
-  }, [selectedLanguage]);
-
-  const loadCollections = async () => {
+  const loadCollections = useCallback(async () => {
     setLoading(true);
     try {
-      const languageFilter = getLanguageFilter();
-      const data = await collectionsApi.getAll(
-        languageFilter ? { lang: languageFilter } : undefined
-      );
-      setCollections(data);
+      const response = await collectionsApi.getAllMultiLanguage();
+
+      // Check if response has data property, otherwise use response directly
+      const collections = Array.isArray(response) ? response : response.data;
+      setCollections(collections);
     } catch (error) {
       console.error("Failed to load collections:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const handleCreate = async (data: CreateCollectionRequest) => {
+  useEffect(() => {
+    loadCollections();
+  }, [loadCollections]);
+
+  const handleCreate = async (data: CreateMultiLanguageCollectionRequest) => {
     try {
-      const newCollection = await collectionsApi.create(data);
-      setCollections((prev) => [...prev, newCollection]);
+      await collectionsApi.createMultiLanguage(data);
       setModalOpen(false);
+      // Refetch collections to get the latest data
+      await loadCollections();
     } catch (error) {
       console.error("Failed to create collection:", error);
       throw error;
     }
   };
 
-  const handleUpdate = async (id: number, data: UpdateCollectionRequest) => {
+  const handleUpdate = async (id: number, data: UpdateMultiLanguageCollectionRequest) => {
     try {
-      const updatedCollection = await collectionsApi.update(id, data);
-      setCollections((prev) =>
-        prev.map((c) => (c.id === id ? updatedCollection : c))
-      );
+      await collectionsApi.updateMultiLanguage(id, data);
       setModalOpen(false);
       setEditingCollection(null);
+      // Refetch collections to get the latest data
+      await loadCollections();
     } catch (error) {
       console.error("Failed to update collection:", error);
       throw error;
@@ -86,30 +75,42 @@ export function CollectionsManager() {
 
     try {
       await collectionsApi.delete(id);
-      setCollections((prev) => prev.filter((c) => c.id !== id));
+      // Refetch collections to get the latest data
+      await loadCollections();
     } catch (error) {
       console.error("Failed to delete collection:", error);
     }
   };
 
-  const handleToggleActive = async (collection: Collection) => {
+  const handleToggleActive = async (collection: MultiLanguageCollection) => {
     try {
-      const updatedCollection = await collectionsApi.update(collection.id, {
-        isActive: !collection.isActive,
+      await collectionsApi.updateMultiLanguage(collection?.id, {
+        isActive: !collection?.isActive,
       });
-      setCollections((prev) =>
-        prev.map((c) => (c.id === collection.id ? updatedCollection : c))
-      );
+      // Refetch collections to get the latest data
+      await loadCollections();
     } catch (error) {
       console.error("Failed to toggle collection status:", error);
     }
   };
 
-  const filteredCollections = collections.filter(
-    (collection) =>
-      collection.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      collection.slug.toLowerCase().includes(searchTerm.toLowerCase())
+  // Helper function to get collection name (defaults to English)
+  const getCollectionName = (collection: MultiLanguageCollection) => {
+    return collection?.translations.en?.name ||
+           collection?.translations[collection?.defaultLanguage]?.name ||
+           Object.values(collection?.translations || {})[0]?.name ||
+           "Untitled";
+  };
+
+  const filteredCollections = collections?.filter(
+    (collection) => {
+      const name = getCollectionName(collection);
+      return name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+             collection?.slug.toLowerCase().includes(searchTerm.toLowerCase());
+    }
   );
+
+  console.log("filteredCollections", filteredCollections)
 
   if (loading) {
     return (
@@ -147,10 +148,6 @@ export function CollectionsManager() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <CMSLanguageFilter
-            selectedLanguage={selectedLanguage}
-            onLanguageChange={setSelectedLanguage}
-          />
           <button
             onClick={() => {
               setEditingCollection(null);
@@ -178,9 +175,9 @@ export function CollectionsManager() {
 
       {/* Collections Grid */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        {filteredCollections.map((collection) => (
+        {filteredCollections?.map((collection) => (
           <div
-            key={collection.id}
+            key={collection?.id}
             className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200"
           >
             <div className="p-6">
@@ -193,16 +190,21 @@ export function CollectionsManager() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
-                      {collection.name}
+                      {getCollectionName(collection)}
                     </h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                      /{collection.slug}
+                      /{collection?.slug}
                     </p>
-                    {collection.description && (
-                      <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
-                        {collection.description}
-                      </p>
-                    )}
+                    {(() => {
+                      const description = collection?.translations.en?.description ||
+                                         collection?.translations[collection?.defaultLanguage]?.description ||
+                                         Object.values(collection?.translations || {})[0]?.description;
+                      return description && (
+                        <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
+                          {description}
+                        </p>
+                      );
+                    })()}
                   </div>
                 </div>
 
@@ -224,18 +226,7 @@ export function CollectionsManager() {
                         Edit
                       </button>
                       <button
-                        onClick={() => handleToggleActive(collection)}
-                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                      >
-                        {collection.isActive ? (
-                          <EyeOff className="w-4 h-4" />
-                        ) : (
-                          <Eye className="w-4 h-4" />
-                        )}
-                        {collection.isActive ? "Deactivate" : "Activate"}
-                      </button>
-                      <button
-                        onClick={() => handleDelete(collection.id)}
+                        onClick={() => handleDelete(collection?.id)}
                         className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -251,19 +242,19 @@ export function CollectionsManager() {
                 <div className="flex items-center gap-2">
                   <span
                     className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      collection.isActive
+                      collection?.isActive
                         ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
                         : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300"
                     }`}
                   >
-                    {collection.isActive ? "Active" : "Inactive"}
+                    {collection?.isActive ? "Active" : "Inactive"}
                   </span>
                   <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 px-2 py-1 rounded">
-                    {getLanguageDisplay(collection.language)}
+                    {collection?.availableLanguages.length} language{collection?.availableLanguages.length !== 1 ? 's' : ''}
                   </span>
                 </div>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
-                  ID: {collection.id}
+                  ID: {collection?.id}
                 </span>
               </div>
             </div>
@@ -272,7 +263,7 @@ export function CollectionsManager() {
       </div>
 
       {/* Empty state */}
-      {filteredCollections.length === 0 && !loading && (
+      {filteredCollections?.length === 0 && !loading && (
         <div className="text-center py-12">
           <Tag className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
           <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
@@ -301,7 +292,7 @@ export function CollectionsManager() {
       )}
 
       {/* Modal */}
-      <CollectionModal
+      <MultiLanguageCollectionModal
         isOpen={modalOpen}
         onClose={() => {
           setModalOpen(false);
@@ -312,10 +303,10 @@ export function CollectionsManager() {
           editingCollection
             ? (data) =>
                 handleUpdate(
-                  editingCollection.id,
-                  data as UpdateCollectionRequest
+                  editingCollection?.id,
+                  data as UpdateMultiLanguageCollectionRequest
                 )
-            : (data) => handleCreate(data as CreateCollectionRequest)
+            : (data) => handleCreate(data as CreateMultiLanguageCollectionRequest)
         }
       />
     </div>

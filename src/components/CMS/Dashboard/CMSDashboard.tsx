@@ -77,7 +77,7 @@ export function CMSDashboard() {
       // Calculate stats
       setStats({
         totalCollections: collections.length,
-        activeCollections: collections.filter((c) => c.isActive).length,
+        activeCollections: collections?.filter((c) => c.isActive).length,
         totalProducts: products.length,
         featuredProducts: products.filter((p) => p.featured).length,
         totalUsers: users.length,

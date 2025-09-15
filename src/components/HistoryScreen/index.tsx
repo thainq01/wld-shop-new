@@ -35,7 +35,7 @@ interface OrderHistoryProduct {
       id: number;
       name: string;
       slug: string;
-    };
+    } | null;
     category: string;
     material: string;
     madeBy: string;
@@ -46,7 +46,7 @@ interface OrderHistoryProduct {
     sizes: ProductSize[] | null;
     images: ProductImage[] | null;
     createdAt: string;
-    updatedAt: string;
+    updatedAt?: string;
   };
   quantity: number;
   priceAtPurchase: number;
@@ -68,8 +68,10 @@ interface OrderHistoryItem {
   city: string;
   postcode: string;
   phone: string;
-  totalAmount: number;
+  language?: string;
+  totalAmount: string;
   status: string;
+  transactionHash?: string;
   products: OrderHistoryProduct[];
   createdAt: string;
   updatedAt: string;
@@ -143,13 +145,7 @@ const HistoryScreen: React.FC = () => {
         city: checkout.city,
         postcode: checkout.postcode,
         phone: checkout.phone,
-        totalAmount:
-          checkout.products?.reduce(
-            (total: number, product: CheckoutProductResponse) => {
-              return total + product.product.price * product.quantity;
-            },
-            0
-          ) || 0,
+        totalAmount: checkout.totalAmount || "0",
         status: checkout.status || "pending",
         products:
           checkout.products?.map((product: CheckoutProductResponse) => ({
@@ -166,12 +162,9 @@ const HistoryScreen: React.FC = () => {
         updatedAt: checkout.updatedAt,
       }));
 
-      console.log("Mapped Orders:", mappedOrders);
-      console.log("Number of orders:", mappedOrders.length);
 
       setOrders(mappedOrders);
 
-      console.log("Orders state should be updated now");
     } catch (err) {
       console.error("Error fetching order history:", err);
 
@@ -306,15 +299,6 @@ const HistoryScreen: React.FC = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
-        {/* Header */}
-        <div className="px-4 pt-6">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              {t("orderHistory")}
-            </h2>
-          </div>
-        </div>
-
         {/* Error state - centered and styled like empty state */}
         <div className="flex-1 flex items-center justify-center px-4 pb-20">
           <div className="text-center max-w-sm">
@@ -338,7 +322,7 @@ const HistoryScreen: React.FC = () => {
               <button
                 onClick={fetchOrderHistory}
                 disabled={loading}
-                className="w-full py-4 bg-black dark:bg-white text-white dark:text-black rounded-full font-semibold text-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-[250px] py-4 bg-black dark:bg-white text-white dark:text-black rounded-full font-semibold text-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? "Retrying..." : t("tryAgain")}
               </button>
@@ -351,24 +335,10 @@ const HistoryScreen: React.FC = () => {
     );
   }
 
-  console.log("Rendering HistoryScreen with orders:", orders);
-  console.log("Orders length:", orders.length);
-  console.log("Loading state:", loading);
-  console.log("Error state:", error);
-
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
       {orders.length === 0 ? (
-        <>
-          {/* Header for empty state */}
-          <div className="px-4 pt-6">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                {t("orderHistory")}
-              </h2>
-            </div>
-          </div>
-
+        <>          
           {/* Empty state - centered and styled like bag empty state */}
           <div className="flex-1 flex items-center justify-center px-4 pb-20">
             <div className="text-center max-w-sm">
@@ -391,7 +361,7 @@ const HistoryScreen: React.FC = () => {
               <div className="space-y-3">
                 <button
                   onClick={() => navigate("/explore")}
-                  className="w-full py-4 bg-black dark:bg-white text-white dark:text-black rounded-full font-semibold text-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
+                  className="w-[250px] py-4 bg-black dark:bg-white text-white dark:text-black rounded-full font-semibold text-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
                 >
                   Explore
                 </button>
@@ -455,7 +425,7 @@ const HistoryScreen: React.FC = () => {
                           </span>
                         </div>
                         <span className="text-lg font-bold text-gray-900 dark:text-white">
-                          {order.totalAmount.toFixed(2)} WLD
+                          {order.totalAmount} WLD
                         </span>
                       </div>
 
@@ -477,17 +447,10 @@ const HistoryScreen: React.FC = () => {
                                       "Product Name Not Available"}
                                   </h5>
                                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                                    Qty: {item.quantity || 0} ×{" "}
-                                    {item.priceAtPurchase || 0} WLD
-                                  </p>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                                    Collection:{" "}
-                                    {item.product?.collection?.name || "N/A"}
+                                    Qty: {item.quantity || 0}
                                   </p>
                                 </div>
-                                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                  {item.lineTotal || 0} WLD
-                                </span>
+                                
                               </div>
                             ))
                           ) : (

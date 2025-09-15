@@ -118,6 +118,7 @@ export const useCollectionStore = create<CollectionState>()(
           .getProductLanguage();
         const products = await collectionsApi.getProducts(collectionSlug, {
           lang: productLanguage,
+          country: productLanguage, // Use same value for country as lang
           active: true,
         });
         set((state) => ({
@@ -180,12 +181,11 @@ export const useCollectionStore = create<CollectionState>()(
       set({ featuredProductsLoading: true, error: null });
 
       try {
-        // Get product language (maps EN to TH since we don't have English products)
-        const productLanguage = useLanguageStore
-          .getState()
-          .getProductLanguage();
+        // For featured products, use UI language for both lang and country
+        const currentLanguage = useLanguageStore.getState().currentLanguage;
         const allProducts = await productsApi.getAll({
-          lang: productLanguage,
+          lang: currentLanguage,
+          country: currentLanguage,
           active: true,
         });
         const featured = allProducts.filter((product) => product.featured);

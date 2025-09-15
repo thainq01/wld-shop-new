@@ -29,14 +29,6 @@ export function ErrorMessage(error: string) {
     case "insufficient_balance":
       return t("Insufficient Balance");
 
-    case "insufficient_allowance":
-      return t("Token approval required. Please approve WLD spending first.");
-
-    case "disallowed_operation":
-      return t(
-        "Token operations not whitelisted. Check Developer Portal setup."
-      );
-
     case "transaction_failed":
       return t("Transaction Failed");
 
@@ -79,7 +71,7 @@ export function ErrorMessage(error: string) {
       return t("unexpected_response");
 
     case "invalid_contract":
-      return t("Contract not whitelisted. Check Developer Portal setup.");
+      return t("Invalid Contract");
 
     case "simulation_failed":
       return t("simulation_failed");
@@ -95,12 +87,6 @@ export function ErrorMessage(error: string) {
 
     case "network_congestion":
       return t("network_congestion");
-
-    case "payment_failed":
-      return t("Payment failed");
-
-    case "contract_validation_failed":
-      return t("Contract validation failed");
 
     default:
       return error;

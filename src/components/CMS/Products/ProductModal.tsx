@@ -256,7 +256,7 @@ export function ProductModal({
   const updateVariant = (
     index: number,
     field: keyof ProductVariant,
-    value: string | number | boolean
+    value: string | number | boolean | null
   ) => {
     const updated = [...productVariants];
     updated[index] = { ...updated[index], [field]: value };
@@ -729,14 +729,16 @@ export function ProductModal({
                             placeholder="Price"
                             step="0.01"
                             min="0"
-                            value={variant.price}
-                            onChange={(e) =>
-                              updateVariant(
-                                index,
-                                "price",
-                                parseFloat(e.target.value) || 0
-                              )
-                            }
+                            value={variant.price ?? ""}
+                            onChange={(e) => {
+                              const inputValue = e.target.value;
+                              if (inputValue === "" || inputValue === null || inputValue === undefined) {
+                                updateVariant(index, "price", null);
+                              } else {
+                                const numericValue = parseFloat(inputValue);
+                                updateVariant(index, "price", isNaN(numericValue) ? null : numericValue);
+                              }
+                            }}
                             className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                           />
                           <input

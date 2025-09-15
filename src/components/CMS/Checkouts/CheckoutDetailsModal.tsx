@@ -130,6 +130,14 @@ export function CheckoutDetailsModal({ checkout, products, onClose }: CheckoutDe
                       {formatDate(checkout.updatedAt)}
                     </span>
                   </div>
+                  {checkout.transactionHash && (
+                    <div>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">Transaction Hash:</span>
+                      <span className="ml-2 text-sm font-mono text-gray-900 dark:text-white break-all">
+                        {checkout.transactionHash}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -157,7 +165,7 @@ export function CheckoutDetailsModal({ checkout, products, onClose }: CheckoutDe
                             {item.product.category} • {item.product.material}
                           </p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Collection: {item.product.collection.name}
+                            Collection: {item.product.collection?.name}
                           </p>
                         </div>
                         <div className="text-right">
@@ -187,17 +195,12 @@ export function CheckoutDetailsModal({ checkout, products, onClose }: CheckoutDe
                         {calculateTotal().toFixed(2)} WLD
                       </span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">Shipping:</span>
-                      <span className="text-gray-900 dark:text-white">
-                        16.99 WLD
-                      </span>
-                    </div>
+                    
                     <div className="border-t border-gray-200 dark:border-gray-600 pt-2">
                       <div className="flex justify-between text-base font-medium">
                         <span className="text-gray-900 dark:text-white">Total:</span>
                         <span className="text-gray-900 dark:text-white">
-                          {(calculateTotal() + 16.99).toFixed(2)} WLD
+                          {(calculateTotal()).toFixed(2)} WLD
                         </span>
                       </div>
                     </div>

@@ -57,8 +57,7 @@ export const useLanguageStore = create<LanguageState>()(
       },
       getProductLanguage: () => {
         const { currentLanguage } = useLanguageStore.getState();
-        // If user selects English interface, default to Thai products since we don't have English products
-        return currentLanguage === "en" ? "th" : currentLanguage;
+        return currentLanguage
       },
     }),
     {

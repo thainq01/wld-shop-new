@@ -1,10 +1,10 @@
 import React from "react";
-import { ShoppingBag, Minus, Plus, Trash2 } from "lucide-react";
+import { ShoppingBag, Minus, Plus, Trash2, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
 import { useCart } from "../../hooks/useCart";
 import { BottomNavigation } from "../BottomNavigation";
 import { LoginButton } from "../LoginButton";
+
 
 // Simple placeholder component for product images in cart
 const ProductImagePlaceholder: React.FC<{
@@ -47,21 +47,40 @@ export const BagScreen: React.FC = () => {
     hasWallet,
   } = useCart();
 
-  // Login required state when no wallet
+  // Show cart layout even when empty to prevent flickering
+  const showCartLayout = hasWallet && (items?.length > 0 || isLoading);
+
   if (!hasWallet) {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
         {/* Content centered in screen */}
-        <LoginButton />
+        <div className="flex-1 flex items-center justify-center px-4 pb-20">
+          <div className="text-center max-w-sm">
+            {/* Clock icon (matching empty state style) */}
+            <div className="w-32 h-32 mx-auto mb-8 bg-gray-400 rounded-full flex items-center justify-center">
+              <Clock className="w-16 h-16 text-white" />
+            </div>
+
+            {/* Login required text */}
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+              Login Required
+            </h2>
+
+            {/* Description text */}
+            <p className="text-gray-500 dark:text-gray-400 text-lg mb-12">
+              Please sign in with your World ID to view your bag history
+            </p>
+
+            {/* Login button */}
+            <LoginButton />
+          </div>
+        </div>
 
         {/* Bottom Navigation */}
         <BottomNavigation />
       </div>
     );
   }
-
-  // Show cart layout even when empty to prevent flickering
-  const showCartLayout = hasWallet && (items?.length > 0 || isLoading);
 
   // Loading state - only show full screen loader if no items exist
   if (isLoading && (!items || items.length === 0)) {
@@ -95,7 +114,7 @@ export const BagScreen: React.FC = () => {
             </p>
             <button
               onClick={() => window.location.reload()}
-              className="w-full py-4 bg-black dark:bg-white text-white dark:text-black rounded-full font-semibold text-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
+              className="w-[250px] py-4 bg-black dark:bg-white text-white dark:text-black rounded-full font-semibold text-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
             >
               Try Again
             </button>
@@ -132,7 +151,7 @@ export const BagScreen: React.FC = () => {
             <div className="space-y-3">
               <button
                 onClick={() => navigate("/explore")}
-                className="w-full py-4 bg-black dark:bg-white text-white dark:text-black rounded-full font-semibold text-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
+                className="w-[250px] py-4 bg-black dark:bg-white text-white dark:text-black rounded-full font-semibold text-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
               >
                 Explore
               </button>
@@ -152,7 +171,7 @@ export const BagScreen: React.FC = () => {
       <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
         <div className="flex-1 pb-20">
           {/* Header */}
-          <div className="px-4 pt-6 pb-8">
+          <div className="px-4 pt-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 Your Bag ({items?.length || 0} item
@@ -201,18 +220,7 @@ export const BagScreen: React.FC = () => {
                               await updateQuantity(item.id, item.quantity - 1);
                             }
                           } catch (error) {
-                            console.error(
-                              "Error in cart operation (decrease):",
-                              error
-                            );
-                            const errorMessage =
-                              error instanceof Error
-                                ? error.message
-                                : "Failed to update cart";
-                            console.log(
-                              "🔔 Showing decrease toast:",
-                              errorMessage
-                            );
+                            console.error("Error in cart operation (decrease):", error);
                           }
                         }}
                         disabled={isLoading}
@@ -238,18 +246,7 @@ export const BagScreen: React.FC = () => {
                           try {
                             await updateQuantity(item.id, item.quantity + 1);
                           } catch (error) {
-                            console.error(
-                              "Error in cart operation (increase):",
-                              error
-                            );
-                            const errorMessage =
-                              error instanceof Error
-                                ? error.message
-                                : "Failed to update cart";
-                            console.log(
-                              "🔔 Showing increase toast:",
-                              errorMessage
-                            );
+                            console.error("Error in cart operation (increase):", error);
                           }
                         }}
                         disabled={isLoading}
@@ -316,16 +313,4 @@ export const BagScreen: React.FC = () => {
       </div>
     );
   }
-
-  // Fallback - should not be reached
-  return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
-      <div className="flex-1 flex items-center justify-center px-4 pb-20">
-        <div className="text-center">
-          <p className="text-gray-600 dark:text-gray-400">Loading...</p>
-        </div>
-      </div>
-      <BottomNavigation />
-    </div>
-  );
 };

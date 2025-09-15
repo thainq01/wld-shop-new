@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Package,
   Plus,
@@ -10,68 +10,56 @@ import {
 } from "lucide-react";
 import { productsApi } from "../../../utils/api";
 import {
-  Product,
-  CreateProductRequest,
-  UpdateProductRequest,
+  MultiLanguageProduct,
+  CreateMultiLanguageProductRequest,
+  UpdateMultiLanguageProductRequest,
 } from "../../../types";
-import { ProductModal } from "./ProductModal";
-import { CMSLanguageFilter } from "../LanguageFilter/CMSLanguageFilter";
-import { useCMSStore } from "../../../store/cmsStore";
-import { cmsLanguages } from "../../../store/languageStore";
+import { MultiLanguageProductModal } from "./MultiLanguageProductModal";
 
 export function ProductsManager() {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<MultiLanguageProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingProduct, setEditingProduct] = useState<MultiLanguageProduct | null>(null);
 
-  const { selectedLanguage, setSelectedLanguage, getLanguageFilter } =
-    useCMSStore();
-
-  const getLanguageDisplay = (langCode: string) => {
-    const language = cmsLanguages.find((lang) => lang.code === langCode);
-    return language ? `${language.flag} ${language.name}` : langCode;
-  };
-
-  useEffect(() => {
-    loadProducts();
-  }, [selectedLanguage]);
-
-  const loadProducts = async () => {
+  const loadProducts = useCallback(async () => {
     setLoading(true);
     try {
-      const languageFilter = getLanguageFilter();
-      const data = await productsApi.getAll(
-        languageFilter ? { lang: languageFilter } : undefined
-      );
-      setProducts(data);
+      const response = await productsApi.getAllMultiLanguage();
+      // Check if response has data property, otherwise use response directly
+      const products = Array.isArray(response) ? response : response.data;
+      setProducts(products);
     } catch (error) {
       console.error("Failed to load products:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const handleCreate = async (data: CreateProductRequest) => {
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
+
+  const handleCreate = async (data: CreateMultiLanguageProductRequest) => {
     try {
-      const newProduct = await productsApi.create(data);
-      setProducts((prev) => [...prev, newProduct]);
+      await productsApi.createMultiLanguage(data);
       setModalOpen(false);
+      // Refetch products to get the latest data
+      await loadProducts();
     } catch (error) {
       console.error("Failed to create product:", error);
       throw error;
     }
   };
 
-  const handleUpdate = async (id: number, data: UpdateProductRequest) => {
+  const handleUpdate = async (id: number, data: UpdateMultiLanguageProductRequest) => {
     try {
-      const updatedProduct = await productsApi.update(id, data);
-      setProducts((prev) =>
-        prev.map((p) => (p.id === id ? updatedProduct : p))
-      );
+      await productsApi.updateMultiLanguage(id, data);
       setModalOpen(false);
       setEditingProduct(null);
+      // Refetch products to get the latest data
+      await loadProducts();
     } catch (error) {
       console.error("Failed to update product:", error);
       throw error;
@@ -85,21 +73,29 @@ export function ProductsManager() {
     if (!confirm(`Are you sure you want to ${action} this product?`)) return;
 
     try {
-      const updatedProduct = await productsApi.toggleActive(id, newActiveState);
-      setProducts((prev) =>
-        prev.map((p) =>
-          p.id === id ? { ...p, active: updatedProduct.active } : p
-        )
-      );
+      await productsApi.updateMultiLanguage(id, { active: newActiveState });
+      // Refetch products to get the latest data
+      await loadProducts();
     } catch (error) {
       console.error(`Failed to ${action} product:`, error);
     }
   };
 
+  // Helper function to get product name (defaults to English)
+  const getProductName = (product: MultiLanguageProduct) => {
+    return product?.translations.en?.name ||
+           product?.translations[product?.defaultLanguage]?.name ||
+           Object.values(product?.translations || {})[0]?.name ||
+           "Untitled";
+  };
+
   const filteredProducts = products.filter(
-    (product) =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.collection.name.toLowerCase().includes(searchTerm.toLowerCase())
+    (product) => {
+      const name = getProductName(product);
+      const collectionName = product.collection?.name || "";
+      return name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+             collectionName.toLowerCase().includes(searchTerm.toLowerCase());
+    }
   );
 
   if (loading) {
@@ -143,10 +139,6 @@ export function ProductsManager() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <CMSLanguageFilter
-            selectedLanguage={selectedLanguage}
-            onLanguageChange={setSelectedLanguage}
-          />
           <button
             onClick={() => {
               setEditingProduct(null);
@@ -213,7 +205,7 @@ export function ProductsManager() {
                               product.images.find((img) => img.isPrimary)
                                 ?.url || product.images[0]?.url
                             }
-                            alt={product.name}
+                            alt={getProductName(product)}
                             className="w-full h-full object-cover rounded-lg"
                             onError={(e) => {
                               e.currentTarget.style.display = "none";
@@ -225,7 +217,7 @@ export function ProductsManager() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                          {product.name}
+                          {getProductName(product)}
                         </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                           ID: {product.id}
@@ -240,12 +232,12 @@ export function ProductsManager() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900 dark:text-white">
-                      ${product.price}
+                      {product.basePrice} WLD
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 px-2 py-1 rounded">
-                      {getLanguageDisplay(product.language)}
+                      {product.availableLanguages.join(", ").toUpperCase()}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -336,7 +328,7 @@ export function ProductsManager() {
                           product.images.find((img) => img.isPrimary)?.url ||
                           product.images[0]?.url
                         }
-                        alt={product.name}
+                        alt={getProductName(product)}
                         className="w-full h-full object-cover rounded-lg"
                         onError={(e) => {
                           e.currentTarget.style.display = "none";
@@ -349,10 +341,10 @@ export function ProductsManager() {
 
                   <div className="flex-1 min-w-0">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
-                      {product.name}
+                      {getProductName(product)}
                     </h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {product.collection?.name} • ${product.price}
+                      {product.collection?.name} • ${product.basePrice}
                     </p>
                     <div className="flex items-center gap-2 mt-1">
                       <span
@@ -452,7 +444,7 @@ export function ProductsManager() {
       )}
 
       {/* Product Modal */}
-      <ProductModal
+      <MultiLanguageProductModal
         isOpen={modalOpen}
         onClose={() => {
           setModalOpen(false);
@@ -462,8 +454,8 @@ export function ProductsManager() {
         onSubmit={
           editingProduct
             ? (data) =>
-                handleUpdate(editingProduct.id, data as UpdateProductRequest)
-            : (data) => handleCreate(data as CreateProductRequest)
+                handleUpdate(editingProduct.id, data as UpdateMultiLanguageProductRequest)
+            : (data) => handleCreate(data as CreateMultiLanguageProductRequest)
         }
       />
     </div>

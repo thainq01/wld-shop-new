@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { ChevronDown, HelpCircle, Check, Lock } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useCart } from "../../hooks/useCart";
 import { BottomNavigation } from "../BottomNavigation";
@@ -9,10 +9,13 @@ import { useWLDBalance } from "../../hooks/useWLDBalance";
 import { useCheckout } from "../../hooks/useCheckout";
 import { useAuthWorld } from "../../store/authStore";
 import { useLanguageStore } from "../../store/languageStore";
+import { useCountryStore, countries } from "../../store/countryStore";
 import { generateOrderId } from "../../utils/orderIdGenerator";
-import { usePaymentService } from "../../hooks/usePaymentService";
-import { ErrorMessage } from "../../utils/error";
+import { productsApi } from "../../utils/api";
 import type { CreateCheckoutRequest } from "../../types";
+import { WLDPaymentButton } from "../checkout/WLDPaymentButton";
+import { CitySelector } from "../checkout/CitySelector";
+import { getCitiesForCountry } from "../../data/cities";
 
 interface ShippingAddress {
   email: string;
@@ -53,8 +56,8 @@ const CountrySelector = ({
       {/* Country Selector Button */}
       <motion.button
         onClick={() => !disabled && setIsModalOpen(true)}
-        whileHover={disabled ? {} : { scale: 1.02 }}
-        whileTap={disabled ? {} : { scale: 0.98 }}
+        whileHover={disabled ? {} : { scale: 1 }}
+        whileTap={disabled ? {} : { scale: 1 }}
         className={`w-full px-4 py-4 border rounded-lg flex items-center justify-between focus:outline-none focus:ring-2 ${
           disabled
             ? "border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed"
@@ -75,7 +78,7 @@ const CountrySelector = ({
           </motion.div>
         )}
       </motion.button>
-
+      
       {/* Disabled reason message */}
       {disabled && reason && (
         <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
@@ -101,7 +104,7 @@ const CountrySelector = ({
               initial={{
                 opacity: 0,
                 y: 100,
-                scale: 0.95,
+                scale: 1,
                 borderRadius: "24px 24px 0 0",
               }}
               animate={{
@@ -113,7 +116,7 @@ const CountrySelector = ({
               exit={{
                 opacity: 0,
                 y: 100,
-                scale: 0.95,
+                scale: 1,
                 borderRadius: "24px 24px 0 0",
               }}
               transition={{
@@ -150,7 +153,7 @@ const CountrySelector = ({
                     key={country}
                     onClick={() => handleCountrySelect(country)}
                     variants={{
-                      hidden: { opacity: 0, y: 20, scale: 0.95 },
+                      hidden: { opacity: 0, y: 20, scale: 1 },
                       visible: {
                         opacity: 1,
                         y: 0,
@@ -162,10 +165,10 @@ const CountrySelector = ({
                       },
                     }}
                     whileHover={{
-                      scale: 1.02,
+                      scale: 1,
                       transition: { duration: 0.2 },
                     }}
-                    whileTap={{ scale: 0.98 }}
+                    whileTap={{ scale: 1 }}
                     className="w-full p-4 rounded-xl flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                   >
                     <span className="text-lg font-medium text-gray-900 dark:text-gray-100">
@@ -174,9 +177,9 @@ const CountrySelector = ({
                     <AnimatePresence>
                       {selectedCountry === country && (
                         <motion.div
-                          initial={{ opacity: 0, scale: 0.5, rotate: -90 }}
+                          initial={{ opacity: 0, scale: 1, rotate: -90 }}
                           animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                          exit={{ opacity: 0, scale: 0.5, rotate: 90 }}
+                          exit={{ opacity: 0, scale: 1, rotate: 90 }}
                           transition={{
                             duration: 0.3,
                             ease: [0.25, 0.46, 0.45, 0.94],
@@ -198,59 +201,40 @@ const CountrySelector = ({
   );
 };
 
-// Language to country mapping - moved outside component to prevent re-creation
-const languageToCountry: Record<string, string> = {
-  th: "Thailand",
-  ms: "Malaysia",
-  ph: "Philippines",
-  id: "Indonesia",
-  en: "Thailand", // Default to Thailand for English
-};
+// CheckoutScreen now uses the shared country store for consistency
 
 export const CheckoutScreen: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { items, totalAmount, clearCart } = useCart();
-  const { balance: wldBalance, error: balanceError } = useWLDBalance();
+  const { items, totalAmount, clearCart, refreshCart } = useCart();
+  const { balance: wldBalance } = useWLDBalance();
   const { address } = useAuthWorld();
   const { currentLanguage } = useLanguageStore();
-  const {
-    createCheckout,
-    isLoading: isCheckoutLoading,
-    error: checkoutError,
-  } = useCheckout();
+  const { selectedCountry, getCountryOption, setCountry, getCountryCodeFromName, getCountryFromLanguage, isManuallySelected } = useCountryStore();
+  const { createCheckout } = useCheckout();
 
-  const {
-    processPaymentWithApproval,
-    processSmartPayment,
-    approveTokens,
-    executePaymentOnly,
-    isProcessing: isPaymentProcessing,
-    error: paymentError,
-  } = usePaymentService();
-
-  console.log(location, paymentError);
-
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [generatedOrderId, setGeneratedOrderId] = useState<string>("");
   const [checkoutCompleted, setCheckoutCompleted] = useState(false);
-  const [tokensApproved, setTokensApproved] = useState(false);
-  const [approvalTxId, setApprovalTxId] = useState<string>("");
 
-  // Available countries for shipping
-  const availableCountries = [
-    "Thailand",
-    "Malaysia",
-    "Philippines",
-    "Indonesia",
-  ];
+  // Country-specific pricing state
+  const [countrySpecificTotal, setCountrySpecificTotal] = useState<number | null>(null);
+  const [itemPricing, setItemPricing] = useState<Record<string, { effectivePrice: number; itemTotal: number }>>({});
+  const [countrySpecificProducts, setCountrySpecificProducts] = useState<Record<string, any>>({});
+  const [isPricingLoading, setIsPricingLoading] = useState(false);
+  const [pricingError, setPricingError] = useState<string | null>(null);
 
-  // Get auto-selected country based on current language
-  const autoSelectedCountry = languageToCountry[currentLanguage] || "Thailand";
-  const isCountryAutoSelected = Boolean(languageToCountry[currentLanguage]);
-  const countryDisabledReason = isCountryAutoSelected
-    ? `Country automatically selected based on your product`
-    : undefined;
+  // Available countries for shipping - use names from country store
+  const availableCountries = countries.map(country => country.name);
+
+  // Get selected country name from country store
+  const selectedCountryOption = getCountryOption(selectedCountry);
+  const selectedCountryName = selectedCountryOption?.name || "Thailand";
+
+  // Country selection is now fully interactive in checkout
+  const isCountryAutoSelected = false;
+  const countryDisabledReason = undefined;
+
+  // Get available cities for the selected country
+  const availableCities = getCitiesForCountry(selectedCountry);
 
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
     email: "",
@@ -261,7 +245,7 @@ export const CheckoutScreen: React.FC = () => {
     city: "",
     postalCode: "",
     phone: "",
-    country: autoSelectedCountry,
+    country: selectedCountryName,
     saveForNextTime: false,
   });
 
@@ -271,22 +255,147 @@ export const CheckoutScreen: React.FC = () => {
     setGeneratedOrderId(orderId);
   }, [currentLanguage]);
 
-  // Update country when language changes
+  // Update country when selected country changes
   useEffect(() => {
-    const newCountry = languageToCountry[currentLanguage] || "Thailand";
-    setShippingAddress((prev) => ({
+    const newCountryName = selectedCountryName;
+    setShippingAddress(prev => ({
       ...prev,
-      country: newCountry,
+      country: newCountryName
     }));
-  }, [currentLanguage]);
+  }, [selectedCountryName]);
 
-  const subtotal = totalAmount || 0;
+  // Function to fetch country-specific pricing for all cart items
+  const fetchCountrySpecificPricing = useCallback(async (countryCode: string) => {
+    if (!items || items.length === 0) {
+      setCountrySpecificTotal(0);
+      return;
+    }
+
+    setIsPricingLoading(true);
+    setPricingError(null);
+
+    try {
+      // Fetch pricing for each cart item
+      const pricingPromises = items.map(async (item) => {
+        try {
+          // For checkout pricing, use selected country for both lang and country
+          const product = await productsApi.getById(item.productId, {
+            lang: countryCode,
+            country: countryCode
+          });
+
+          // Use countryPrice if available, otherwise use basePrice
+          const effectivePrice = product.countryPrice ?? product.basePrice;
+          const itemTotal = effectivePrice * item.quantity;
+
+          console.log(`Product ${item.productId}: countryPrice=${product.countryPrice}, basePrice=${product.basePrice}, effectivePrice=${effectivePrice}, quantity=${item.quantity}, total=${itemTotal}`);
+
+          return {
+            productId: item.productId,
+            effectivePrice,
+            itemTotal,
+            productData: product
+          };
+        } catch (error) {
+          console.error(`Failed to fetch pricing for product ${item.productId}:`, error);
+          // Fallback to current item price if API call fails
+          return {
+            productId: item.productId,
+            effectivePrice: item.productPrice,
+            itemTotal: item.lineTotal,
+            productData: null // No updated data available
+          };
+        }
+      });
+
+      const pricingResults = await Promise.all(pricingPromises);
+
+      // Create pricing map and product data map for individual items
+      const newItemPricing: Record<string, { effectivePrice: number; itemTotal: number }> = {};
+      const newProductData: Record<string, any> = {};
+      let newTotal = 0;
+
+      pricingResults.forEach(result => {
+        newItemPricing[result.productId] = {
+          effectivePrice: result.effectivePrice,
+          itemTotal: result.itemTotal
+        };
+        if (result.productData) {
+          newProductData[result.productId] = result.productData;
+        }
+        newTotal += result.itemTotal;
+      });
+
+      setItemPricing(newItemPricing);
+      setCountrySpecificProducts(newProductData);
+      setCountrySpecificTotal(newTotal);
+      console.log(`Country-specific total for ${countryCode}: ${newTotal}`);
+
+    } catch (error) {
+      console.error("Failed to fetch country-specific pricing:", error);
+      setPricingError("Failed to load country-specific pricing");
+      // Fallback to cart total
+      setCountrySpecificTotal(totalAmount || 0);
+    } finally {
+      setIsPricingLoading(false);
+    }
+  }, [items, totalAmount]);
+
+  // Fetch country-specific pricing when component mounts, items change, or country changes
+  useEffect(() => {
+    if (items && items.length > 0) {
+      fetchCountrySpecificPricing(selectedCountry);
+    }
+  }, [items, selectedCountry, fetchCountrySpecificPricing]);
+
+  // Handle automatic country selection and show toast notification
+  useEffect(() => {
+    const expectedCountry = getCountryFromLanguage(currentLanguage);
+
+    // If the country doesn't match the expected country for the current language
+    // and it wasn't manually selected, update it automatically
+    if (selectedCountry !== expectedCountry && !isManuallySelected) {
+      console.log(`Auto-selecting country ${expectedCountry} for language ${currentLanguage}`);
+
+      // Update the country (this will trigger price updates via the existing useEffect)
+      setCountry(expectedCountry, false);
+
+      // Show toast notification to inform user about automatic country selection
+      const countryOption = getCountryOption(expectedCountry);
+      if (countryOption) {
+        toast.success(`Delivery country automatically set to ${countryOption.name} based on your language preference.`);
+      }
+    }
+  }, [currentLanguage, selectedCountry, isManuallySelected, getCountryFromLanguage, setCountry, getCountryOption]);
+
+  // Helper function to build checkout products with country-specific data
+  const buildCheckoutProducts = () => {
+    return items.map((item) => {
+      const countrySpecificProduct = countrySpecificProducts[item.productId];
+      const pricing = itemPricing[item.productId];
+
+      return {
+        productId: parseInt(item.productId),
+        size: item.size || "Default",
+        quantity: item.quantity,
+        // Include country-specific product information if available
+        ...(countrySpecificProduct && {
+          productName: countrySpecificProduct.name,
+          productDescription: countrySpecificProduct.description,
+          effectivePrice: pricing?.effectivePrice || item.productPrice,
+          countryCode: selectedCountry,
+          language: selectedCountry, // Use selected country as language for checkout
+        })
+      };
+    });
+  };
+
+  // Use country-specific total if available, otherwise fall back to cart total
+  const subtotal = countrySpecificTotal !== null ? countrySpecificTotal : (totalAmount || 0);
   const shipping = "Freeship"; // Worldwide flat rate
   const total = subtotal;
 
   // Balance validation logic
-  const hasInsufficientBalance = wldBalance !== null && wldBalance < total;
-  const shortfallAmount = hasInsufficientBalance ? total - wldBalance : 0;
   const canProceedWithPayment = wldBalance !== null && wldBalance >= total;
 
   const handleInputChange = (
@@ -299,333 +408,40 @@ export const CheckoutScreen: React.FC = () => {
     }));
   };
 
-  const handleApproveTokens = async () => {
-    if (!address) {
-      alert("Please connect your wallet to proceed.");
-      return;
-    }
+  // Special handler for country changes that also updates the country store and refreshes pricing
+  const handleCountryChange = async (countryName: string) => {
+    // Update shipping address and reset city when country changes
+    handleInputChange("country", countryName);
+    handleInputChange("city", ""); // Reset city when country changes
 
-    setIsProcessingPayment(true);
+    // Find the country code from the country name using the helper function
+    const countryCode = getCountryCodeFromName(countryName);
+    if (countryCode) {
+      // Update the shared country store (mark as manually selected)
+      setCountry(countryCode, true);
 
-    try {
-      console.log("🚀 Starting token approval process...");
-
-      const approvalResult = await approveTokens(address, total);
-
-      if (!approvalResult.success) {
-        const errorCode = approvalResult.error || "approval_failed";
-        console.error("❌ Token approval failed with error:", errorCode);
-        throw new Error(errorCode);
+      // Fetch country-specific pricing for the new country
+      try {
+        await fetchCountrySpecificPricing(countryCode);
+        console.log("Country-specific pricing updated for:", countryCode);
+      } catch (error) {
+        console.error("Failed to fetch country-specific pricing after country change:", error);
+        // Could show a toast notification here if needed
       }
 
-      console.log(
-        "✅ Token approval successful:",
-        approvalResult.transactionId
-      );
-      setTokensApproved(true);
-      setApprovalTxId(approvalResult.transactionId || "");
-    } catch (error) {
-      console.error("❌ Token approval process failed:", error);
-
-      if (error instanceof Error) {
-        const errorMessage = error.message;
-        const { ErrorMessage } = await import("../../utils/error");
-        const friendlyMessage = ErrorMessage(errorMessage);
-        toast.error(friendlyMessage);
-      } else {
-        toast.error("Token approval failed. Please try again.");
+      // Also refresh cart with new country pricing
+      try {
+        await refreshCart();
+        console.log("Cart refreshed with new country pricing:", countryCode);
+      } catch (error) {
+        console.error("Failed to refresh cart after country change:", error);
       }
-    } finally {
-      setIsProcessingPayment(false);
     }
   };
 
-  const handleExecutePayment = async () => {
-    if (!address) {
-      alert("Please connect your wallet to proceed.");
-      return;
-    }
-
-    if (!tokensApproved) {
-      alert("Please approve tokens first before executing payment.");
-      return;
-    }
-
-    setIsProcessingPayment(true);
-
-    try {
-      console.log("🚀 Starting payment execution (tokens already approved)...");
-
-      // Execute payment only (tokens already approved)
-      const paymentResult = await executePaymentOnly({
-        orderId: generatedOrderId,
-        amount: total,
-        walletAddress: address,
-      });
-
-      if (!paymentResult.success) {
-        const errorCode = paymentResult.error || "payment_failed";
-        console.error("❌ Payment failed with error:", errorCode);
-        throw new Error(errorCode);
-      }
-
-      console.log("✅ Payment successful:", paymentResult.transactionId);
-
-      // Continue with checkout creation
-      await createCheckoutAfterPayment(paymentResult.transactionId!);
-    } catch (error) {
-      console.error("❌ Payment execution failed:", error);
-
-      if (error instanceof Error) {
-        const errorMessage = error.message;
-        const { ErrorMessage } = await import("../../utils/error");
-        const friendlyMessage = ErrorMessage(errorMessage);
-        toast.error(friendlyMessage);
-      } else {
-        toast.error("Payment failed. Please try again.");
-      }
-    } finally {
-      setIsProcessingPayment(false);
-    }
-  };
-
-  const createCheckoutAfterPayment = async (transactionId: string) => {
-    // Create checkout record after successful payment
-    console.log("📝 Creating checkout record...");
-    const checkoutData: CreateCheckoutRequest = {
-      orderId: generatedOrderId,
-      walletAddress: address!,
-      email: shippingAddress.email,
-      country: shippingAddress.country,
-      firstName: shippingAddress.firstName,
-      lastName: shippingAddress.lastName,
-      address: shippingAddress.address,
-      apartment: shippingAddress.apartment || undefined,
-      city: shippingAddress.city,
-      postcode: shippingAddress.postalCode,
-      phone: shippingAddress.phone,
-      status: "pending", // Keep as pending, backend will verify and update
-      products: items.map((item) => ({
-        productId: parseInt(item.productId),
-        size: item.size || "Default",
-        quantity: item.quantity,
-      })),
-    };
-
-    const orderResponse = await createCheckout(checkoutData);
-
-    if (!orderResponse) {
-      const errorMsg = checkoutError || "Failed to create checkout record";
-      console.error("❌ Checkout creation failed:", errorMsg);
-      throw new Error(
-        `Payment submitted but failed to save order: ${errorMsg}. Transaction ID: ${transactionId}`
-      );
-    }
-
-    // Navigate to success page
-    const successData = {
-      orderId: generatedOrderId,
-      transactionId: transactionId,
-      amount: total,
-      items: items,
-      shippingAddress: shippingAddress,
-      statusCode: 200,
-    };
-
-    navigate("/order-success", {
-      state: { orderData: successData },
-      replace: true,
-    });
-
-    // Clear cart after navigation
-    setTimeout(() => {
-      console.log("🧹 Clearing cart...");
-      clearCart();
-    }, 200);
-  };
-
-  const handlePayNow = async () => {
-    // Prevent payment if balance is insufficient
-    if (hasInsufficientBalance) {
-      alert(
-        `Insufficient WLD balance. You need ${shortfallAmount.toFixed(
-          2
-        )} more WLD to complete this purchase.`
-      );
-      return;
-    }
-
-    // Validate wallet address
-    if (!address) {
-      alert("Please connect your wallet to proceed with checkout.");
-      return;
-    }
-
-    setIsProcessingPayment(true);
-
-    try {
-      console.log("🚀 Starting checkout and payment process...");
-
-      // Step 1: Process payment through PaymentService (smart payment with auto-approval)
-      console.log("💳 Processing WLD payment with smart payment...");
-      const paymentResult = await processSmartPayment({
-        orderId: generatedOrderId,
-        amount: total,
-        walletAddress: address,
-      });
-
-      if (!paymentResult.success) {
-        const errorCode = paymentResult.error || "payment_failed";
-        console.error("❌ Payment failed with error:", errorCode);
-        throw new Error(errorCode);
-      }
-
-      console.log("✅ Payment successful:", paymentResult.transactionId);
-
-      // Step 2: Create checkout record after successful payment
-      // Backend will verify payment and update status from pending to paid
-      console.log("📝 Creating checkout record...");
-      const checkoutData: CreateCheckoutRequest = {
-        orderId: generatedOrderId,
-        walletAddress: address,
-        email: shippingAddress.email,
-        country: shippingAddress.country,
-        firstName: shippingAddress.firstName,
-        lastName: shippingAddress.lastName,
-        address: shippingAddress.address,
-        apartment: shippingAddress.apartment || undefined,
-        city: shippingAddress.city,
-        postcode: shippingAddress.postalCode,
-        phone: shippingAddress.phone,
-        status: "pending", // Keep as pending, backend will verify and update
-        products: items.map((item) => ({
-          productId: parseInt(item.productId),
-          size: item.size || "Default",
-          quantity: item.quantity,
-        })),
-      };
-
-      const orderResponse = await createCheckout(checkoutData);
-
-      if (!orderResponse) {
-        const errorMsg = checkoutError || "Failed to create checkout record";
-        console.error("❌ Checkout creation failed:", errorMsg);
-        // Payment was successful but checkout creation failed
-        // This is a critical error that needs manual intervention
-        throw new Error(
-          `Payment submitted but failed to save order: ${errorMsg}. Transaction ID: ${paymentResult.transactionId}`
-        );
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const orderData = orderResponse as any;
-      if (!orderData.id || !orderData.orderId) {
-        console.error("❌ Invalid checkout response structure:", orderResponse);
-        throw new Error(
-          `Payment submitted but received invalid order response. Transaction ID: ${paymentResult.transactionId}`
-        );
-      }
-
-      console.log("✅ Checkout created successfully:", orderResponse);
-
-      // Step 3: Mark checkout as completed and navigate to success
-      setCheckoutCompleted(true);
-
-      console.log("🔄 Navigating to success page...");
-
-      const successData = {
-        success: true,
-        data: {
-          ...orderResponse,
-          transactionId: paymentResult.transactionId,
-        },
-        statusCode: 200,
-      };
-
-      navigate("/order-success", {
-        state: {
-          orderData: successData,
-        },
-        replace: true,
-      });
-
-      // Clear cart after navigation
-      setTimeout(() => {
-        console.log("🧹 Clearing cart...");
-        clearCart();
-      }, 200);
-    } catch (error) {
-      console.error("❌ Checkout process failed:", error);
-
-      // Handle different types of errors
-      if (error instanceof Error) {
-        const errorMessage = error.message;
-
-        // Check if this is a payment vs checkout error
-        if (errorMessage.includes("Payment submitted but")) {
-          // Payment went through but checkout creation failed
-          toast.error(
-            "Payment submitted but order creation failed. Please contact support with your transaction details."
-          );
-        } else if (errorMessage.includes("Validation errors:")) {
-          // Parse validation errors
-          const validationPart = errorMessage.split("Validation errors: ")[1];
-          if (validationPart) {
-            const validationErrors = validationPart.split(", ");
-            validationErrors.forEach((errorStr) => {
-              const [field, message] = errorStr.split(": ");
-              if (field && message) {
-                toast.error(
-                  `${
-                    field.charAt(0).toUpperCase() + field.slice(1)
-                  }: ${message}`
-                );
-              }
-            });
-          } else {
-            toast.error(errorMessage);
-          }
-        } else if (errorMessage === "insufficient_allowance") {
-          // Handle insufficient allowance error specifically
-          const friendlyMessage = ErrorMessage(errorMessage);
-          toast.error(friendlyMessage);
-
-          // Ask user if they want to approve and retry
-          const shouldRetry = window.confirm(
-            "You need to approve WLD spending first. Would you like to approve and retry the payment?"
-          );
-
-          if (shouldRetry) {
-            console.log("🔄 Retrying payment with approval...");
-            try {
-              const retryResult = await processPaymentWithApproval({
-                orderId: generatedOrderId,
-                amount: total,
-                walletAddress: address,
-              });
-
-              if (retryResult.success) {
-                // Continue with the checkout process
-                window.location.reload(); // Simple retry for now
-                return;
-              }
-            } catch (retryError) {
-              console.error("❌ Retry with approval failed:", retryError);
-            }
-          }
-        } else {
-          // Use ErrorMessage function for standardized error handling
-          const friendlyMessage = ErrorMessage(errorMessage);
-          toast.error(friendlyMessage);
-        }
-      } else {
-        toast.error("Checkout failed. Please try again.");
-      }
-    } finally {
-      // Ensure processing state is always reset
-      setIsProcessingPayment(false);
-      console.log("🔄 Payment processing state reset");
-    }
+  // Handler for city changes
+  const handleCityChange = (cityName: string) => {
+    handleInputChange("city", cityName);
   };
 
   const isFormValid = () => {
@@ -640,25 +456,7 @@ export const CheckoutScreen: React.FC = () => {
     return formFieldsValid && canProceedWithPayment;
   };
 
-  const buttonStatus = useMemo(() => {
-    if (isProcessingPayment || isPaymentProcessing || isCheckoutLoading) {
-      return "Processing WLD Payment...";
-    }
-    if (hasInsufficientBalance) {
-      return "Insufficient Balance";
-    }
 
-    if (balanceError) {
-      return "Error loading balance";
-    }
-    return "Pay now";
-  }, [
-    balanceError,
-    hasInsufficientBalance,
-    isCheckoutLoading,
-    isProcessingPayment,
-    isPaymentProcessing,
-  ]);
 
   if ((!items || items.length === 0) && !checkoutCompleted) {
     return (
@@ -688,6 +486,8 @@ export const CheckoutScreen: React.FC = () => {
           </h2>
         </div>
 
+
+
         {/* Contact Section */}
         <div className="pt-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
@@ -712,9 +512,7 @@ export const CheckoutScreen: React.FC = () => {
             <CountrySelector
               countries={availableCountries}
               selectedCountry={shippingAddress.country}
-              onCountryChange={(country) =>
-                handleInputChange("country", country)
-              }
+              onCountryChange={handleCountryChange}
               disabled={isCountryAutoSelected}
               reason={countryDisabledReason}
             />
@@ -758,12 +556,12 @@ export const CheckoutScreen: React.FC = () => {
 
           {/* City and Postal Code */}
           <div className="grid grid-cols-2 gap-4 mb-4">
-            <input
-              type="text"
-              placeholder="City"
-              value={shippingAddress.city}
-              onChange={(e) => handleInputChange("city", e.target.value)}
-              className="px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            <CitySelector
+              cities={availableCities}
+              selectedCity={shippingAddress.city}
+              onCityChange={handleCityChange}
+              disabled={availableCities.length === 0}
+              reason={availableCities.length === 0 ? "No cities available for selected country" : undefined}
             />
             <input
               type="text"
@@ -879,22 +677,48 @@ export const CheckoutScreen: React.FC = () => {
               </div>
               <div className="flex-1">
                 <h3 className="font-medium text-gray-900 dark:text-gray-100">
-                  {item.productName}
+                  {countrySpecificProducts[item.productId]?.name || item.productName}
                 </h3>
-                <p className="text-sm text-gray-500">Size: {item.size}</p>
+                <p className="text-sm text-gray-500">
+                  Size: {item.size}
+                  {itemPricing[item.productId] && (
+                    <span className="ml-2 text-xs">
+                      ({itemPricing[item.productId].effectivePrice.toFixed(2)} WLD each)
+                    </span>
+                  )}
+                </p>
               </div>
               <span className="font-medium text-gray-900 dark:text-gray-100">
-                {(item.productPrice * item.quantity).toFixed(2)} WLD
+                {isPricingLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-600 dark:border-gray-400"></div>
+                    <span className="text-sm">Loading...</span>
+                  </div>
+                ) : (
+                  `${(itemPricing[item.productId]?.itemTotal ?? (item.productPrice * item.quantity)).toFixed(2)} WLD`
+                )}
               </span>
             </div>
           ))}
 
           {/* Totals */}
           <div className="space-y-2 my-7">
+            {countrySpecificTotal !== null && (
+              <div className="text-xs text-green-600 dark:text-green-400 mb-2">
+                ✓ Prices updated for {getCountryOption(selectedCountry)?.name || selectedCountry}
+              </div>
+            )}
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
-              <span className="text-gray-900 dark:text-gray-100">
-                {subtotal} WLD
+              <span className="text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                {isPricingLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-600 dark:border-gray-400"></div>
+                    <span className="text-sm">Loading...</span>
+                  </>
+                ) : (
+                  `${(subtotal).toFixed(2)} WLD`
+                )}
               </span>
             </div>
             <div className="flex justify-between pb-2">
@@ -906,91 +730,92 @@ export const CheckoutScreen: React.FC = () => {
 
             <div className="flex justify-between text-xl font-bold border-t border-gray-200 dark:border-gray-700 pt-5">
               <span className="text-gray-900 dark:text-gray-100">Total</span>
-              <span className="text-gray-900 dark:text-gray-100">
-                {total.toFixed(2)} WLD
+              <span className="text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                {isPricingLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900 dark:border-white"></div>
+                    <span className="text-sm">Updating...</span>
+                  </>
+                ) : (
+                  <>
+                    {total.toFixed(2)} WLD
+                    {pricingError && (
+                      <span className="text-xs text-red-500 ml-1">*</span>
+                    )}
+                  </>
+                )}
               </span>
             </div>
-          </div>
-        </div>
-
-        {/* Two-Step Payment Section */}
-        <div className="mb-6 p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
-            Two-Step Payment (Recommended)
-          </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            For better control, you can approve tokens first, then execute
-            payment separately.
-          </p>
-
-          {/* Step 1: Approve Tokens */}
-          <div className="mb-3">
-            <button
-              onClick={handleApproveTokens}
-              disabled={
-                !isFormValid() ||
-                isProcessingPayment ||
-                isPaymentProcessing ||
-                tokensApproved
-              }
-              className={`w-full py-3 rounded-lg font-medium text-base transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                tokensApproved
-                  ? "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border border-green-300 dark:border-green-700"
-                  : "bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600"
-              }`}
-            >
-              {tokensApproved ? "✅ Tokens Approved" : "Step 1: Approve Tokens"}
-            </button>
-            {tokensApproved && approvalTxId && (
-              <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                Approval TX: {approvalTxId.slice(0, 10)}...
-                {approvalTxId.slice(-6)}
-              </p>
+            {pricingError && (
+              <div className="text-xs text-red-500 mt-1">
+                *Using fallback pricing due to error
+              </div>
             )}
           </div>
-
-          {/* Step 2: Execute Payment */}
-          <button
-            onClick={handleExecutePayment}
-            disabled={
-              !isFormValid() ||
-              !tokensApproved ||
-              isProcessingPayment ||
-              isPaymentProcessing ||
-              isCheckoutLoading
-            }
-            className={`w-full py-3 rounded-lg font-medium text-base transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-              !tokensApproved
-                ? "bg-gray-400 dark:bg-gray-600 text-gray-200 dark:text-gray-400"
-                : "bg-green-600 dark:bg-green-500 text-white hover:bg-green-700 dark:hover:bg-green-600"
-            }`}
-          >
-            Step 2: Execute Payment
-          </button>
         </div>
 
-        {/* OR Divider */}
-        <div className="flex items-center my-6">
-          <div className="flex-1 border-t border-gray-300 dark:border-gray-600"></div>
-          <span className="px-4 text-sm text-gray-500 dark:text-gray-400">
-            OR
-          </span>
-          <div className="flex-1 border-t border-gray-300 dark:border-gray-600"></div>
-        </div>
+        {/* Payment Method Selection */}
+        <div className="mb-6">
+          {/* WLD Payment Button */}
+          <WLDPaymentButton
+            amount={total}
+            orderId={generatedOrderId}
+            wldBalance={wldBalance}
+            disabled={!isFormValid()}
+            onPaymentSuccess={async (txHash) => {
+              console.log("✅ WLD Payment successful:", txHash);
 
-        {/* One-Click Payment Button */}
-        <button
-          onClick={handlePayNow}
-          disabled={
-            !isFormValid() ||
-            isProcessingPayment ||
-            isPaymentProcessing ||
-            isCheckoutLoading
-          }
-          className={`w-full py-4 rounded-full font-semibold text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-6 bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200`}
-        >
-          {buttonStatus} (One-Click)
-        </button>
+              try {
+                // Create checkout after successful payment
+                const checkoutData: CreateCheckoutRequest = {
+                  orderId: generatedOrderId,
+                  walletAddress: address!,
+                  email: shippingAddress.email,
+                  country: shippingAddress.country,
+                  firstName: shippingAddress.firstName,
+                  lastName: shippingAddress.lastName,
+                  address: shippingAddress.address,
+                  apartment: shippingAddress.apartment || undefined,
+                  city: shippingAddress.city,
+                  postcode: shippingAddress.postalCode,
+                  phone: shippingAddress.phone,
+                  language: currentLanguage, // User's language preference
+                  totalAmount: total.toFixed(2), // Country-specific total amount
+                  status: "pending", // Mark as pending for backend verification
+                  transactionHash: txHash, // Store the transaction hash from WLD payment
+                  products: buildCheckoutProducts(),
+                };
+
+                const orderResponse = await createCheckout(checkoutData);
+
+                if (orderResponse) {
+                  setCheckoutCompleted(true);
+
+                  const successData = {
+                    success: true,
+                    data: orderResponse,
+                    statusCode: 200
+                  };
+
+                  navigate("/order-success", {
+                    state: { orderData: successData },
+                    replace: true,
+                  });
+
+                  setTimeout(() => clearCart(), 200);
+                }
+              } catch (error) {
+                console.error("❌ Failed to create checkout after payment:", error);
+                toast.error("Payment successful but failed to create order. Please contact support.");
+              }
+            }}
+            onPaymentError={(error) => {
+              console.error("❌ WLD Payment failed:", error);
+              toast.error(`Payment failed: ${error}`);
+            }}
+            className="w-full"
+          />
+        </div>
       </div>
 
       {/* Bottom Navigation */}

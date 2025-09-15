@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { cartApi } from "../utils/api";
 import type { CartItem, AddToCartRequest } from "../types";
 import { useLanguageStore } from "./languageStore";
+import { useCountryStore } from "./countryStore";
 
 interface CartState {
   items: CartItem[];
@@ -16,7 +17,7 @@ interface CartState {
   fetchCart: (walletAddress: string) => Promise<void>;
   addToCart: (
     walletAddress: string,
-    item: Omit<AddToCartRequest, "quantity" | "language">
+    item: Omit<AddToCartRequest, "quantity" | "language" | "country">
   ) => Promise<void>;
   removeFromCart: (walletAddress: string, itemId: number) => Promise<void>;
   updateQuantity: (
@@ -49,12 +50,13 @@ export const useCartStore = create<CartState>((set, get) => ({
     console.log("Fetching cart for wallet:", walletAddress);
     set({ isLoading: true, error: null });
     try {
-      // Get current language from language store
-      const productLanguage = useLanguageStore.getState().getProductLanguage();
-      const cartData = await cartApi.getCart(walletAddress, productLanguage);
+      // For cart, use UI language for both lang and country
+      const currentLanguage = useLanguageStore.getState().currentLanguage;
+      const cartData = await cartApi.getCart(walletAddress, currentLanguage, currentLanguage);
       console.log("Cart data fetched:", cartData);
       console.log("Cart items count:", cartData.items?.length || 0);
       console.log("Cart items:", cartData.items);
+      console.log("Using language and country:", currentLanguage);
 
       set({
         items: cartData.items || [],
@@ -82,12 +84,13 @@ export const useCartStore = create<CartState>((set, get) => ({
 
     try {
       console.log("Adding item to cart:", newItem);
-      // Get current language from language store
-      const productLanguage = useLanguageStore.getState().getProductLanguage();
+      // For cart, use UI language for both lang and country
+      const currentLanguage = useLanguageStore.getState().currentLanguage;
       const cartData = await cartApi.addToCart(walletAddress, {
         ...newItem,
         quantity: 1,
-        language: productLanguage,
+        language: currentLanguage,
+        country: currentLanguage,
       });
       console.log("Cart data received from add:", cartData);
 
@@ -102,12 +105,11 @@ export const useCartStore = create<CartState>((set, get) => ({
       } else {
         // If response is invalid, refetch the cart
         console.warn("Invalid cart data received from add, refetching cart...");
-        const productLanguage = useLanguageStore
-          .getState()
-          .getProductLanguage();
+        const currentLanguage = useLanguageStore.getState().currentLanguage;
         const refreshedCartData = await cartApi.getCart(
           walletAddress,
-          productLanguage
+          currentLanguage,
+          currentLanguage
         );
         set({
           items: refreshedCartData.items || [],
@@ -229,8 +231,11 @@ export const useCartStore = create<CartState>((set, get) => ({
     // Then make the API call in the background
     try {
       console.log("Updating quantity for item", itemId, "to", quantity);
+      // Get selected country
+      const selectedCountry = useCountryStore.getState().selectedCountry;
       const cartData = await cartApi.updateCartItem(walletAddress, itemId, {
         quantity,
+        country: selectedCountry,
       });
       console.log("Cart data received from update:", cartData);
 
@@ -275,8 +280,11 @@ export const useCartStore = create<CartState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       console.log("Updating size for item", itemId, "to", size);
+      // Get selected country
+      const selectedCountry = useCountryStore.getState().selectedCountry;
       const cartData = await cartApi.updateCartItem(walletAddress, itemId, {
         size,
+        country: selectedCountry,
       });
       console.log("Cart data received from size update:", cartData);
 
@@ -286,12 +294,11 @@ export const useCartStore = create<CartState>((set, get) => ({
           "Invalid cart data received from size update, refetching cart..."
         );
         // If the response doesn't have the expected structure, refetch the cart
-        const productLanguage = useLanguageStore
-          .getState()
-          .getProductLanguage();
+        const currentLanguage = useLanguageStore.getState().currentLanguage;
         const refreshedCartData = await cartApi.getCart(
           walletAddress,
-          productLanguage
+          currentLanguage,
+          currentLanguage
         );
         console.log(
           "Refreshed cart data after size update:",
@@ -344,18 +351,21 @@ export const useCartStore = create<CartState>((set, get) => ({
 }));
 
 // Subscribe to language changes and refresh cart when language changes
-let previousLanguageForCart = useLanguageStore.getState().getProductLanguage();
+let previousLanguageForCart = useLanguageStore.getState().currentLanguage;
 
 useLanguageStore.subscribe(() => {
-  const productLanguage = useLanguageStore.getState().getProductLanguage();
+  const currentLanguage = useLanguageStore.getState().currentLanguage;
   // Only refresh if language actually changed
-  if (productLanguage !== previousLanguageForCart) {
+  if (currentLanguage !== previousLanguageForCart) {
     console.log(
-      `Product language changed from ${previousLanguageForCart} to ${productLanguage}, refreshing cart...`
+      `UI language changed from ${previousLanguageForCart} to ${currentLanguage}, refreshing cart...`
     );
-    previousLanguageForCart = productLanguage;
+    previousLanguageForCart = currentLanguage;
 
     // Note: We can't directly access wallet address here, so we'll rely on the component to handle this
     // The useCart hook will handle the language change and refetch the cart
   }
 });
+
+// Note: Cart now only depends on UI language, not on selected country
+// Country changes will only affect checkout pricing, not cart content

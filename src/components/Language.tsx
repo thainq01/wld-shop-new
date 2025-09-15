@@ -64,7 +64,7 @@ export function Language() {
                     key={index}
                     className={`cursor-pointer flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
                       languages.length - 1 !== index
-                        ? "border-b border-gray-200 dark:border-gray-700"
+                        ? ""
                         : ""
                     }`}
                   >

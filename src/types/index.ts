@@ -20,14 +20,14 @@ export interface ProductImage {
 
 export interface ProductSize {
   size: string;
-  price: number;
+  price: number | null;
   stockQuantity: number;
   available: boolean;
 }
 
 export interface ProductVariant {
   size: string;
-  price: number;
+  price: number | null;
   stockQuantity: number;
   available: boolean;
 }
@@ -41,7 +41,7 @@ export interface Product {
     id: number;
     name: string;
     slug: string;
-  };
+  } | null;
   category: string;
   material: string;
   madeBy: string;
@@ -53,7 +53,14 @@ export interface Product {
   sizes: ProductSize[] | null;
   otherDetails: string;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
+  // New country-specific pricing fields
+  basePrice: number;
+  countryPrice: number | null;
+  countryCode: string;
+  hasCountrySpecificPrice: boolean;
+  currency: string;
+  effectivePrice: number;
 }
 
 export interface CreateCollectionRequest {
@@ -104,6 +111,137 @@ export interface UpdateProductRequest {
   productImages?: ProductImage[];
 }
 
+// Multi-language collection types
+export interface CollectionTranslation {
+  languageCode: string;
+  name: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MultiLanguageCollection {
+  id: number;
+  slug: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  translations: Record<string, CollectionTranslation>;
+  availableLanguages: string[];
+  defaultLanguage: string;
+  metadata: {
+    requestedLanguage: string;
+    requestedCountry: string | null;
+    effectiveLanguage: string;
+    effectiveCountry: string | null;
+    currency: string;
+    hasLanguageFallback: boolean;
+    hasCountryFallback: boolean;
+    responseTimestamp: string;
+  };
+}
+
+export interface CreateMultiLanguageCollectionRequest {
+  slug: string;
+  isActive: boolean;
+  translations: Record<string, {
+    name: string;
+    description: string;
+  }>;
+}
+
+export interface UpdateMultiLanguageCollectionRequest {
+  slug?: string;
+  isActive?: boolean;
+  translations?: Record<string, {
+    name: string;
+    description: string;
+  }>;
+}
+
+// Multi-language product types
+export interface ProductTranslation {
+  languageCode: string;
+  name: string;
+  description: string;
+  material: string;
+  otherDetails: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MultiLanguageProduct {
+  id: number;
+  basePrice: number;
+  collection: {
+    id: number;
+    name: string;
+    slug: string;
+  } | null;
+  category: string;
+  madeBy: string;
+  inStock: string;
+  featured: boolean;
+  active: boolean;
+  sizes: ProductSize[];
+  images: ProductImage[];
+  createdAt: string;
+  updatedAt: string;
+  translations: Record<string, ProductTranslation>;
+  availableLanguages: string[];
+  defaultLanguage: string;
+  countryPrices: Record<string, number>;
+  availableCountries: string[];
+  metadata: {
+    requestedLanguage: string;
+    requestedCountry: string | null;
+    effectiveLanguage: string;
+    effectiveCountry: string | null;
+    currency: string;
+    hasLanguageFallback: boolean;
+    hasCountryFallback: boolean;
+    responseTimestamp: string;
+  };
+}
+
+export interface CreateMultiLanguageProductRequest {
+  price: number;
+  collectionId?: number;
+  category: string;
+  madeBy: string;
+  inStock: string;
+  featured: boolean;
+  active: boolean;
+  translations: Record<string, {
+    name: string;
+    description: string;
+    material: string;
+    otherDetails: string;
+  }>;
+  countryPrices?: Record<string, number>;
+  productVariants: ProductVariant[];
+  productImages: ProductImage[];
+}
+
+export interface UpdateMultiLanguageProductRequest {
+  price?: number;
+  collectionId?: number;
+  category?: string;
+  madeBy?: string;
+  inStock?: string;
+  featured?: boolean;
+  active?: boolean;
+  translations?: Record<string, {
+    name: string;
+    description: string;
+    material: string;
+    otherDetails: string;
+  }>;
+  countryPrices?: Record<string, number>;
+  productVariants?: ProductVariant[];
+  productImages?: ProductImage[];
+}
+
 // Cart API Types
 export interface CartItem {
   id: number;
@@ -124,7 +262,7 @@ export interface CartResponse {
   items: CartItem[];
   totalItems: number;
   totalQuantity: number;
-  totalAmount: number;
+  totalAmount: string;
 }
 
 export interface AddToCartRequest {
@@ -132,11 +270,13 @@ export interface AddToCartRequest {
   size: string;
   quantity: number;
   language: string;
+  country: string;
 }
 
 export interface UpdateCartItemRequest {
   quantity?: number;
   size?: string;
+  country?: string;
 }
 
 // User Management Types
@@ -187,7 +327,10 @@ export interface CreateCheckoutRequest {
   city: string;
   postcode: string;
   phone: string;
+  language?: string; // Optional - user's language preference
+  totalAmount?: string; // Optional - total amount with country-specific pricing
   status?: string; // Optional - defaults to "pending"
+  transactionHash?: string; // Optional - transaction hash from WLD payment
   products: CheckoutProduct[];
 }
 
@@ -212,6 +355,9 @@ export interface Checkout {
   city: string;
   postcode: string;
   phone: string;
+  language?: string; // User's language preference
+  totalAmount?: string; // Total amount with country-specific pricing
+  transactionHash?: string; // Transaction hash from WLD payment
   createdAt: string;
   updatedAt: string;
   products?: CheckoutProductResponse[];
@@ -260,8 +406,10 @@ export interface OrderSuccessData {
   city: string;
   postcode: string;
   phone: string;
-  totalAmount: number;
+  language?: string; // User's language preference
+  totalAmount: string;
   status: string; // "pending", "paid", "out for delivery", "delivered"
+  transactionHash?: string; // Transaction hash from WLD payment
   products: OrderSuccessProduct[];
   createdAt: string;
   updatedAt: string;

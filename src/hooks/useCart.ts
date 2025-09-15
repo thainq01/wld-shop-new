@@ -2,10 +2,11 @@ import { useEffect, useRef } from "react";
 import { useCartStore } from "../store/cartStore";
 import { useAuthWorld } from "../store/authStore";
 import { useLanguageStore } from "../store/languageStore";
+import { useCountryStore } from "../store/countryStore";
 
 export const useCart = () => {
   const { address } = useAuthWorld();
-  const { currentLanguage, getProductLanguage } = useLanguageStore();
+  const { currentLanguage } = useLanguageStore();
   const {
     items,
     totalItems,
@@ -29,23 +30,22 @@ export const useCart = () => {
 
   // Automatically fetch cart when wallet address or language changes
   useEffect(() => {
-    const productLanguage = getProductLanguage();
     if (
       address &&
       (address !== lastAddressRef.current ||
-        productLanguage !== lastLanguageRef.current)
+        currentLanguage !== lastLanguageRef.current)
     ) {
       console.log(
-        "Wallet address or language changed, fetching cart for:",
+        "Wallet address or UI language changed, fetching cart for:",
         address,
-        "language:",
-        productLanguage
+        "UI language:",
+        currentLanguage
       );
       lastAddressRef.current = address;
-      lastLanguageRef.current = productLanguage;
+      lastLanguageRef.current = currentLanguage;
       fetchCart(address);
     }
-  }, [address, currentLanguage, fetchCart, getProductLanguage]);
+  }, [address, currentLanguage, fetchCart]);
 
   return {
     items,

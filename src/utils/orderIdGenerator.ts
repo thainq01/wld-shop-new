@@ -1,10 +1,10 @@
 import { useLanguageStore } from "../store/languageStore";
 
-// Language to country code mapping
+// Language to country code mapping for order IDs
 const LANGUAGE_TO_COUNTRY_CODE: Record<string, string> = {
-  'en': 'th', // Default to Thailand for English
+  'en': 'th', // English → Thailand (consistent with country store)
   'th': 'th', // Thailand
-  'ms': 'my', // Malaysia
+  'ms': 'my', // Malaysia (using 'my' for order IDs)
   'ph': 'ph', // Philippines
   'id': 'id', // Indonesia
 };

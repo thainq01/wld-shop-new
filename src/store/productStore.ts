@@ -44,12 +44,11 @@ export const useProductStore = create<ProductState>()(
       set({ isLoading: true, error: null });
 
       try {
-        // Get product language (maps EN to TH since we don't have English products)
-        const productLanguage = useLanguageStore
-          .getState()
-          .getProductLanguage();
+        // For product detail, use UI language for both lang and country
+        const currentLanguage = useLanguageStore.getState().currentLanguage;
         const product = await productsApi.getById(productId, {
-          lang: productLanguage,
+          lang: currentLanguage,
+          country: currentLanguage,
         });
         set({ currentProduct: product, isLoading: false });
       } catch (error) {
@@ -66,12 +65,11 @@ export const useProductStore = create<ProductState>()(
       set({ isLoadingCoreCollection: true, error: null });
 
       try {
-        // Get product language (maps EN to TH since we don't have English products)
-        const productLanguage = useLanguageStore
-          .getState()
-          .getProductLanguage();
+        // For collections, use UI language for both lang and country
+        const currentLanguage = useLanguageStore.getState().currentLanguage;
         const products = await collectionsApi.getProducts("core-collection", {
-          lang: productLanguage,
+          lang: currentLanguage,
+          country: currentLanguage,
           active: true,
         });
         set({
@@ -93,12 +91,11 @@ export const useProductStore = create<ProductState>()(
       set({ isLoadingLimitedDrop: true, error: null });
 
       try {
-        // Get product language (maps EN to TH since we don't have English products)
-        const productLanguage = useLanguageStore
-          .getState()
-          .getProductLanguage();
+        // For collections, use UI language for both lang and country
+        const currentLanguage = useLanguageStore.getState().currentLanguage;
         const products = await collectionsApi.getProducts("limited-drop", {
-          lang: productLanguage,
+          lang: currentLanguage,
+          country: currentLanguage,
           active: true,
         });
         set({
@@ -120,14 +117,13 @@ export const useProductStore = create<ProductState>()(
       set({ isLoadingSlider: true, error: null });
 
       try {
-        // Get product language (maps EN to TH since we don't have English products)
-        const productLanguage = useLanguageStore
-          .getState()
-          .getProductLanguage();
+        // For slider products, use UI language for both lang and country
+        const currentLanguage = useLanguageStore.getState().currentLanguage;
         // For slider, fetch featured products or mix from both collections
         const products = await productsApi.getAll({
           limit: 6,
-          lang: productLanguage,
+          lang: currentLanguage,
+          country: currentLanguage,
           active: true,
         });
         set({

@@ -9,11 +9,9 @@ import { usersApi } from "../utils/api";
 const WEEKEND_MILISECOND = 7 * 24 * 60 * 60 * 1000;
 const DAY_MILISECOND = 24 * 60 * 60 * 1000;
 
-interface LoginButtonProps {
-  compact?: boolean;
-}
 
-export function LoginButton({ compact = false }: LoginButtonProps) {
+
+export function LoginButton() {
   const [loading, setLoading] = useState(false);
   const [setUserInfo, setAddress] = useAuthWorld(
     useShallow((state) => [state.setUserInfo, state.setAddress])
@@ -80,7 +78,7 @@ export function LoginButton({ compact = false }: LoginButtonProps) {
       data-action="walletAuth"
       disabled={loading}
       onClick={login}
-      className={`w-full py-4 bg-black dark:bg-white text-white dark:text-black rounded-full font-semibold text-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors`}
+      className={`w-[250px] py-4 bg-black dark:bg-white text-white dark:text-black rounded-full font-semibold text-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors`}
     >
       {loading ? t("Signing in...") : t("Sign in")}
     </button>

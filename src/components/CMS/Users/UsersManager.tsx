@@ -73,8 +73,8 @@ export function UsersManager() {
 
   const filteredUsers = users.filter(
     (user) =>
-      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.walletAddress.toLowerCase().includes(searchTerm.toLowerCase())
+      user?.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user?.walletAddress?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const formatDate = (dateString: string) => {

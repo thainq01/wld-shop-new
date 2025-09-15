@@ -7,6 +7,12 @@ import type {
   UpdateCollectionRequest,
   CreateProductRequest,
   UpdateProductRequest,
+  MultiLanguageCollection,
+  CreateMultiLanguageCollectionRequest,
+  UpdateMultiLanguageCollectionRequest,
+  MultiLanguageProduct,
+  CreateMultiLanguageProductRequest,
+  UpdateMultiLanguageProductRequest,
   User,
   CreateUserRequest,
   UpdateUserRequest,
@@ -149,9 +155,21 @@ export const collectionsApi = {
     );
   },
 
-  getProducts: (slug: string, params?: { lang?: string; active?: boolean }) => {
+  // Multi-language collections
+  getAllMultiLanguage: (params?: { lang?: string }) => {
     const searchParams = new URLSearchParams();
     if (params?.lang) searchParams.append("lang", params.lang);
+
+    const query = searchParams.toString();
+    return apiFetch<{ success: boolean; data: MultiLanguageCollection[]; statusCode: number } | MultiLanguageCollection[]>(
+      `/api/cms/collections/multi-language${query ? `?${query}` : ""}`
+    );
+  },
+
+  getProducts: (slug: string, params?: { lang?: string; country?: string; active?: boolean }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.lang) searchParams.append("lang", params.lang);
+    if (params?.country) searchParams.append("country", params.country);
     if (params?.active !== undefined)
       searchParams.append("active", params.active.toString());
 
@@ -161,7 +179,7 @@ export const collectionsApi = {
     );
   },
 
-  // CMS operations
+  // CMS operations (legacy single-language)
   create: (data: CreateCollectionRequest) =>
     apiFetch<Collection>("/api/collections", {
       method: "POST",
@@ -170,6 +188,19 @@ export const collectionsApi = {
 
   update: (id: number, data: UpdateCollectionRequest) =>
     apiFetch<Collection>(`/api/collections/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  // Multi-language CMS operations
+  createMultiLanguage: (data: CreateMultiLanguageCollectionRequest) =>
+    apiFetch<{ success: boolean; data: MultiLanguageCollection; statusCode: number }>("/api/cms/collections", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateMultiLanguage: (id: number, data: UpdateMultiLanguageCollectionRequest) =>
+    apiFetch<{ success: boolean; data: MultiLanguageCollection; statusCode: number }>(`/api/cms/collections/${id}/multi-language`, {
       method: "PUT",
       body: JSON.stringify(data),
     }),
@@ -183,6 +214,7 @@ export const productsApi = {
     limit?: number;
     page?: number;
     lang?: string;
+    country?: string;
     active?: boolean;
   }) => {
     const searchParams = new URLSearchParams();
@@ -191,6 +223,7 @@ export const productsApi = {
     if (params?.limit) searchParams.append("limit", params.limit.toString());
     if (params?.page) searchParams.append("page", params.page.toString());
     if (params?.lang) searchParams.append("lang", params.lang);
+    if (params?.country) searchParams.append("country", params.country);
     if (params?.active !== undefined)
       searchParams.append("active", params.active.toString());
 
@@ -198,10 +231,11 @@ export const productsApi = {
     return apiFetch<Product[]>(`/api/products${query ? `?${query}` : ""}`);
   },
 
-  getById: (id: string | number, params?: { lang?: string }) => {
+  getById: (id: string | number, params?: { lang?: string; country?: string }) => {
     const searchParams = new URLSearchParams();
     searchParams.append("id", id.toString());
     if (params?.lang) searchParams.append("lang", params.lang);
+    if (params?.country) searchParams.append("country", params.country);
 
     const query = searchParams.toString();
     return apiFetch<Product>(`/api/products?${query}`);
@@ -223,6 +257,30 @@ export const productsApi = {
   toggleActive: (id: number, active: boolean) =>
     apiFetch<Product>(`/api/products/${id}/active?active=${active}`, {
       method: "PUT",
+    }),
+
+  // Multi-language products
+  getAllMultiLanguage: (params?: { lang?: string }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.lang) searchParams.append("lang", params.lang);
+
+    const query = searchParams.toString();
+    return apiFetch<{ success: boolean; data: MultiLanguageProduct[]; statusCode: number } | MultiLanguageProduct[]>(
+      `/api/cms/products/multi-language${query ? `?${query}` : ""}`
+    );
+  },
+
+  // Multi-language CMS operations
+  createMultiLanguage: (data: CreateMultiLanguageProductRequest) =>
+    apiFetch<{ success: boolean; data: MultiLanguageProduct; statusCode: number }>("/api/cms/products", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateMultiLanguage: (id: number, data: UpdateMultiLanguageProductRequest) =>
+    apiFetch<{ success: boolean; data: MultiLanguageProduct; statusCode: number }>(`/api/cms/products/${id}/multi-language`, {
+      method: "PUT",
+      body: JSON.stringify(data),
     }),
 };
 
@@ -421,10 +479,13 @@ export const checkoutApi = {
 // Cart API functions
 export const cartApi = {
   // Get all cart items for a specific wallet
-  getCart: (walletAddress: string, language?: string) => {
-    const url = language
-      ? `/api/cart/${walletAddress}?lang=${language}`
-      : `/api/cart/${walletAddress}`;
+  getCart: (walletAddress: string, language?: string, country?: string) => {
+    const searchParams = new URLSearchParams();
+    if (language) searchParams.append("lang", language);
+    if (country) searchParams.append("country", country);
+
+    const query = searchParams.toString();
+    const url = `/api/cart/${walletAddress}${query ? `?${query}` : ""}`;
     return apiFetch<CartResponse>(url);
   },
 

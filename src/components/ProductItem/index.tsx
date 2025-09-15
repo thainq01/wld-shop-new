@@ -134,7 +134,7 @@ export const ProductItem: React.FC<ProductItemProps> = ({ product }) => {
         <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
           {product.name}
         </h4>
-        <p className="text-gray-500 dark:text-gray-400"> {product.price} WLD</p>
+        <p className="text-gray-500 dark:text-gray-400"> {product.effectivePrice || product.countryPrice || product.basePrice || product.price} WLD</p>
       </div>
 
       {/* Arrow */}

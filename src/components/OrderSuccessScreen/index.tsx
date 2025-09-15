@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { CheckCircle, Package, MapPin, Phone, Mail, ArrowLeft } from "lucide-react";
+import { CheckCircle, Package, MapPin, Phone, Mail } from "lucide-react";
 import { motion } from "framer-motion";
 import { BottomNavigation } from "../BottomNavigation";
 import type { OrderSuccessResponse } from "../../types";
@@ -43,6 +44,7 @@ const OrderSuccessScreen: React.FC = () => {
     // Try different possible structures
     if ('data' in orderData && orderData.data) {
       order = orderData.data;
+    // eslint-disable-next-line no-dupe-else-if
     } else if ('success' in orderData && 'data' in orderData && orderData.data) {
       order = orderData.data;
     } else if ('id' in orderData) {
@@ -144,7 +146,7 @@ const OrderSuccessScreen: React.FC = () => {
           className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
         >
           <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Order Details
               </h2>
@@ -169,7 +171,7 @@ const OrderSuccessScreen: React.FC = () => {
                  Total Amount
                </span>
                <span className="text-lg font-bold text-gray-900 dark:text-white">
-                 ${(order.totalAmount || 0).toFixed(2)}
+                 ${(parseFloat(order.totalAmount) || 0).toFixed(2)}
                </span>
              </div>
 
@@ -210,12 +212,9 @@ const OrderSuccessScreen: React.FC = () => {
                           {item.product?.name || "Product Name Not Available"}
                         </h4>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Qty: {item.quantity || 0} × ${(item.priceAtPurchase || 0).toFixed(2)}
+                          Qty: {item.quantity || 0}
                         </p>
                       </div>
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">
-                        ${(item.lineTotal || 0).toFixed(2)}
-                      </span>
                     </div>
                   ))
                 ) : (

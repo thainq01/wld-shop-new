@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { ExpandableSection } from "./types";
 import { useCart } from "../../hooks/useCart";
 import { useProductStore } from "../../store/productStore";
+import { useLanguageStore } from "../../store/languageStore";
 import { type ProductImage, type ProductSize } from "../../types";
 
 // Product image component - reused from other components
@@ -397,6 +398,7 @@ export const ProductDetailScreen: React.FC = () => {
     fetchProductDetail,
   } = useProductStore();
   const { addToCart, totalQuantity, hasWallet } = useCart();
+  const { currentLanguage } = useLanguageStore();
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
@@ -410,13 +412,13 @@ export const ProductDetailScreen: React.FC = () => {
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
-  // Fetch product detail when component mounts or productId changes
+  // Fetch product detail when component mounts, productId changes, or language changes
   useEffect(() => {
     if (productId) {
       fetchProductDetail(productId);
       setCurrentImageIndex(0); // Reset to first image (which will be primary) when product changes
     }
-  }, [productId, fetchProductDetail]);
+  }, [productId, currentLanguage, fetchProductDetail]);
 
   // Reorder images to show primary image first
   const getOrderedImages = () => {
@@ -681,7 +683,7 @@ export const ProductDetailScreen: React.FC = () => {
           <div className="mt-4">
             {/* Dot indicators */}
             <div className="flex justify-center gap-2">
-              {orderedImages.map((index: number) => (
+              {orderedImages.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => handleManualImageChange(index)}
@@ -709,7 +711,7 @@ export const ProductDetailScreen: React.FC = () => {
           {productDetail.name}
         </h1>
         <p className="text-xl text-gray-600 dark:text-gray-400 mb-6">
-          {productDetail.price} WLD
+          {productDetail.effectivePrice || productDetail.countryPrice || productDetail.basePrice || productDetail.price} WLD
         </p>
 
         {/* Size Selector */}
@@ -770,7 +772,7 @@ export const ProductDetailScreen: React.FC = () => {
                   </span>
                 </div>
                 <span className="font-semibold text-gray-900 dark:text-gray-100">
-                  {productDetail.collection.name}
+                  {productDetail?.collection?.name}
                 </span>
               </div>
             </div>

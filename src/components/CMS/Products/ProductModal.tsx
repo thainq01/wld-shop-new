@@ -11,6 +11,7 @@ import {
 import { collectionsApi } from "../../../utils/api";
 import { cmsLanguages } from "../../../store/languageStore";
 import { useCMSStore } from "../../../store/cmsStore";
+import { ImageUpload } from "./ImageUpload";
 
 interface ProductModalProps {
   isOpen: boolean;
@@ -642,14 +643,11 @@ export function ProductModal({
                         className="p-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50"
                       >
                         <div className="grid grid-cols-1 gap-3">
-                          <input
-                            type="url"
-                            placeholder="Image URL"
+                          <ImageUpload
                             value={image.url}
-                            onChange={(e) =>
-                              updateImage(index, "url", e.target.value)
-                            }
-                            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            onChange={(url) => updateImage(index, "url", url)}
+                            placeholder="Image URL"
+                            className="text-sm"
                           />
                           <input
                             type="text"

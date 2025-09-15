@@ -12,7 +12,7 @@ import { useLanguageStore } from "../../store/languageStore";
 import { useCountryStore, countries } from "../../store/countryStore";
 import { generateOrderId } from "../../utils/orderIdGenerator";
 import { productsApi } from "../../utils/api";
-import type { CreateCheckoutRequest } from "../../types";
+import type { CreateCheckoutRequest, Product, ProductImage } from "../../types";
 import { WLDPaymentButton } from "../checkout/WLDPaymentButton";
 import { CitySelector } from "../checkout/CitySelector";
 import { getCitiesForCountry } from "../../data/cities";
@@ -218,7 +218,7 @@ export const CheckoutScreen: React.FC = () => {
   // Country-specific pricing state
   const [countrySpecificTotal, setCountrySpecificTotal] = useState<number | null>(null);
   const [itemPricing, setItemPricing] = useState<Record<string, { effectivePrice: number; itemTotal: number }>>({});
-  const [countrySpecificProducts, setCountrySpecificProducts] = useState<Record<string, any>>({});
+  const [countrySpecificProducts, setCountrySpecificProducts] = useState<Record<string, Product>>({});
   const [isPricingLoading, setIsPricingLoading] = useState(false);
   const [pricingError, setPricingError] = useState<string | null>(null);
 
@@ -312,7 +312,7 @@ export const CheckoutScreen: React.FC = () => {
 
       // Create pricing map and product data map for individual items
       const newItemPricing: Record<string, { effectivePrice: number; itemTotal: number }> = {};
-      const newProductData: Record<string, any> = {};
+      const newProductData: Record<string, Product> = {};
       let newTotal = 0;
 
       pricingResults.forEach(result => {
@@ -662,20 +662,49 @@ export const CheckoutScreen: React.FC = () => {
             Order summary
           </h2>
 
-          {items?.map((item) => (
-            <div
-              key={`${item.productId}-${item.size}`}
-              className="flex items-center gap-4 mb-4"
-            >
-              <div className="relative">
-                <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-                  <span className="text-gray-500 text-xs">IMG</span>
+          {items?.map((item) => {
+            const countryProduct = countrySpecificProducts[item.productId];
+            const productImage = countryProduct?.images?.find((img: ProductImage) => img.isPrimary)?.url ||
+                                countryProduct?.images?.[0]?.url ||
+                                item.productImage;
+
+            return (
+              <div
+                key={`${item.productId}-${item.size}`}
+                className="flex items-center gap-4 mb-4"
+              >
+                <div className="relative">
+                  <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
+                    {productImage ? (
+                      <img
+                        src={productImage}
+                        alt={countryProduct?.name || item.productName}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // Fallback to placeholder if image fails to load
+                          const target = e.currentTarget as HTMLImageElement;
+                          target.style.display = 'none';
+                          const nextElement = target.nextElementSibling as HTMLElement;
+                          if (nextElement) {
+                            nextElement.style.display = 'flex';
+                          }
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center"
+                      style={{ display: productImage ? 'none' : 'flex' }}
+                    >
+                      <span className="text-gray-500 text-xs font-medium">
+                        {(countryProduct?.name || item.productName)?.charAt(0) || 'P'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="absolute -top-2 -right-2 bg-gray-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                    {item.quantity}
+                  </div>
                 </div>
-                <div className="absolute -top-2 -right-2 bg-gray-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                  {item.quantity}
-                </div>
-              </div>
-              <div className="flex-1">
+                <div className="flex-1">
                 <h3 className="font-medium text-gray-900 dark:text-gray-100">
                   {countrySpecificProducts[item.productId]?.name || item.productName}
                 </h3>
@@ -698,8 +727,9 @@ export const CheckoutScreen: React.FC = () => {
                   `${(itemPricing[item.productId]?.itemTotal ?? (item.productPrice * item.quantity)).toFixed(2)} WLD`
                 )}
               </span>
-            </div>
-          ))}
+              </div>
+            );
+          })}
 
           {/* Totals */}
           <div className="space-y-2 my-7">

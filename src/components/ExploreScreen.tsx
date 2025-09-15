@@ -1,5 +1,4 @@
 import { HeroSection } from "./HeroSection";
-import { FeaturedProducts } from "./FeaturedProducts";
 import { ProductList } from "./ProductList";
 import { BottomNavigation } from "./BottomNavigation";
 import { useEffect } from "react";
@@ -22,7 +21,6 @@ export function ExploreScreen() {
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <div className="pb-20">
         <HeroSection />
-        <FeaturedProducts />
         <ProductList />
       </div>
       <BottomNavigation />

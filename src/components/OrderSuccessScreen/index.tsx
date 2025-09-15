@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { CheckCircle, Package, MapPin, Phone, Mail } from "lucide-react";
 import { motion } from "framer-motion";
@@ -9,6 +9,15 @@ import type { OrderSuccessResponse } from "../../types";
 const OrderSuccessScreen: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "instant",
+      });
+    }, []);
+
   
   // Get order data from location state
   const getOrderData = (): OrderSuccessResponse | null => {
@@ -52,8 +61,6 @@ const OrderSuccessScreen: React.FC = () => {
       order = orderData;
     }
   }
-
-  console.log("OrderSuccessScreen - Final extracted order:", order);
 
   // Safety check - if no order data, show error state
   if (!order) {

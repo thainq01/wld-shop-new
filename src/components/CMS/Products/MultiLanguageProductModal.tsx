@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { X, Package, Save, Plus, Trash2, Upload } from "lucide-react";
-import { 
-  MultiLanguageProduct, 
-  CreateMultiLanguageProductRequest, 
+import {
+  MultiLanguageProduct,
+  CreateMultiLanguageProductRequest,
   UpdateMultiLanguageProductRequest,
   ProductImage,
   ProductVariant,
@@ -10,6 +10,7 @@ import {
 } from "../../../types";
 import { cmsLanguages } from "../../../store/languageStore";
 import { collectionsApi } from "../../../utils/api";
+import { ImageUpload } from "./ImageUpload";
 
 interface MultiLanguageProductModalProps {
   isOpen: boolean;
@@ -794,51 +795,53 @@ export function MultiLanguageProductModal({
 
               <div className="space-y-3">
                 {productImages.map((image, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <div className="flex-1">
-                      <input
-                        type="url"
-                        value={image.url}
-                        onChange={(e) => updateImage(index, "url", e.target.value)}
-                        placeholder="Image URL"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
+                  <div key={index} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1">
+                        <ImageUpload
+                          value={image.url}
+                          onChange={(url) => updateImage(index, "url", url)}
+                          placeholder="Image URL"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        value={image.altText}
-                        onChange={(e) => updateImage(index, "altText", e.target.value)}
-                        placeholder="Alt text"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          value={image.altText}
+                          onChange={(e) => updateImage(index, "altText", e.target.value)}
+                          placeholder="Alt text"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div className="w-20">
+                        <input
+                          type="number"
+                          min="0"
+                          value={image.orderIndex || 0}
+                          onChange={(e) => updateImage(index, "orderIndex", parseInt(e.target.value) || 0)}
+                          placeholder="Order"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={image.isPrimary}
+                          onChange={(e) => updateImage(index, "isPrimary", e.target.checked)}
+                          className="w-4 h-4 text-blue-600 bg-gray-100 dark:bg-gray-600 border-gray-300 dark:border-gray-500 rounded focus:ring-blue-500"
+                        />
+                        <label className="ml-2 text-sm text-gray-700 dark:text-gray-300">Primary</label>
+                      </div>
                     </div>
-                    <div className="w-20">
-                      <input
-                        type="number"
-                        min="0"
-                        value={image.orderIndex || 0}
-                        onChange={(e) => updateImage(index, "orderIndex", parseInt(e.target.value) || 0)}
-                        placeholder="Order"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={image.isPrimary}
-                        onChange={(e) => updateImage(index, "isPrimary", e.target.checked)}
-                        className="w-4 h-4 text-blue-600 bg-gray-100 dark:bg-gray-600 border-gray-300 dark:border-gray-500 rounded focus:ring-blue-500"
-                      />
-                      <label className="ml-2 text-sm text-gray-700 dark:text-gray-300">Primary</label>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeImage(index)}
-                      className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
                   </div>
                 ))}
               </div>

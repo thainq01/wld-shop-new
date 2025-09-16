@@ -53,7 +53,9 @@ export function ImageUpload({ value, onChange, placeholder = "Image URL", classN
       formData.append('file', file);
       formData.append('path', 'products');
 
-      const response = await fetch('http://localhost:8086/api/image-uploads', {
+
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/image-uploads`, {
         method: 'POST',
         body: formData,
       });
@@ -83,7 +85,7 @@ export function ImageUpload({ value, onChange, placeholder = "Image URL", classN
     if (!uploadedImageId) return;
 
     try {
-      const response = await fetch(`http://localhost:8086/api/image-uploads/${uploadedImageId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/image-uploads/${uploadedImageId}`, {
         method: 'DELETE',
       });
 

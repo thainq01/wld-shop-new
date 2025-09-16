@@ -5,8 +5,7 @@ import { useAuthWorld } from "../store/authStore";
 const WLD_CONTRACT_ADDRESS = "0x2cfc85d8e48f8eab294be644d9e25c3030863003";
 
 // API base URL from environment variable
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8086";
-
+const API_BASE_URL = import.meta.env.VITE_API_URL
 interface TokenBalance {
   contract_decimals: number;
   contract_name: string;

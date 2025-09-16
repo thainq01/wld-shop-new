@@ -9,8 +9,6 @@ import { usersApi } from "../utils/api";
 const WEEKEND_MILISECOND = 7 * 24 * 60 * 60 * 1000;
 const DAY_MILISECOND = 24 * 60 * 60 * 1000;
 
-
-
 export function LoginButton() {
   const [loading, setLoading] = useState(false);
   const [setUserInfo, setAddress] = useAuthWorld(
@@ -80,7 +78,7 @@ export function LoginButton() {
       onClick={login}
       className={`w-[250px] py-4 bg-black dark:bg-white text-white dark:text-black rounded-full font-semibold text-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors`}
     >
-      {loading ? t("Signing in...") : t("Sign in")}
+      {loading ? t("loading") : t("signIn")}
     </button>
   );
 }

@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
-import { useWLDPayment, usePaymentStatus } from '../../hooks/useWLDPayment';
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { useWLDPayment, usePaymentStatus } from "../../hooks/useWLDPayment";
 
 interface WLDPaymentButtonProps {
   amount: number; // Amount in WLD
@@ -20,6 +21,7 @@ export function WLDPaymentButton({
   className = "",
   wldBalance = null,
 }: WLDPaymentButtonProps) {
+  const { t } = useTranslation();
   const { isLoading, transferByTokenExact } = useWLDPayment();
   const { status, resetStatus, updateStatus } = usePaymentStatus();
 
@@ -37,7 +39,7 @@ export function WLDPaymentButton({
   const handleWldClientPayment = async () => {
     try {
       resetStatus();
-      updateStatus('paying', 1);
+      updateStatus("paying", 1);
 
       // Use exact wld-prediction-client pattern
       const result = await transferByTokenExact({
@@ -49,44 +51,44 @@ export function WLDPaymentButton({
         throw new Error(result.error || "WLD Client payment failed");
       }
 
-      updateStatus('completed', 1, result.txHash);
-      onPaymentSuccess?.(result.txHash || '');
-
+      updateStatus("completed", 1, result.txHash);
+      onPaymentSuccess?.(result.txHash || "");
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "WLD Client payment failed";
-      updateStatus('failed', 1);
+      const errorMessage =
+        error instanceof Error ? error.message : "WLD Client payment failed";
+      updateStatus("failed", 1);
       onPaymentError?.(errorMessage);
     }
   };
 
-  const isButtonDisabled = disabled || isLoading || !hasEnoughBalance || status === 'paying';
+  const isButtonDisabled =
+    disabled || isLoading || !hasEnoughBalance || status === "paying";
 
   const getButtonText = () => {
-    if (status === 'paying') return 'Processing Payment...';
-    if (status === 'completed') return 'Payment Successful!';
-    if (status === 'failed') return 'Payment Failed - Retry';
-    if (!hasEnoughBalance) return `Insufficient Balance (Need ${shortfallAmount.toFixed(2)} more WLD)`;
-    if (isLoading) return 'Processing...';
-    return `Pay ${amount.toFixed(2)} WLD`;
+    if (status === "paying") return t("processingPayment");
+    if (status === "completed") return t("paymentSuccessfulButton");
+    if (status === "failed") return t("paymentFailedRetry");
+    if (!hasEnoughBalance)
+      return t("insufficientBalance", { amount: shortfallAmount.toFixed(2) });
+    if (isLoading) return t("processing");
+    return t("payWLD", { amount: amount.toFixed(2) });
   };
 
   const getButtonColor = () => {
-    if (status === 'completed') return 'bg-green-500 hover:bg-green-600';
-    if (status === 'failed') return 'bg-red-500 hover:bg-red-600';
-    if (isButtonDisabled) return 'bg-gray-400 cursor-not-allowed';
-    return 'bg-blue-600 hover:bg-blue-700';
+    if (status === "completed") return "bg-green-500 hover:bg-green-600";
+    if (status === "failed") return "bg-red-500 hover:bg-red-600";
+    if (isButtonDisabled) return "bg-gray-400 cursor-not-allowed";
+    return "bg-blue-600 hover:bg-blue-700";
   };
 
   return (
     <div className={`wld-payment-container ${className}`}>
       {/* Payment Progress */}
-      {status === 'paying' && (
+      {status === "paying" && (
         <div className="mb-4 p-3 bg-blue-50 rounded-lg">
           <div className="flex items-center mb-2">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-            <span className="text-sm text-blue-800">
-              Processing payment...
-            </span>
+            <span className="text-sm text-blue-800">Processing payment...</span>
           </div>
         </div>
       )}
@@ -95,23 +97,26 @@ export function WLDPaymentButton({
       {!hasEnoughBalance && wldBalance !== null && (
         <div className="mb-4 p-3 bg-red-50 rounded-lg">
           <p className="text-sm text-red-800">
-            Insufficient WLD balance. You need {shortfallAmount.toFixed(2)} more WLD to complete this payment.
+            {t("insufficientWLDBalance", {
+              amount: shortfallAmount.toFixed(2),
+            })}
           </p>
         </div>
       )}
 
-      {status === 'failed' && (
+      {status === "failed" && (
         <div className="mb-4 p-3 bg-red-50 rounded-lg">
           <p className="text-sm text-red-800">
-            Payment failed. Please try again or contact support if the issue persists.
+            Payment failed. Please try again or contact support if the issue
+            persists.
           </p>
         </div>
       )}
 
-      {status === 'completed' && (
+      {status === "completed" && (
         <div className="mb-4 p-3 bg-green-50 rounded-lg">
           <p className="text-sm text-green-800">
-            ✅ Payment completed successfully!
+            {t("paymentCompletedSuccessfully")}
           </p>
         </div>
       )}
@@ -127,8 +132,6 @@ export function WLDPaymentButton({
       >
         {getButtonText()}
       </button>
-
-    
     </div>
   );
 }

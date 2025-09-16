@@ -2,8 +2,10 @@ import { useEffect } from "react";
 import { Star } from "lucide-react";
 import { ProductItem } from "./ProductItem";
 import { useCollectionStore } from "../store/collectionStore";
+import { useTranslation } from "react-i18next";
 
 export function FeaturedProducts() {
+  const { t } = useTranslation();
   const {
     fetchFeaturedProducts,
     getFeaturedProducts,
@@ -28,7 +30,7 @@ export function FeaturedProducts() {
       <div className="flex items-center gap-2 mb-4">
         <Star className="w-5 h-5 text-yellow-500 fill-current" />
         <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-          Featured Products
+          {t("featuredProducts")}
         </h3>
       </div>
 
@@ -55,4 +57,4 @@ export function FeaturedProducts() {
       )}
     </div>
   );
-} 
+}

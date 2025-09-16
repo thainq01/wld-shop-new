@@ -1,12 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { productsApi } from "../utils/api";
-import { useLanguageStore } from "../store/languageStore";
 import { Product } from "../types";
 import { Language } from "./Language";
 import { ThemeMode } from "./ThemeMode";
+import { useCollectionStore } from "../store/collectionStore";
 
 // Helper function to get product image
 function getProductImage(product: Product): string {
@@ -23,38 +21,34 @@ function getProductImage(product: Product): string {
 export function HeroSection() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+
+  // Persist current slide state to prevent jumping back to 0 when returning from other screens
+  const currentSlideRef = useRef(0);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isManualControl, setIsManualControl] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const { currentLanguage } = useLanguageStore();
 
+  // Use collection store for featured products - this will use cache when available
+  const {
+    fetchFeaturedProducts,
+    getFeaturedProducts,
+    isFeaturedProductsLoading,
+  } = useCollectionStore();
+
+  const featuredProducts = getFeaturedProducts();
+  const isLoading = isFeaturedProductsLoading();
+
+  // Fetch featured products on component mount
   useEffect(() => {
-    const fetchFeaturedProducts = async () => {
-      try {
-        setIsLoading(true);
-        const products = await productsApi.getAll({
-          lang: currentLanguage,
-          country: currentLanguage,
-          active: true,
-        });
-        // Filter only featured products
-        const featured = products.filter(product => product.featured);
-        setFeaturedProducts(featured);
-      } catch (error) {
-        console.error("Failed to fetch featured products:", error);
-        setFeaturedProducts([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
+    // This will only fetch if not already cached
     fetchFeaturedProducts();
-  }, [currentLanguage]);
+  }, [fetchFeaturedProducts]);
 
+  // Auto-slide effect with proper state management
   useEffect(() => {
+    if (!featuredProducts.length) return;
+
     if (isManualControl) {
       const resetTimer = setTimeout(() => {
         setIsManualControl(false);
@@ -63,14 +57,33 @@ export function HeroSection() {
     }
 
     const intervalId = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % featuredProducts.length);
+      setCurrentSlide((prev) => {
+        const nextSlide = (prev + 1) % featuredProducts.length;
+        currentSlideRef.current = nextSlide;
+        return nextSlide;
+      });
     }, 2500);
 
     return () => clearInterval(intervalId);
   }, [isManualControl, featuredProducts.length]);
 
+  // Initialize current slide from ref when featured products are loaded
+  useEffect(() => {
+    if (
+      featuredProducts.length > 0 &&
+      currentSlide === 0 &&
+      currentSlideRef.current > 0
+    ) {
+      // Restore the previous slide position if we had one
+      setCurrentSlide(
+        Math.min(currentSlideRef.current, featuredProducts.length - 1)
+      );
+    }
+  }, [featuredProducts.length, currentSlide]);
+
   const handleManualSlide = (index: number) => {
     setCurrentSlide(index);
+    currentSlideRef.current = index;
     setIsManualControl(true);
   };
 
@@ -112,10 +125,10 @@ export function HeroSection() {
       <div className="flex items-center justify-between mb-6 md:mb-8">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">
-            {t('explore')}
+            {t("explore")}
           </h2>
           <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base mt-1">
-            Featured Products
+            {t("featuredProducts")}
           </p>
         </div>
         <div className="flex flex-row items-center justify-end gap-2">
@@ -151,10 +164,10 @@ export function HeroSection() {
               <div className="w-full flex-shrink-0 relative bg-gray-100 dark:bg-gray-800 h-full flex items-center justify-center">
                 <div className="text-center">
                   <h3 className="text-gray-600 dark:text-gray-400 text-xl font-medium mb-2">
-                    No Featured Products
+                    {t("noFeaturedProducts")}
                   </h3>
                   <p className="text-gray-500 dark:text-gray-500 text-sm">
-                    Check back later for featured items
+                    {t("checkBackLater")}
                   </p>
                 </div>
               </div>
@@ -205,7 +218,11 @@ export function HeroSection() {
                           </h3>
                           <div className=" sm:justify-start gap-2">
                             <span className="text-gray-500 dark:text-gray-400 sm:text-sm text-base font-semibold">
-                              {product.effectivePrice || product.countryPrice || product.basePrice || product.price} WLD
+                              {product.effectivePrice ||
+                                product.countryPrice ||
+                                product.basePrice ||
+                                product.price}{" "}
+                              WLD
                             </span>
                           </div>
                         </div>

@@ -230,7 +230,7 @@ export function useAutoLogin() {
         // If no stored address, try to auto-login
         if (!storedAddress) {
           console.log("No stored address, attempting auto-login...");
-          
+
           if (!MiniKit.isInstalled()) {
             console.log("MiniKit not installed, skipping auto-login");
             return;
@@ -250,8 +250,11 @@ export function useAutoLogin() {
 
           if (finalPayload.status === "success") {
             const walletAddress = finalPayload.address;
-            console.log("Auto-login successful, wallet address:", walletAddress);
-            
+            console.log(
+              "Auto-login successful, wallet address:",
+              walletAddress
+            );
+
             // Set the address first
             setAddress(walletAddress);
             localStorage.setItem(KEY_AUTH_WORLDAPP, walletAddress);
@@ -273,9 +276,12 @@ export function useAutoLogin() {
           }
         } else {
           // We have a stored address but it's different from current address
-          console.log("Stored address found, fetching user info:", storedAddress);
+          console.log(
+            "Stored address found, fetching user info:",
+            storedAddress
+          );
           setAddress(storedAddress);
-          
+
           const data = await MiniKit.getUserInfo(storedAddress);
           if (data) {
             const userInfo = {

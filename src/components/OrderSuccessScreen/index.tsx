@@ -4,30 +4,31 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { CheckCircle, Package, MapPin, Phone, Mail } from "lucide-react";
 import { motion } from "framer-motion";
 import { BottomNavigation } from "../BottomNavigation";
+import { useTranslation } from "react-i18next";
 import type { OrderSuccessResponse } from "../../types";
 
 const OrderSuccessScreen: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
 
   useEffect(() => {
-      window.scrollTo({
-        top: 0,
-        left: 0,
-        behavior: "instant",
-      });
-    }, []);
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "instant",
+    });
+  }, []);
 
-  
   // Get order data from location state
   const getOrderData = (): OrderSuccessResponse | null => {
     // First try location state
     if (location.state?.orderData) {
       return location.state.orderData;
     }
-    
+
     // No localStorage fallback needed for smooth navigation
-    
+
     // No order data found, return null
     console.error("❌ No order data found");
     return null;
@@ -42,21 +43,23 @@ const OrderSuccessScreen: React.FC = () => {
     return null;
   }
 
-
-
   console.log("OrderSuccessScreen - Full orderData:", orderData);
   console.log("OrderSuccessScreen - Location state:", location.state);
 
   // More robust data extraction - handle different possible response structures
   let order: any = null;
-  if (orderData && typeof orderData === 'object') {
+  if (orderData && typeof orderData === "object") {
     // Try different possible structures
-    if ('data' in orderData && orderData.data) {
+    if ("data" in orderData && orderData.data) {
       order = orderData.data;
-    // eslint-disable-next-line no-dupe-else-if
-    } else if ('success' in orderData && 'data' in orderData && orderData.data) {
+      // eslint-disable-next-line no-dupe-else-if
+    } else if (
+      "success" in orderData &&
+      "data" in orderData &&
+      orderData.data
+    ) {
       order = orderData.data;
-    } else if ('id' in orderData) {
+    } else if ("id" in orderData) {
       // If the response is directly the order data
       order = orderData;
     }
@@ -64,24 +67,26 @@ const OrderSuccessScreen: React.FC = () => {
 
   // Safety check - if no order data, show error state
   if (!order) {
-    console.log("OrderSuccessScreen - No order data found, showing error state");
+    console.log(
+      "OrderSuccessScreen - No order data found, showing error state"
+    );
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-            No Order Data Found
+            {t("noOrderDataFound")}
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Unable to display order information.
+            {t("unableToDisplayOrder")}
           </p>
           <p className="text-xs text-gray-500 mb-4">
             Debug: orderData = {JSON.stringify(orderData, null, 2)}
           </p>
           <button
-            onClick={() => navigate('/explore')}
+            onClick={() => navigate("/explore")}
             className="bg-black dark:bg-white text-white dark:text-black px-6 py-3 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
           >
-            Back to Shop
+            {t("backToShop")}
           </button>
         </div>
       </div>
@@ -90,12 +95,12 @@ const OrderSuccessScreen: React.FC = () => {
 
   const formatDate = (dateString: string) => {
     try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+      return new Date(dateString).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       });
     } catch (error) {
       console.error("Error formatting date:", error);
@@ -110,9 +115,9 @@ const OrderSuccessScreen: React.FC = () => {
         order.apartment,
         order.city,
         order.postcode,
-        order.country
+        order.country,
       ].filter(Boolean);
-      return parts.join(', ');
+      return parts.join(", ");
     } catch (error) {
       console.error("Error formatting address:", error);
       return "Address not available";
@@ -138,10 +143,10 @@ const OrderSuccessScreen: React.FC = () => {
             <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
           </motion.div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            Order Confirmed!
+            {t("orderConfirmed")}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Thank you for your purchase. Your order has been successfully placed.
+            {t("thankYouPurchase")}
           </p>
         </motion.div>
 
@@ -155,7 +160,7 @@ const OrderSuccessScreen: React.FC = () => {
           <div className="p-6">
             <div className="items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Order Details
+                {t("orderDetails")}
               </h2>
               <span className="text-sm text-gray-500 dark:text-gray-400">
                 {order.createdAt ? formatDate(order.createdAt) : "N/A"}
@@ -165,47 +170,51 @@ const OrderSuccessScreen: React.FC = () => {
             {/* Order ID */}
             <div className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-700">
               <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Order ID
+                {t("orderIdLabel")}
               </span>
               <span className="text-sm font-mono text-gray-900 dark:text-white">
                 {order.orderId || "N/A"}
               </span>
             </div>
 
-                         {/* Total Amount */}
-             <div className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-700">
-               <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                 Total Amount
-               </span>
-               <span className="text-lg font-bold text-gray-900 dark:text-white">
-                 ${(parseFloat(order.totalAmount) || 0).toFixed(2)}
-               </span>
-             </div>
+            {/* Total Amount */}
+            <div className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-700">
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                {t("totalAmountLabel")}
+              </span>
+              <span className="text-lg font-bold text-gray-900 dark:text-white">
+                ${(parseFloat(order.totalAmount) || 0).toFixed(2)}
+              </span>
+            </div>
 
-                           {/* Order Status */}
-              <div className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-700">
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Status
-                </span>
-                <span className={`text-sm font-medium px-3 py-1 rounded-full ${
-                  order.status === 'delivered'
-                    ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                    : order.status === 'out for delivery'
-                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
-                    : order.status === 'paid'
-                    ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400'
-                    : order.status === 'pending'
-                    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
-                    : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                }`}>
-                  {order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : 'N/A'}
-                </span>
-              </div>
+            {/* Order Status */}
+            <div className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-700">
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                {t("statusLabel")}
+              </span>
+              <span
+                className={`text-sm font-medium px-3 py-1 rounded-full ${
+                  order.status === "delivered"
+                    ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
+                    : order.status === "out for delivery"
+                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
+                    : order.status === "paid"
+                    ? "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400"
+                    : order.status === "pending"
+                    ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400"
+                    : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                }`}
+              >
+                {order.status
+                  ? order.status.charAt(0).toUpperCase() + order.status.slice(1)
+                  : "N/A"}
+              </span>
+            </div>
 
             {/* Products */}
             <div className="py-3">
               <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">
-                Products Ordered
+                {t("productsOrdered")}
               </h3>
               <div className="space-y-3">
                 {order.products && order.products.length > 0 ? (
@@ -216,10 +225,10 @@ const OrderSuccessScreen: React.FC = () => {
                     >
                       <div className="flex-1">
                         <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                          {item.product?.name || "Product Name Not Available"}
+                          {item.product?.name || t("productNameNotAvailable")}
                         </h4>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Qty: {item.quantity || 0}
+                          {t("quantity")}: {item.quantity || 0}
                         </p>
                       </div>
                     </div>
@@ -227,7 +236,7 @@ const OrderSuccessScreen: React.FC = () => {
                 ) : (
                   <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      No products found
+                      {t("noProductsFound")}
                     </p>
                   </div>
                 )}
@@ -245,9 +254,9 @@ const OrderSuccessScreen: React.FC = () => {
         >
           <div className="p-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Shipping Information
+              {t("shippingInformation")}
             </h2>
-            
+
             <div className="space-y-4">
               {/* Customer Name */}
               <div className="flex items-start space-x-3">
@@ -299,17 +308,17 @@ const OrderSuccessScreen: React.FC = () => {
           className="space-y-3"
         >
           <button
-            onClick={() => navigate('/explore')}
+            onClick={() => navigate("/explore")}
             className="mb-10 w-full bg-black dark:bg-white text-white dark:text-black py-3 px-6 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
           >
-            Continue Shopping
+            {t("continueShopping")}
           </button>
-          
+
           <button
-            onClick={() => navigate('/history')}
+            onClick={() => navigate("/history")}
             className="w-full bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
           >
-            View Order History
+            {t("viewOrderHistory")}
           </button>
         </motion.div>
       </div>

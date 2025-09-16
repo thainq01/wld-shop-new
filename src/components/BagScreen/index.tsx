@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useCart } from "../../hooks/useCart";
 import { BottomNavigation } from "../BottomNavigation";
 import { LoginButton } from "../LoginButton";
-
+import { useTranslation } from "react-i18next";
 
 // Simple placeholder component for product images in cart
 const ProductImagePlaceholder: React.FC<{
@@ -37,6 +37,7 @@ const ProductImagePlaceholder: React.FC<{
 
 export const BagScreen: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const {
     items,
     removeFromCart,
@@ -63,12 +64,12 @@ export const BagScreen: React.FC = () => {
 
             {/* Login required text */}
             <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-              Login Required
+              {t("loginRequired")}
             </h2>
 
             {/* Description text */}
             <p className="text-gray-500 dark:text-gray-400 text-lg mb-12">
-              Please sign in with your World ID to view your bag history
+              {t("signInWithWorldId")}
             </p>
 
             {/* Login button */}
@@ -89,7 +90,9 @@ export const BagScreen: React.FC = () => {
         <div className="flex-1 flex items-center justify-center px-4 pb-20">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">Loading cart...</p>
+            <p className="text-gray-600 dark:text-gray-400">
+              {t("loadingCart")}
+            </p>
           </div>
         </div>
         <BottomNavigation />
@@ -139,12 +142,12 @@ export const BagScreen: React.FC = () => {
 
             {/* No items text */}
             <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-              No items yet
+              {t("noItemsYet")}
             </h2>
 
             {/* Description text */}
             <p className="text-gray-500 dark:text-gray-400 text-lg mb-6">
-              Your items will be displayed here
+              {t("itemsDisplayedHere")}
             </p>
 
             {/* Action buttons */}
@@ -153,7 +156,7 @@ export const BagScreen: React.FC = () => {
                 onClick={() => navigate("/explore")}
                 className="w-[250px] py-4 bg-black dark:bg-white text-white dark:text-black rounded-full font-semibold text-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
               >
-                Explore
+                {t("explore")}
               </button>
             </div>
           </div>
@@ -174,8 +177,8 @@ export const BagScreen: React.FC = () => {
           <div className="px-4 pt-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                Your Bag ({items?.length || 0} item
-                {(items?.length || 0) !== 1 ? "s" : ""})
+                {t("yourBag")} ({items?.length || 0}{" "}
+                {(items?.length || 0) === 1 ? t("item") : t("items")})
               </h2>
             </div>
           </div>
@@ -206,7 +209,7 @@ export const BagScreen: React.FC = () => {
                       {item.productPrice} WLD
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                      Size: {item.size}
+                      {t("size")}: {item.size}
                     </p>
 
                     {/* Quantity Controls */}
@@ -220,7 +223,10 @@ export const BagScreen: React.FC = () => {
                               await updateQuantity(item.id, item.quantity - 1);
                             }
                           } catch (error) {
-                            console.error("Error in cart operation (decrease):", error);
+                            console.error(
+                              "Error in cart operation (decrease):",
+                              error
+                            );
                           }
                         }}
                         disabled={isLoading}
@@ -246,7 +252,10 @@ export const BagScreen: React.FC = () => {
                           try {
                             await updateQuantity(item.id, item.quantity + 1);
                           } catch (error) {
-                            console.error("Error in cart operation (increase):", error);
+                            console.error(
+                              "Error in cart operation (increase):",
+                              error
+                            );
                           }
                         }}
                         disabled={isLoading}
@@ -268,16 +277,16 @@ export const BagScreen: React.FC = () => {
                 <div className="text-center max-w-md">
                   <ShoppingBag className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                    No items yet
+                    {t("noItemsYet")}
                   </h3>
                   <p className="text-gray-500 dark:text-gray-400 mb-4">
-                    Your items will be displayed here
+                    {t("itemsDisplayedHere")}
                   </p>
                   <button
                     onClick={() => navigate("/explore")}
                     className="px-6 py-2 bg-black dark:bg-white text-white dark:text-black rounded-full font-semibold hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
                   >
-                    Explore
+                    {t("explore")}
                   </button>
                 </div>
               </div>
@@ -288,7 +297,7 @@ export const BagScreen: React.FC = () => {
           <div className="sticky bottom-20 bg-white dark:bg-gray-900 p-4">
             <div className="flex justify-between items-center mb-4">
               <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                Total:
+                {t("total")}:
               </span>
               <span className="text-xl font-bold text-gray-900 dark:text-gray-100">
                 {(totalAmount || 0).toFixed(2)} WLD
@@ -303,7 +312,7 @@ export const BagScreen: React.FC = () => {
                   : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
               }`}
             >
-              Checkout
+              {t("checkout")}
             </button>
           </div>
         </div>

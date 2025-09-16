@@ -1,6 +1,7 @@
 import React from "react";
 import { ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ProductItemProps } from "./types";
 // Product type is imported via ProductItemProps
 
@@ -80,6 +81,7 @@ function ProductImage({ type }: { type: string }) {
 
 export const ProductItem: React.FC<ProductItemProps> = ({ product }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handlePress = () => {
     navigate(`/product/${product.id}`);
@@ -123,18 +125,27 @@ export const ProductItem: React.FC<ProductItemProps> = ({ product }) => {
                 : "text-blue-500"
             } text-sm font-medium`}
           >
-            {product.inStock}
+            {product.inStock === "Out of Stock"
+              ? t("outOfStock")
+              : t("inStock")}
           </div>
           {product.featured && (
             <span className="text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-2 py-0.5 rounded-full font-medium">
-              FEATURED
+              {t("featured")}
             </span>
           )}
         </div>
         <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
           {product.name}
         </h4>
-        <p className="text-gray-500 dark:text-gray-400"> {product.effectivePrice || product.countryPrice || product.basePrice || product.price} WLD</p>
+        <p className="text-gray-500 dark:text-gray-400">
+          {" "}
+          {product.effectivePrice ||
+            product.countryPrice ||
+            product.basePrice ||
+            product.price}{" "}
+          WLD
+        </p>
       </div>
 
       {/* Arrow */}

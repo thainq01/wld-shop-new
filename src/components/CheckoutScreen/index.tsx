@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { ChevronDown, HelpCircle, Check, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { useCart } from "../../hooks/useCart";
 import { BottomNavigation } from "../BottomNavigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -78,7 +79,7 @@ const CountrySelector = ({
           </motion.div>
         )}
       </motion.button>
-      
+
       {/* Disabled reason message */}
       {disabled && reason && (
         <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
@@ -205,25 +206,39 @@ const CountrySelector = ({
 
 export const CheckoutScreen: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { items, totalAmount, clearCart, refreshCart } = useCart();
   const { balance: wldBalance } = useWLDBalance();
   const { address } = useAuthWorld();
   const { currentLanguage } = useLanguageStore();
-  const { selectedCountry, getCountryOption, setCountry, getCountryCodeFromName, getCountryFromLanguage, isManuallySelected } = useCountryStore();
+  const {
+    selectedCountry,
+    getCountryOption,
+    setCountry,
+    getCountryCodeFromName,
+    getCountryFromLanguage,
+    isManuallySelected,
+  } = useCountryStore();
   const { createCheckout } = useCheckout();
 
   const [generatedOrderId, setGeneratedOrderId] = useState<string>("");
   const [checkoutCompleted, setCheckoutCompleted] = useState(false);
 
   // Country-specific pricing state
-  const [countrySpecificTotal, setCountrySpecificTotal] = useState<number | null>(null);
-  const [itemPricing, setItemPricing] = useState<Record<string, { effectivePrice: number; itemTotal: number }>>({});
-  const [countrySpecificProducts, setCountrySpecificProducts] = useState<Record<string, Product>>({});
+  const [countrySpecificTotal, setCountrySpecificTotal] = useState<
+    number | null
+  >(null);
+  const [itemPricing, setItemPricing] = useState<
+    Record<string, { effectivePrice: number; itemTotal: number }>
+  >({});
+  const [countrySpecificProducts, setCountrySpecificProducts] = useState<
+    Record<string, Product>
+  >({});
   const [isPricingLoading, setIsPricingLoading] = useState(false);
   const [pricingError, setPricingError] = useState<string | null>(null);
 
   // Available countries for shipping - use names from country store
-  const availableCountries = countries.map(country => country.name);
+  const availableCountries = countries.map((country) => country.name);
 
   // Get selected country name from country store
   const selectedCountryOption = getCountryOption(selectedCountry);
@@ -258,88 +273,98 @@ export const CheckoutScreen: React.FC = () => {
   // Update country when selected country changes
   useEffect(() => {
     const newCountryName = selectedCountryName;
-    setShippingAddress(prev => ({
+    setShippingAddress((prev) => ({
       ...prev,
-      country: newCountryName
+      country: newCountryName,
     }));
   }, [selectedCountryName]);
 
   // Function to fetch country-specific pricing for all cart items
-  const fetchCountrySpecificPricing = useCallback(async (countryCode: string) => {
-    if (!items || items.length === 0) {
-      setCountrySpecificTotal(0);
-      return;
-    }
+  const fetchCountrySpecificPricing = useCallback(
+    async (countryCode: string) => {
+      if (!items || items.length === 0) {
+        setCountrySpecificTotal(0);
+        return;
+      }
 
-    setIsPricingLoading(true);
-    setPricingError(null);
+      setIsPricingLoading(true);
+      setPricingError(null);
 
-    try {
-      // Fetch pricing for each cart item
-      const pricingPromises = items.map(async (item) => {
-        try {
-          // For checkout pricing, use selected country for both lang and country
-          const product = await productsApi.getById(item.productId, {
-            lang: countryCode,
-            country: countryCode
-          });
+      try {
+        // Fetch pricing for each cart item
+        const pricingPromises = items.map(async (item) => {
+          try {
+            // For checkout pricing, use selected country for both lang and country
+            const product = await productsApi.getById(item.productId, {
+              lang: countryCode,
+              country: countryCode,
+            });
 
-          // Use countryPrice if available, otherwise use basePrice
-          const effectivePrice = product.countryPrice ?? product.basePrice;
-          const itemTotal = effectivePrice * item.quantity;
+            // Use countryPrice if available, otherwise use basePrice
+            const effectivePrice = product.countryPrice ?? product.basePrice;
+            const itemTotal = effectivePrice * item.quantity;
 
-          console.log(`Product ${item.productId}: countryPrice=${product.countryPrice}, basePrice=${product.basePrice}, effectivePrice=${effectivePrice}, quantity=${item.quantity}, total=${itemTotal}`);
+            console.log(
+              `Product ${item.productId}: countryPrice=${product.countryPrice}, basePrice=${product.basePrice}, effectivePrice=${effectivePrice}, quantity=${item.quantity}, total=${itemTotal}`
+            );
 
-          return {
-            productId: item.productId,
-            effectivePrice,
-            itemTotal,
-            productData: product
+            return {
+              productId: item.productId,
+              effectivePrice,
+              itemTotal,
+              productData: product,
+            };
+          } catch (error) {
+            console.error(
+              `Failed to fetch pricing for product ${item.productId}:`,
+              error
+            );
+            // Fallback to current item price if API call fails
+            return {
+              productId: item.productId,
+              effectivePrice: item.productPrice,
+              itemTotal: item.lineTotal,
+              productData: null, // No updated data available
+            };
+          }
+        });
+
+        const pricingResults = await Promise.all(pricingPromises);
+
+        // Create pricing map and product data map for individual items
+        const newItemPricing: Record<
+          string,
+          { effectivePrice: number; itemTotal: number }
+        > = {};
+        const newProductData: Record<string, Product> = {};
+        let newTotal = 0;
+
+        pricingResults.forEach((result) => {
+          newItemPricing[result.productId] = {
+            effectivePrice: result.effectivePrice,
+            itemTotal: result.itemTotal,
           };
-        } catch (error) {
-          console.error(`Failed to fetch pricing for product ${item.productId}:`, error);
-          // Fallback to current item price if API call fails
-          return {
-            productId: item.productId,
-            effectivePrice: item.productPrice,
-            itemTotal: item.lineTotal,
-            productData: null // No updated data available
-          };
-        }
-      });
+          if (result.productData) {
+            newProductData[result.productId] = result.productData;
+          }
+          newTotal += result.itemTotal;
+        });
 
-      const pricingResults = await Promise.all(pricingPromises);
-
-      // Create pricing map and product data map for individual items
-      const newItemPricing: Record<string, { effectivePrice: number; itemTotal: number }> = {};
-      const newProductData: Record<string, Product> = {};
-      let newTotal = 0;
-
-      pricingResults.forEach(result => {
-        newItemPricing[result.productId] = {
-          effectivePrice: result.effectivePrice,
-          itemTotal: result.itemTotal
-        };
-        if (result.productData) {
-          newProductData[result.productId] = result.productData;
-        }
-        newTotal += result.itemTotal;
-      });
-
-      setItemPricing(newItemPricing);
-      setCountrySpecificProducts(newProductData);
-      setCountrySpecificTotal(newTotal);
-      console.log(`Country-specific total for ${countryCode}: ${newTotal}`);
-
-    } catch (error) {
-      console.error("Failed to fetch country-specific pricing:", error);
-      setPricingError("Failed to load country-specific pricing");
-      // Fallback to cart total
-      setCountrySpecificTotal(totalAmount || 0);
-    } finally {
-      setIsPricingLoading(false);
-    }
-  }, [items, totalAmount]);
+        setItemPricing(newItemPricing);
+        setCountrySpecificProducts(newProductData);
+        setCountrySpecificTotal(newTotal);
+        console.log(`Country-specific total for ${countryCode}: ${newTotal}`);
+      } catch (error) {
+        console.error("Failed to fetch country-specific pricing:", error);
+        setPricingError("Failed to load country-specific pricing");
+        // Fallback to cart total
+        setCountrySpecificTotal(totalAmount || 0);
+      } finally {
+        setIsPricingLoading(false);
+      }
+    },
+    [items, totalAmount]
+  );
 
   // Fetch country-specific pricing when component mounts, items change, or country changes
   useEffect(() => {
@@ -355,7 +380,9 @@ export const CheckoutScreen: React.FC = () => {
     // If the country doesn't match the expected country for the current language
     // and it wasn't manually selected, update it automatically
     if (selectedCountry !== expectedCountry && !isManuallySelected) {
-      console.log(`Auto-selecting country ${expectedCountry} for language ${currentLanguage}`);
+      console.log(
+        `Auto-selecting country ${expectedCountry} for language ${currentLanguage}`
+      );
 
       // Update the country (this will trigger price updates via the existing useEffect)
       setCountry(expectedCountry, false);
@@ -363,10 +390,19 @@ export const CheckoutScreen: React.FC = () => {
       // Show toast notification to inform user about automatic country selection
       const countryOption = getCountryOption(expectedCountry);
       if (countryOption) {
-        toast.success(`Delivery country automatically set to ${countryOption.name} based on your language preference.`);
+        toast.success(
+          `Delivery country automatically set to ${countryOption.name} based on your language preference.`
+        );
       }
     }
-  }, [currentLanguage, selectedCountry, isManuallySelected, getCountryFromLanguage, setCountry, getCountryOption]);
+  }, [
+    currentLanguage,
+    selectedCountry,
+    isManuallySelected,
+    getCountryFromLanguage,
+    setCountry,
+    getCountryOption,
+  ]);
 
   // Helper function to build checkout products with country-specific data
   const buildCheckoutProducts = () => {
@@ -385,14 +421,14 @@ export const CheckoutScreen: React.FC = () => {
           effectivePrice: pricing?.effectivePrice || item.productPrice,
           countryCode: selectedCountry,
           language: selectedCountry, // Use selected country as language for checkout
-        })
+        }),
       };
     });
   };
 
   // Use country-specific total if available, otherwise fall back to cart total
-  const subtotal = countrySpecificTotal !== null ? countrySpecificTotal : (totalAmount || 0);
-  const shipping = "Freeship"; // Worldwide flat rate
+  const subtotal =
+    countrySpecificTotal !== null ? countrySpecificTotal : totalAmount || 0;
   const total = subtotal;
 
   // Balance validation logic
@@ -425,7 +461,10 @@ export const CheckoutScreen: React.FC = () => {
         await fetchCountrySpecificPricing(countryCode);
         console.log("Country-specific pricing updated for:", countryCode);
       } catch (error) {
-        console.error("Failed to fetch country-specific pricing after country change:", error);
+        console.error(
+          "Failed to fetch country-specific pricing after country change:",
+          error
+        );
         // Could show a toast notification here if needed
       }
 
@@ -456,8 +495,6 @@ export const CheckoutScreen: React.FC = () => {
     return formFieldsValid && canProceedWithPayment;
   };
 
-
-
   if ((!items || items.length === 0) && !checkoutCompleted) {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
@@ -486,16 +523,14 @@ export const CheckoutScreen: React.FC = () => {
           </h2>
         </div>
 
-
-
         {/* Contact Section */}
         <div className="pt-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-            Contact
+            {t("contact")}
           </h2>
           <input
             type="email"
-            placeholder="Email"
+            placeholder={t("email")}
             value={shippingAddress.email}
             onChange={(e) => handleInputChange("email", e.target.value)}
             className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 mb-4"
@@ -504,7 +539,7 @@ export const CheckoutScreen: React.FC = () => {
         {/* Delivery Section */}
         <div className="py-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-            Delivery
+            {t("delivery")}
           </h2>
 
           {/* Country */}
@@ -522,14 +557,14 @@ export const CheckoutScreen: React.FC = () => {
           <div className="grid grid-cols-2 gap-4 mb-4">
             <input
               type="text"
-              placeholder="First name"
+              placeholder={t("firstName")}
               value={shippingAddress.firstName}
               onChange={(e) => handleInputChange("firstName", e.target.value)}
               className="px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
             <input
               type="text"
-              placeholder="Last name"
+              placeholder={t("lastName")}
               value={shippingAddress.lastName}
               onChange={(e) => handleInputChange("lastName", e.target.value)}
               className="px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
@@ -539,7 +574,7 @@ export const CheckoutScreen: React.FC = () => {
           {/* Address */}
           <input
             type="text"
-            placeholder="Address"
+            placeholder={t("address")}
             value={shippingAddress.address}
             onChange={(e) => handleInputChange("address", e.target.value)}
             className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 mb-4"
@@ -548,7 +583,7 @@ export const CheckoutScreen: React.FC = () => {
           {/* Apartment */}
           <input
             type="text"
-            placeholder="Apartment, suite, etc. (optional)"
+            placeholder={t("apartment")}
             value={shippingAddress.apartment}
             onChange={(e) => handleInputChange("apartment", e.target.value)}
             className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 mb-4"
@@ -561,11 +596,15 @@ export const CheckoutScreen: React.FC = () => {
               selectedCity={shippingAddress.city}
               onCityChange={handleCityChange}
               disabled={availableCities.length === 0}
-              reason={availableCities.length === 0 ? "No cities available for selected country" : undefined}
+              reason={
+                availableCities.length === 0
+                  ? "No cities available for selected country"
+                  : undefined
+              }
             />
             <input
               type="text"
-              placeholder="Postal code (optional)"
+              placeholder={t("postalCode")}
               value={shippingAddress.postalCode}
               onChange={(e) => handleInputChange("postalCode", e.target.value)}
               className="px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
@@ -576,7 +615,7 @@ export const CheckoutScreen: React.FC = () => {
           <div className="relative mb-4">
             <input
               type="tel"
-              placeholder="Phone"
+              placeholder={t("phone")}
               value={shippingAddress.phone}
               onChange={(e) => handleInputChange("phone", e.target.value)}
               className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 pr-12"
@@ -588,14 +627,14 @@ export const CheckoutScreen: React.FC = () => {
         {/* Shipping Method */}
         <div className="py-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-            Shipping method
+            {t("shippingMethod")}
           </h2>
           <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 flex justify-between items-center">
             <span className="text-gray-900 dark:text-gray-100">
-              Worldwide Flat Rate
+              {t("worldwideFlatRate")}
             </span>
             <span className="font-medium text-gray-900 dark:text-gray-100">
-              Freeship
+              {t("freeship")}
             </span>
           </div>
         </div>
@@ -659,14 +698,16 @@ export const CheckoutScreen: React.FC = () => {
         {/* Order Summary */}
         <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-            Order summary
+            {t("orderSummary")}
           </h2>
 
           {items?.map((item) => {
             const countryProduct = countrySpecificProducts[item.productId];
-            const productImage = countryProduct?.images?.find((img: ProductImage) => img.isPrimary)?.url ||
-                                countryProduct?.images?.[0]?.url ||
-                                item.productImage;
+            const productImage =
+              countryProduct?.images?.find((img: ProductImage) => img.isPrimary)
+                ?.url ||
+              countryProduct?.images?.[0]?.url ||
+              item.productImage;
 
             return (
               <div
@@ -683,20 +724,23 @@ export const CheckoutScreen: React.FC = () => {
                         onError={(e) => {
                           // Fallback to placeholder if image fails to load
                           const target = e.currentTarget as HTMLImageElement;
-                          target.style.display = 'none';
-                          const nextElement = target.nextElementSibling as HTMLElement;
+                          target.style.display = "none";
+                          const nextElement =
+                            target.nextElementSibling as HTMLElement;
                           if (nextElement) {
-                            nextElement.style.display = 'flex';
+                            nextElement.style.display = "flex";
                           }
                         }}
                       />
                     ) : null}
                     <div
                       className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center"
-                      style={{ display: productImage ? 'none' : 'flex' }}
+                      style={{ display: productImage ? "none" : "flex" }}
                     >
                       <span className="text-gray-500 text-xs font-medium">
-                        {(countryProduct?.name || item.productName)?.charAt(0) || 'P'}
+                        {(countryProduct?.name || item.productName)?.charAt(
+                          0
+                        ) || "P"}
                       </span>
                     </div>
                   </div>
@@ -705,28 +749,33 @@ export const CheckoutScreen: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex-1">
-                <h3 className="font-medium text-gray-900 dark:text-gray-100">
-                  {countrySpecificProducts[item.productId]?.name || item.productName}
-                </h3>
-                <p className="text-sm text-gray-500">
-                  Size: {item.size}
-                  {itemPricing[item.productId] && (
-                    <span className="ml-2 text-xs">
-                      ({itemPricing[item.productId].effectivePrice.toFixed(2)} WLD each)
-                    </span>
+                  <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                    {countrySpecificProducts[item.productId]?.name ||
+                      item.productName}
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Size: {item.size}
+                    {itemPricing[item.productId] && (
+                      <span className="ml-2 text-xs">
+                        ({itemPricing[item.productId].effectivePrice.toFixed(2)}{" "}
+                        WLD each)
+                      </span>
+                    )}
+                  </p>
+                </div>
+                <span className="font-medium text-gray-900 dark:text-gray-100">
+                  {isPricingLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-600 dark:border-gray-400"></div>
+                      <span className="text-sm">Loading...</span>
+                    </div>
+                  ) : (
+                    `${(
+                      itemPricing[item.productId]?.itemTotal ??
+                      item.productPrice * item.quantity
+                    ).toFixed(2)} WLD`
                   )}
-                </p>
-              </div>
-              <span className="font-medium text-gray-900 dark:text-gray-100">
-                {isPricingLoading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-600 dark:border-gray-400"></div>
-                    <span className="text-sm">Loading...</span>
-                  </div>
-                ) : (
-                  `${(itemPricing[item.productId]?.itemTotal ?? (item.productPrice * item.quantity)).toFixed(2)} WLD`
-                )}
-              </span>
+                </span>
               </div>
             );
           })}
@@ -735,26 +784,33 @@ export const CheckoutScreen: React.FC = () => {
           <div className="space-y-2 my-7">
             {countrySpecificTotal !== null && (
               <div className="text-xs text-green-600 dark:text-green-400 mb-2">
-                ✓ Prices updated for {getCountryOption(selectedCountry)?.name || selectedCountry}
+                {t("pricesUpdatedFor", {
+                  country:
+                    getCountryOption(selectedCountry)?.name || selectedCountry,
+                })}
               </div>
             )}
             <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
+              <span className="text-gray-600 dark:text-gray-400">
+                {t("subtotal")}
+              </span>
               <span className="text-gray-900 dark:text-gray-100 flex items-center gap-2">
                 {isPricingLoading ? (
                   <>
                     <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-600 dark:border-gray-400"></div>
-                    <span className="text-sm">Loading...</span>
+                    <span className="text-sm">{t("loading")}</span>
                   </>
                 ) : (
-                  `${(subtotal).toFixed(2)} WLD`
+                  `${subtotal.toFixed(2)} WLD`
                 )}
               </span>
             </div>
             <div className="flex justify-between pb-2">
-              <span className="text-gray-600 dark:text-gray-400">Shipping</span>
+              <span className="text-gray-600 dark:text-gray-400">
+                {t("shipping")}
+              </span>
               <span className="text-gray-900 dark:text-gray-100">
-                {shipping}
+                {t("freeship")}
               </span>
             </div>
 
@@ -824,7 +880,7 @@ export const CheckoutScreen: React.FC = () => {
                   const successData = {
                     success: true,
                     data: orderResponse,
-                    statusCode: 200
+                    statusCode: 200,
                   };
 
                   navigate("/order-success", {
@@ -835,8 +891,13 @@ export const CheckoutScreen: React.FC = () => {
                   setTimeout(() => clearCart(), 200);
                 }
               } catch (error) {
-                console.error("❌ Failed to create checkout after payment:", error);
-                toast.error("Payment successful but failed to create order. Please contact support.");
+                console.error(
+                  "❌ Failed to create checkout after payment:",
+                  error
+                );
+                toast.error(
+                  "Payment successful but failed to create order. Please contact support."
+                );
               }
             }}
             onPaymentError={(error) => {

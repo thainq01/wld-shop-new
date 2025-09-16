@@ -162,9 +162,7 @@ const HistoryScreen: React.FC = () => {
         updatedAt: checkout.updatedAt,
       }));
 
-
       setOrders(mappedOrders);
-
     } catch (err) {
       console.error("Error fetching order history:", err);
 
@@ -237,6 +235,15 @@ const HistoryScreen: React.FC = () => {
     }
   };
 
+  const getStatusText = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "paid":
+        return t("paid");
+      default:
+        return status.charAt(0).toUpperCase() + status.slice(1);
+    }
+  };
+
   // Login required state when no wallet
   if (!walletAddress) {
     return (
@@ -251,12 +258,12 @@ const HistoryScreen: React.FC = () => {
 
             {/* Login required text */}
             <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-              Login Required
+              {t("loginRequired")}
             </h2>
 
             {/* Description text */}
             <p className="text-gray-500 dark:text-gray-400 text-lg mb-12">
-              Please sign in with your World ID to view your order history
+              {t("signInWithWorldIdHistory")}
             </p>
 
             {/* Login button */}
@@ -324,7 +331,7 @@ const HistoryScreen: React.FC = () => {
                 disabled={loading}
                 className="w-[250px] py-4 bg-black dark:bg-white text-white dark:text-black rounded-full font-semibold text-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? "Retrying..." : t("tryAgain")}
+                {loading ? t("retrying") : t("tryAgain")}
               </button>
             </div>
           </div>
@@ -338,7 +345,7 @@ const HistoryScreen: React.FC = () => {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
       {orders.length === 0 ? (
-        <>          
+        <>
           {/* Empty state - centered and styled like bag empty state */}
           <div className="flex-1 flex items-center justify-center px-4 pb-20">
             <div className="text-center max-w-sm">
@@ -349,12 +356,12 @@ const HistoryScreen: React.FC = () => {
 
               {/* No orders text */}
               <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-                No orders yet
+                {t("noOrdersYet")}
               </h2>
 
               {/* Description text */}
               <p className="text-gray-500 dark:text-gray-400 text-lg mb-6">
-                Your order history will be displayed here
+                {t("orderHistoryDisplayedHere")}
               </p>
 
               {/* Action buttons */}
@@ -363,7 +370,7 @@ const HistoryScreen: React.FC = () => {
                   onClick={() => navigate("/explore")}
                   className="w-[250px] py-4 bg-black dark:bg-white text-white dark:text-black rounded-full font-semibold text-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
                 >
-                  Explore
+                  {t("explore")}
                 </button>
               </div>
             </div>
@@ -409,8 +416,7 @@ const HistoryScreen: React.FC = () => {
                           order.status
                         )}`}
                       >
-                        {order.status.charAt(0).toUpperCase() +
-                          order.status.slice(1)}
+                        {getStatusText(order.status)}
                       </span>
                     </div>
 
@@ -432,7 +438,7 @@ const HistoryScreen: React.FC = () => {
                       {/* Products */}
                       <div className="py-3 border-b border-gray-100 dark:border-gray-700">
                         <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">
-                          Products Ordered
+                          {t("productsOrdered")}
                         </h4>
                         <div className="space-y-3">
                           {order.products && order.products.length > 0 ? (
@@ -444,13 +450,12 @@ const HistoryScreen: React.FC = () => {
                                 <div className="flex-1">
                                   <h5 className="text-sm font-medium text-gray-900 dark:text-white">
                                     {item.product?.name ||
-                                      "Product Name Not Available"}
+                                      t("productNameNotAvailable")}
                                   </h5>
                                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                                    Qty: {item.quantity || 0}
+                                    {t("quantity")}: {item.quantity || 0}
                                   </p>
                                 </div>
-                                
                               </div>
                             ))
                           ) : (

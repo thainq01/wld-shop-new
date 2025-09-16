@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ChevronDown, Check, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 interface CitySelectorProps {
   cities: string[];
@@ -17,6 +18,7 @@ export const CitySelector: React.FC<CitySelectorProps> = ({
   disabled = false,
   reason,
 }) => {
+  const { t } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleCitySelect = (city: string) => {
@@ -40,7 +42,7 @@ export const CitySelector: React.FC<CitySelectorProps> = ({
       >
         <div className="flex items-center gap-2">
           {disabled && <Lock className="w-4 h-4" />}
-          <span>{selectedCity || "Select City"}</span>
+          <span>{selectedCity || t("selectCity")}</span>
         </div>
         {!disabled && (
           <motion.div
@@ -51,7 +53,7 @@ export const CitySelector: React.FC<CitySelectorProps> = ({
           </motion.div>
         )}
       </motion.button>
-      
+
       {/* Disabled reason message */}
       {disabled && reason && (
         <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">

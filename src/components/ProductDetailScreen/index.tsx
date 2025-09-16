@@ -15,6 +15,7 @@ import { ExpandableSection } from "./types";
 import { useCart } from "../../hooks/useCart";
 import { useProductStore } from "../../store/productStore";
 import { useLanguageStore } from "../../store/languageStore";
+import { useTranslation } from "react-i18next";
 import { type ProductImage, type ProductSize } from "../../types";
 
 // Product image component - reused from other components
@@ -212,6 +213,7 @@ const SizeSelector = ({
   onSizeChange: (size: string) => void;
   sizeDetails?: ProductSize[];
 }) => {
+  const { t } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleSizeSelect = (size: string) => {
@@ -229,7 +231,7 @@ const SizeSelector = ({
         className="flex items-center gap-2 text-gray-900 dark:text-gray-100 focus:outline-none"
       >
         <span className="text-lg font-semibold">
-          {selectedSize || "Select Size"}
+          {selectedSize || t("selectSize")}
         </span>
         <motion.div
           animate={{ rotate: isModalOpen ? 180 : 0 }}
@@ -346,7 +348,9 @@ const SizeSelector = ({
                           !isOutOfStock &&
                           sizeDetail.stockQuantity <= 5 && (
                             <span className="text-xs bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 px-2 py-1 rounded-full">
-                              Only {sizeDetail.stockQuantity} left
+                              {t("onlyLeft", {
+                                count: sizeDetail.stockQuantity,
+                              })}
                             </span>
                           )}
                       </div>
@@ -391,6 +395,7 @@ const SizeSelector = ({
 export const ProductDetailScreen: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const {
     currentProduct: productDetail,
     isLoading,
@@ -521,13 +526,13 @@ export const ProductDetailScreen: React.FC = () => {
     if (!productDetail) return;
 
     if (!selectedSize) {
-      toast.error("Please select a size");
+      toast.error(t("pleaseSelectSize"));
       return;
     }
 
     // Check if selected size is out of stock
     if (isSelectedSizeOutOfStock()) {
-      toast.error("This size is currently out of stock");
+      toast.error(t("sizeOutOfStock"));
       return;
     }
 
@@ -539,17 +544,17 @@ export const ProductDetailScreen: React.FC = () => {
     setIsAddingToCart(true);
     try {
       if (!hasWallet) {
-        toast.error("Please connect your wallet to add items to cart");
+        toast.error(t("connectWalletToAddItems"));
         return;
       }
-      
+
       await addToCart({
         productId: productDetail.id.toString(),
         size: selectedSize,
       });
-      toast.success(`${productDetail.name} added to bag!`);
+      toast.success(`${productDetail.name} ${t("addedToBag")}`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to add to cart");
+      toast.error(err instanceof Error ? err.message : t("failedToAddToCart"));
     } finally {
       setIsAddingToCart(false);
     }
@@ -559,7 +564,7 @@ export const ProductDetailScreen: React.FC = () => {
   if (error || !productDetail)
     return (
       <ErrorState
-        error={error || "Product not found"}
+        error={error || t("productNotFound")}
         onRetry={() => productId && fetchProductDetail(productId)}
       />
     );
@@ -711,14 +716,18 @@ export const ProductDetailScreen: React.FC = () => {
           {productDetail.name}
         </h1>
         <p className="text-xl text-gray-600 dark:text-gray-400 mb-6">
-          {productDetail.effectivePrice || productDetail.countryPrice || productDetail.basePrice || productDetail.price} WLD
+          {productDetail.effectivePrice ||
+            productDetail.countryPrice ||
+            productDetail.basePrice ||
+            productDetail.price}{" "}
+          WLD
         </p>
 
         {/* Size Selector */}
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Size
+              {t("size")}
             </span>
             <SizeSelector
               sizes={productDetail.sizes?.map((s: ProductSize) => s.size) || []}
@@ -732,7 +741,7 @@ export const ProductDetailScreen: React.FC = () => {
         {/* Expandable Sections */}
         <div className="space-y-0">
           <ExpandableSectionComponent
-            title="About"
+            title={t("about")}
             content={productDetail.description}
             isExpanded={expandedSections.has("about")}
             onToggle={() => toggleSection("about")}
@@ -744,7 +753,7 @@ export const ProductDetailScreen: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <UserRoundCheck className="w-5 h-5 text-gray-400" />
                   <span className="text-gray-600 dark:text-gray-300">
-                    Made by
+                    {t("madeBy")}
                   </span>
                 </div>
                 <span className="font-semibold text-gray-900 dark:text-gray-100">
@@ -756,7 +765,7 @@ export const ProductDetailScreen: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <Package className="w-5 h-5 text-gray-400" />
                   <span className="text-gray-600 dark:text-gray-300">
-                    In stock
+                    {t("inStock")}
                   </span>
                 </div>
                 <span className="font-semibold text-gray-900 dark:text-gray-100">
@@ -768,7 +777,7 @@ export const ProductDetailScreen: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <Shirt className="w-5 h-5 text-gray-400" />
                   <span className="text-gray-600 dark:text-gray-300">
-                    Collection
+                    {t("collection")}
                   </span>
                 </div>
                 <span className="font-semibold text-gray-900 dark:text-gray-100">
@@ -779,16 +788,16 @@ export const ProductDetailScreen: React.FC = () => {
           )}
 
           <ExpandableSectionComponent
-            title="Material"
+            title={t("material")}
             content={productDetail.material}
             isExpanded={expandedSections.has("material")}
             onToggle={() => toggleSection("material")}
           />
 
           <ExpandableSectionComponent
-            title="Other Details"
+            title={t("otherDetails")}
             content={
-              productDetail.otherDetails || "Additional details not available"
+              productDetail.otherDetails || t("additionalDetailsNotAvailable")
             }
             isExpanded={expandedSections.has("otherDetails")}
             onToggle={() => toggleSection("otherDetails")}
@@ -809,10 +818,10 @@ export const ProductDetailScreen: React.FC = () => {
             }`}
           >
             {isAddingToCart
-              ? "Adding..."
+              ? t("adding")
               : isSelectedSizeOutOfStock() && selectedSize
-              ? "Out of product"
-              : "Add to bag"}
+              ? t("outOfStock")
+              : t("addToBag")}
           </button>
 
           {/* Stock information for selected size */}

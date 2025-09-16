@@ -1,8 +1,17 @@
 import { create } from "zustand";
-import { subscribeWithSelector } from "zustand/middleware";
+import { subscribeWithSelector, persist } from "zustand/middleware";
 import { collectionsApi, productsApi } from "../utils/api";
 import { Product, Collection } from "../types";
 import { useLanguageStore, type Language } from "./languageStore";
+
+// Cache configuration constants
+const CACHE_CONFIG = {
+  COLLECTION_PRODUCTS_TTL: 5 * 60 * 1000, // 5 minutes
+  FEATURED_PRODUCTS_TTL: 5 * 60 * 1000, // 5 minutes
+  COLLECTIONS_TTL: 10 * 60 * 1000, // 10 minutes
+  STALE_THRESHOLD: 4 * 60 * 1000, // 4 minutes (warn before expiry)
+  MAX_CACHE_SIZE: 1000, // Maximum products to cache
+} as const;
 
 interface CollectionState {
   collections: Collection[];
@@ -19,6 +28,12 @@ interface CollectionState {
   featuredProducts: Product[];
   featuredProductsLoading: boolean;
   featuredProductsLastFetched: number;
+
+  // Enhanced cache metadata
+  collectionsLastFetched: number;
+  cacheHits: number;
+  cacheMisses: number;
+  totalCachedProducts: number;
 
   // Actions
   fetchCollections: () => Promise<void>;
@@ -54,10 +69,25 @@ export const useCollectionStore = create<CollectionState>()(
     featuredProductsLoading: false,
     featuredProductsLastFetched: 0,
 
+    // Enhanced cache metadata
+    collectionsLastFetched: 0,
+    cacheHits: 0,
+    cacheMisses: 0,
+    totalCachedProducts: 0,
+
     fetchCollections: async () => {
-      // Only fetch if not already loaded
-      const { collections } = get();
-      if (collections.length > 0) return;
+      const { collections, collectionsLastFetched, cacheHits } = get();
+
+      // Check cache age
+      const now = Date.now();
+      if (
+        collections.length > 0 &&
+        collectionsLastFetched &&
+        now - collectionsLastFetched < CACHE_CONFIG.COLLECTIONS_TTL
+      ) {
+        set({ cacheHits: cacheHits + 1 });
+        return;
+      }
 
       set({ isLoading: true, error: null });
       try {
@@ -68,7 +98,12 @@ export const useCollectionStore = create<CollectionState>()(
         const collections = await collectionsApi.getAll({
           lang: productLanguage,
         });
-        set({ collections, isLoading: false });
+        set({
+          collections,
+          isLoading: false,
+          collectionsLastFetched: now,
+          cacheMisses: get().cacheMisses + 1,
+        });
       } catch (error) {
         set({
           error:
@@ -84,7 +119,8 @@ export const useCollectionStore = create<CollectionState>()(
       collectionSlug: string,
       forceRefresh = false
     ) => {
-      const { collectionProducts, loadingStates, lastFetched } = get();
+      const { collectionProducts, loadingStates, lastFetched, cacheHits } =
+        get();
 
       // Check if already loaded and not forcing refresh
       if (
@@ -92,17 +128,18 @@ export const useCollectionStore = create<CollectionState>()(
         collectionProducts[collectionSlug] &&
         !loadingStates[collectionSlug]
       ) {
+        set({ cacheHits: cacheHits + 1 });
         return;
       }
 
-      // Check cache age (optional: only refetch if data is older than 5 minutes)
-      const cacheMaxAge = 5 * 60 * 1000; // 5 minutes
+      // Check cache age using configuration constant
       const lastFetchTime = lastFetched[collectionSlug];
       if (
         !forceRefresh &&
         lastFetchTime &&
-        Date.now() - lastFetchTime < cacheMaxAge
+        Date.now() - lastFetchTime < CACHE_CONFIG.COLLECTION_PRODUCTS_TTL
       ) {
+        set({ cacheHits: cacheHits + 1 });
         return;
       }
 
@@ -121,20 +158,29 @@ export const useCollectionStore = create<CollectionState>()(
           country: productLanguage, // Use same value for country as lang
           active: true,
         });
-        set((state) => ({
-          collectionProducts: {
+        set((state) => {
+          const newTotalProducts = Object.values({
             ...state.collectionProducts,
             [collectionSlug]: products,
-          },
-          loadingStates: {
-            ...state.loadingStates,
-            [collectionSlug]: false,
-          },
-          lastFetched: {
-            ...state.lastFetched,
-            [collectionSlug]: Date.now(),
-          },
-        }));
+          }).reduce((sum, prods) => sum + prods.length, 0);
+
+          return {
+            collectionProducts: {
+              ...state.collectionProducts,
+              [collectionSlug]: products,
+            },
+            loadingStates: {
+              ...state.loadingStates,
+              [collectionSlug]: false,
+            },
+            lastFetched: {
+              ...state.lastFetched,
+              [collectionSlug]: Date.now(),
+            },
+            cacheMisses: state.cacheMisses + 1,
+            totalCachedProducts: newTotalProducts,
+          };
+        });
       } catch (error) {
         console.error(`Failed to fetch products for ${collectionSlug}:`, error);
         set((state) => ({
@@ -157,6 +203,7 @@ export const useCollectionStore = create<CollectionState>()(
         featuredProducts,
         featuredProductsLoading,
         featuredProductsLastFetched,
+        cacheHits,
       } = get();
 
       // Check if already loaded and not forcing refresh
@@ -165,16 +212,18 @@ export const useCollectionStore = create<CollectionState>()(
         featuredProducts.length > 0 &&
         !featuredProductsLoading
       ) {
+        set({ cacheHits: cacheHits + 1 });
         return;
       }
 
-      // Check cache age
-      const cacheMaxAge = 5 * 60 * 1000; // 5 minutes
+      // Check cache age using configuration constant
       if (
         !forceRefresh &&
         featuredProductsLastFetched &&
-        Date.now() - featuredProductsLastFetched < cacheMaxAge
+        Date.now() - featuredProductsLastFetched <
+          CACHE_CONFIG.FEATURED_PRODUCTS_TTL
       ) {
+        set({ cacheHits: cacheHits + 1 });
         return;
       }
 
@@ -190,11 +239,12 @@ export const useCollectionStore = create<CollectionState>()(
         });
         const featured = allProducts.filter((product) => product.featured);
 
-        set({
+        set((state) => ({
           featuredProducts: featured,
           featuredProductsLoading: false,
           featuredProductsLastFetched: Date.now(),
-        });
+          cacheMisses: state.cacheMisses + 1,
+        }));
       } catch (error) {
         console.error("Failed to fetch featured products:", error);
         set({

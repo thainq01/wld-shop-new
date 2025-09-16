@@ -2,8 +2,13 @@ import { HeroSection } from "./HeroSection";
 import { ProductList } from "./ProductList";
 import { BottomNavigation } from "./BottomNavigation";
 import { useEffect } from "react";
+import { useExploreCache } from "../hooks/useExploreCache";
+import { CacheDebugPanel } from "./debug/CacheDebugPanel";
 
 export function ExploreScreen() {
+  // Initialize enhanced caching system
+  const { isInitialized, getCacheStats } = useExploreCache();
+
   useEffect(() => {
     window.scrollTo({
       top: 0,
@@ -12,10 +17,20 @@ export function ExploreScreen() {
     });
   }, []);
 
-  // Note: Data caching is now handled by the collection store.
-  // When users navigate back to this screen, cached data will be used
-  // and no API calls will be made unless the cache is expired (5 minutes)
-  // or explicitly refreshed.
+  // Log cache statistics in development
+  useEffect(() => {
+    if (import.meta.env.DEV && isInitialized) {
+      const stats = getCacheStats();
+      console.log("📊 Explore Cache Stats:", stats);
+    }
+  }, [isInitialized, getCacheStats]);
+
+  // Enhanced caching system provides:
+  // - Smart preloading and cache warming
+  // - Language-aware cache invalidation
+  // - Background refresh for stale data
+  // - Cache hit/miss tracking
+  // - Optimized data fetching with 5-minute TTL
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
@@ -24,6 +39,7 @@ export function ExploreScreen() {
         <ProductList />
       </div>
       <BottomNavigation />
+      <CacheDebugPanel />
     </div>
   );
 }

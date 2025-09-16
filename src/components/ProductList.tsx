@@ -3,11 +3,13 @@ import { useCollectionStore } from "../store/collectionStore";
 import { ProductItem } from "./ProductItem";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 import { Product } from "../types";
 
 export function ProductList() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const {
     collections,
     isLoading: isLoadingCollections,
@@ -89,7 +91,7 @@ export function ProductList() {
                 onClick={() => handleSeeAllClick(collection.slug)}
                 className="text-gray-500 dark:text-gray-400 text-sm font-medium hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
               >
-                See all
+                {t("seeAll")}
               </button>
             </div>
 
@@ -102,7 +104,7 @@ export function ProductList() {
                 ))}
                 {products.length === 0 && (
                   <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                    No products available in this collection
+                    {t("noProductsAvailable")}
                   </div>
                 )}
               </div>

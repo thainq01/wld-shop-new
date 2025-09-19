@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { ChevronDown, HelpCircle, Check, Lock } from "lucide-react";
+import { ChevronDown, Check, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -17,6 +17,7 @@ import type { CreateCheckoutRequest, Product, ProductImage } from "../../types";
 import { WLDPaymentButton } from "../checkout/WLDPaymentButton";
 import { CitySelector } from "../checkout/CitySelector";
 import { getCitiesForCountry } from "../../data/cities";
+import { PhoneInput } from "../PhoneInput";
 
 interface ShippingAddress {
   email: string;
@@ -264,6 +265,9 @@ export const CheckoutScreen: React.FC = () => {
     saveForNextTime: false,
   });
 
+  // Phone validation state
+  const [isPhoneValid, setIsPhoneValid] = useState(false);
+
   // Generate order ID when component mounts or language changes
   useEffect(() => {
     const orderId = generateOrderId();
@@ -483,6 +487,15 @@ export const CheckoutScreen: React.FC = () => {
     handleInputChange("city", cityName);
   };
 
+  // Handler for phone changes with validation
+  const handlePhoneChange = (value: string, isValid: boolean) => {
+    setShippingAddress((prev) => ({
+      ...prev,
+      phone: value,
+    }));
+    setIsPhoneValid(isValid);
+  };
+
   const isFormValid = () => {
     const formFieldsValid =
       shippingAddress.email &&
@@ -490,7 +503,8 @@ export const CheckoutScreen: React.FC = () => {
       shippingAddress.lastName &&
       shippingAddress.address &&
       shippingAddress.city &&
-      shippingAddress.phone;
+      shippingAddress.phone &&
+      isPhoneValid; // Add phone validation check
 
     return formFieldsValid && canProceedWithPayment;
   };
@@ -533,7 +547,7 @@ export const CheckoutScreen: React.FC = () => {
             placeholder={t("email")}
             value={shippingAddress.email}
             onChange={(e) => handleInputChange("email", e.target.value)}
-            className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 mb-4"
+            className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 mb-4 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
           />
         </div>
         {/* Delivery Section */}
@@ -560,14 +574,14 @@ export const CheckoutScreen: React.FC = () => {
               placeholder={t("firstName")}
               value={shippingAddress.firstName}
               onChange={(e) => handleInputChange("firstName", e.target.value)}
-              className="px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              className="px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
             />
             <input
               type="text"
               placeholder={t("lastName")}
               value={shippingAddress.lastName}
               onChange={(e) => handleInputChange("lastName", e.target.value)}
-              className="px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              className="px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
             />
           </div>
 
@@ -577,7 +591,7 @@ export const CheckoutScreen: React.FC = () => {
             placeholder={t("address")}
             value={shippingAddress.address}
             onChange={(e) => handleInputChange("address", e.target.value)}
-            className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 mb-4"
+            className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 mb-4 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
           />
 
           {/* Apartment */}
@@ -586,7 +600,7 @@ export const CheckoutScreen: React.FC = () => {
             placeholder={t("apartment")}
             value={shippingAddress.apartment}
             onChange={(e) => handleInputChange("apartment", e.target.value)}
-            className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 mb-4"
+            className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 mb-4 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
           />
 
           {/* City and Postal Code */}
@@ -607,20 +621,20 @@ export const CheckoutScreen: React.FC = () => {
               placeholder={t("postalCode")}
               value={shippingAddress.postalCode}
               onChange={(e) => handleInputChange("postalCode", e.target.value)}
-              className="px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              className="px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
             />
           </div>
 
           {/* Phone */}
-          <div className="relative mb-4">
-            <input
-              type="tel"
-              placeholder={t("phone")}
+          <div className="mb-4">
+            <PhoneInput
               value={shippingAddress.phone}
-              onChange={(e) => handleInputChange("phone", e.target.value)}
-              className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 pr-12"
+              onChange={handlePhoneChange}
+              countryCode={selectedCountry}
+              placeholder={t("phone")}
+              required={true}
+              showValidation={true}
             />
-            <HelpCircle className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
           </div>
         </div>
 

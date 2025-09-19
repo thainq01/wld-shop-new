@@ -77,7 +77,10 @@ function App() {
                       <Route path="/bag" element={<BagScreen />} />
                       <Route path="/history" element={<HistoryScreen />} />
                       <Route path="/checkout" element={<CheckoutScreen />} />
-                      <Route path="/order-success" element={<OrderSuccessScreen />} />
+                      <Route
+                        path="/order-success"
+                        element={<OrderSuccessScreen />}
+                      />
                     </Routes>
                   </MainLayout>
                 </Container>

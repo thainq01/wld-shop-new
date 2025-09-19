@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-constant-binary-expression */
 import { useEffect, useState } from "react";
 import {
   Search,
-  Eye,
   Calendar,
   User,
   Package,

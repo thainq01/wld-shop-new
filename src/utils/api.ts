@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 import type {
   Collection,
@@ -78,11 +78,12 @@ async function apiFetch<T>(
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const result: ApiResponse<T> | ApiError | ApiValidationError = await response.json();
+    const result: ApiResponse<T> | ApiError | ApiValidationError =
+      await response.json();
 
     if (!result.success) {
       // Handle validation errors (like the checkout API response)
-      if ('validation' in result && result.validation) {
+      if ("validation" in result && result.validation) {
         const errorMessage = result.message || "Validation failed";
         const validationErrors = Object.entries(result.validation)
           .map(([field, error]) => `${field}: ${error}`)
@@ -91,10 +92,11 @@ async function apiFetch<T>(
           `${errorMessage}. Validation errors: ${validationErrors}`
         );
       }
-      
+
       // Handle regular API errors
       const error = result as ApiError;
-      const errorMessage = error.message || error.error?.message || "API request failed";
+      const errorMessage =
+        error.message || error.error?.message || "API request failed";
       console.log("🔍 Extracted error message from API:", errorMessage);
       throw new Error(errorMessage);
     }
@@ -161,12 +163,20 @@ export const collectionsApi = {
     if (params?.lang) searchParams.append("lang", params.lang);
 
     const query = searchParams.toString();
-    return apiFetch<{ success: boolean; data: MultiLanguageCollection[]; statusCode: number } | MultiLanguageCollection[]>(
-      `/api/cms/collections/multi-language${query ? `?${query}` : ""}`
-    );
+    return apiFetch<
+      | {
+          success: boolean;
+          data: MultiLanguageCollection[];
+          statusCode: number;
+        }
+      | MultiLanguageCollection[]
+    >(`/api/cms/collections/multi-language${query ? `?${query}` : ""}`);
   },
 
-  getProducts: (slug: string, params?: { lang?: string; country?: string; active?: boolean }) => {
+  getProducts: (
+    slug: string,
+    params?: { lang?: string; country?: string; active?: boolean }
+  ) => {
     const searchParams = new URLSearchParams();
     if (params?.lang) searchParams.append("lang", params.lang);
     if (params?.country) searchParams.append("country", params.country);
@@ -194,13 +204,24 @@ export const collectionsApi = {
 
   // Multi-language CMS operations
   createMultiLanguage: (data: CreateMultiLanguageCollectionRequest) =>
-    apiFetch<{ success: boolean; data: MultiLanguageCollection; statusCode: number }>("/api/cms/collections", {
+    apiFetch<{
+      success: boolean;
+      data: MultiLanguageCollection;
+      statusCode: number;
+    }>("/api/cms/collections", {
       method: "POST",
       body: JSON.stringify(data),
     }),
 
-  updateMultiLanguage: (id: number, data: UpdateMultiLanguageCollectionRequest) =>
-    apiFetch<{ success: boolean; data: MultiLanguageCollection; statusCode: number }>(`/api/cms/collections/${id}/multi-language`, {
+  updateMultiLanguage: (
+    id: number,
+    data: UpdateMultiLanguageCollectionRequest
+  ) =>
+    apiFetch<{
+      success: boolean;
+      data: MultiLanguageCollection;
+      statusCode: number;
+    }>(`/api/cms/collections/${id}/multi-language`, {
       method: "PUT",
       body: JSON.stringify(data),
     }),
@@ -231,7 +252,10 @@ export const productsApi = {
     return apiFetch<Product[]>(`/api/products${query ? `?${query}` : ""}`);
   },
 
-  getById: (id: string | number, params?: { lang?: string; country?: string }) => {
+  getById: (
+    id: string | number,
+    params?: { lang?: string; country?: string }
+  ) => {
     const searchParams = new URLSearchParams();
     searchParams.append("id", id.toString());
     if (params?.lang) searchParams.append("lang", params.lang);
@@ -265,20 +289,29 @@ export const productsApi = {
     if (params?.lang) searchParams.append("lang", params.lang);
 
     const query = searchParams.toString();
-    return apiFetch<{ success: boolean; data: MultiLanguageProduct[]; statusCode: number } | MultiLanguageProduct[]>(
-      `/api/cms/products/multi-language${query ? `?${query}` : ""}`
-    );
+    return apiFetch<
+      | { success: boolean; data: MultiLanguageProduct[]; statusCode: number }
+      | MultiLanguageProduct[]
+    >(`/api/cms/products/multi-language${query ? `?${query}` : ""}`);
   },
 
   // Multi-language CMS operations
   createMultiLanguage: (data: CreateMultiLanguageProductRequest) =>
-    apiFetch<{ success: boolean; data: MultiLanguageProduct; statusCode: number }>("/api/cms/products", {
+    apiFetch<{
+      success: boolean;
+      data: MultiLanguageProduct;
+      statusCode: number;
+    }>("/api/cms/products", {
       method: "POST",
       body: JSON.stringify(data),
     }),
 
   updateMultiLanguage: (id: number, data: UpdateMultiLanguageProductRequest) =>
-    apiFetch<{ success: boolean; data: MultiLanguageProduct; statusCode: number }>(`/api/cms/products/${id}/multi-language`, {
+    apiFetch<{
+      success: boolean;
+      data: MultiLanguageProduct;
+      statusCode: number;
+    }>(`/api/cms/products/${id}/multi-language`, {
       method: "PUT",
       body: JSON.stringify(data),
     }),
@@ -450,13 +483,25 @@ export const checkoutApi = {
     apiFetch<CheckoutProductResponse[]>(`/api/checkout/${id}/products`),
 
   // Update checkout status
-  updateStatus: (orderId: string, status: string) =>
-    apiFetch<{ success: boolean; message: string }>(
-      `/api/checkout/order/${orderId}/status?status=${status}`,
+  updateStatus: (
+    orderId: string,
+    status: string,
+    carrier?: string,
+    trackingCode?: string
+  ) => {
+    const searchParams = new URLSearchParams();
+    searchParams.append("status", status);
+    // Always include carrier and trackingCode parameters, even if empty
+    searchParams.append("carrier", carrier || "");
+    searchParams.append("trackingCode", trackingCode || "");
+
+    return apiFetch<{ success: boolean; message: string }>(
+      `/api/checkout/order/${orderId}/status?${searchParams.toString()}`,
       {
         method: "PATCH",
       }
-    ),
+    );
+  },
 
   // Get checkouts by wallet address
   getByWalletAddress: (

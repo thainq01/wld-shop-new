@@ -9,6 +9,7 @@ import {
   ArrowLeft,
   DollarSign,
   Hash,
+  Truck,
 } from "lucide-react";
 
 import { BottomNavigation } from "../BottomNavigation";
@@ -72,6 +73,8 @@ interface OrderHistoryItem {
   totalAmount: string;
   status: string;
   transactionHash?: string;
+  carrier?: string | null;
+  trackingCode?: string | null;
   products: OrderHistoryProduct[];
   createdAt: string;
   updatedAt: string;
@@ -147,6 +150,8 @@ const HistoryScreen: React.FC = () => {
         phone: checkout.phone,
         totalAmount: checkout.totalAmount || "0",
         status: checkout.status || "pending",
+        carrier: checkout.carrier,
+        trackingCode: checkout.trackingCode,
         products:
           checkout.products?.map((product: CheckoutProductResponse) => ({
             id: product.id,
@@ -228,6 +233,10 @@ const HistoryScreen: React.FC = () => {
         return "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400";
       case "paid":
         return "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400";
+      case "confirmed":
+        return "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400";
+      case "completed":
+        return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400";
       case "pending":
         return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400";
       default:
@@ -497,6 +506,38 @@ const HistoryScreen: React.FC = () => {
                             {order.phone}
                           </span>
                         </div>
+
+                        {/* Shipping Tracking Info */}
+                        {(order.carrier || order.trackingCode) && (
+                          <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <Truck className="w-4 h-4 text-gray-400" />
+                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                {t("shippingInformation")}
+                              </span>
+                            </div>
+                            {order.carrier && (
+                              <div className="ml-6 mb-1">
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                  Carrier:
+                                </span>
+                                <span className="ml-1 text-xs text-gray-700 dark:text-gray-300 font-medium">
+                                  {order.carrier}
+                                </span>
+                              </div>
+                            )}
+                            {order.trackingCode && (
+                              <div className="ml-6">
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                  Tracking:
+                                </span>
+                                <span className="ml-1 text-xs text-gray-700 dark:text-gray-300 font-mono">
+                                  {order.trackingCode}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       {/* Order ID */}

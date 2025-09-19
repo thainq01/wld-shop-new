@@ -1,4 +1,13 @@
-import { X, User, MapPin, Phone, Mail, Wallet, Package, Calendar } from "lucide-react";
+import {
+  X,
+  User,
+  MapPin,
+  Phone,
+  Mail,
+  Wallet,
+  Package,
+  Calendar,
+} from "lucide-react";
 import { Checkout, CheckoutProductResponse } from "../../../types";
 
 interface CheckoutDetailsModalProps {
@@ -7,15 +16,19 @@ interface CheckoutDetailsModalProps {
   onClose: () => void;
 }
 
-export function CheckoutDetailsModal({ checkout, products, onClose }: CheckoutDetailsModalProps) {
+export function CheckoutDetailsModal({
+  checkout,
+  products,
+  onClose,
+}: CheckoutDetailsModalProps) {
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZoneName: 'short'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZoneName: "short",
     });
   };
 
@@ -25,7 +38,7 @@ export function CheckoutDetailsModal({ checkout, products, onClose }: CheckoutDe
 
   const calculateTotal = () => {
     return products.reduce((total, item) => {
-      return total + (item.product.price * item.quantity);
+      return total + item.product.price * item.quantity;
     }, 0);
   };
 
@@ -33,7 +46,7 @@ export function CheckoutDetailsModal({ checkout, products, onClose }: CheckoutDe
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         {/* Background overlay */}
-        <div 
+        <div
           className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
           onClick={onClose}
         />
@@ -68,7 +81,9 @@ export function CheckoutDetailsModal({ checkout, products, onClose }: CheckoutDe
                 </h4>
                 <div className="space-y-2">
                   <div>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Name:</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      Name:
+                    </span>
                     <span className="ml-2 text-sm font-medium text-gray-900 dark:text-white">
                       {checkout.firstName} {checkout.lastName}
                     </span>
@@ -107,7 +122,9 @@ export function CheckoutDetailsModal({ checkout, products, onClose }: CheckoutDe
                 <div className="text-sm text-gray-900 dark:text-white space-y-1">
                   <div>{checkout.address}</div>
                   {checkout.apartment && <div>{checkout.apartment}</div>}
-                  <div>{checkout.city}, {checkout.postcode}</div>
+                  <div>
+                    {checkout.city}, {checkout.postcode}
+                  </div>
                   <div className="font-medium">{checkout.country}</div>
                 </div>
               </div>
@@ -119,23 +136,33 @@ export function CheckoutDetailsModal({ checkout, products, onClose }: CheckoutDe
                 </h4>
                 <div className="space-y-2">
                   <div>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Created:</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      Created:
+                    </span>
                     <span className="ml-2 text-sm text-gray-900 dark:text-white">
                       {formatDate(checkout.createdAt)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Updated:</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      Updated:
+                    </span>
                     <span className="ml-2 text-sm text-gray-900 dark:text-white">
                       {formatDate(checkout.updatedAt)}
                     </span>
                   </div>
                   {checkout.transactionHash && (
                     <div>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">Transaction Hash:</span>
-                      <span className="ml-2 text-sm font-mono text-gray-900 dark:text-white break-all">
-                        {checkout.transactionHash}
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        Transaction Hash:
                       </span>
+                      <a
+                        target="_blank"
+                        href={`https://worldscan.org/tx/${checkout.transactionHash}`}
+                        className="ml-2 text-sm font-mono text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 cursor-pointer break-all"
+                      >
+                        {checkout.transactionHash}
+                      </a>
                     </div>
                   )}
                 </div>
@@ -156,7 +183,10 @@ export function CheckoutDetailsModal({ checkout, products, onClose }: CheckoutDe
                     </p>
                   ) : (
                     products.map((item) => (
-                      <div key={item.id} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600">
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600"
+                      >
                         <div className="flex-1">
                           <h5 className="text-sm font-medium text-gray-900 dark:text-white">
                             {item.product.name}
@@ -170,10 +200,12 @@ export function CheckoutDetailsModal({ checkout, products, onClose }: CheckoutDe
                         </div>
                         <div className="text-right">
                           <div className="text-sm font-medium text-gray-900 dark:text-white">
-                            {item.quantity} × {item.product.price.toFixed(2)} WLD
+                            {item.quantity} × {item.product.price.toFixed(2)}{" "}
+                            WLD
                           </div>
                           <div className="text-sm font-bold text-gray-900 dark:text-white">
-                            {(item.quantity * item.product.price).toFixed(2)} WLD
+                            {(item.quantity * item.product.price).toFixed(2)}{" "}
+                            WLD
                           </div>
                         </div>
                       </div>
@@ -190,17 +222,21 @@ export function CheckoutDetailsModal({ checkout, products, onClose }: CheckoutDe
                   </h4>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">Subtotal:</span>
+                      <span className="text-gray-500 dark:text-gray-400">
+                        Subtotal:
+                      </span>
                       <span className="text-gray-900 dark:text-white">
                         {calculateTotal().toFixed(2)} WLD
                       </span>
                     </div>
-                    
+
                     <div className="border-t border-gray-200 dark:border-gray-600 pt-2">
                       <div className="flex justify-between text-base font-medium">
-                        <span className="text-gray-900 dark:text-white">Total:</span>
                         <span className="text-gray-900 dark:text-white">
-                          {(calculateTotal()).toFixed(2)} WLD
+                          Total:
+                        </span>
+                        <span className="text-gray-900 dark:text-white">
+                          {calculateTotal().toFixed(2)} WLD
                         </span>
                       </div>
                     </div>

@@ -144,19 +144,25 @@ export interface MultiLanguageCollection {
 export interface CreateMultiLanguageCollectionRequest {
   slug: string;
   isActive: boolean;
-  translations: Record<string, {
-    name: string;
-    description: string;
-  }>;
+  translations: Record<
+    string,
+    {
+      name: string;
+      description: string;
+    }
+  >;
 }
 
 export interface UpdateMultiLanguageCollectionRequest {
   slug?: string;
   isActive?: boolean;
-  translations?: Record<string, {
-    name: string;
-    description: string;
-  }>;
+  translations?: Record<
+    string,
+    {
+      name: string;
+      description: string;
+    }
+  >;
 }
 
 // Multi-language product types
@@ -212,12 +218,15 @@ export interface CreateMultiLanguageProductRequest {
   inStock: string;
   featured: boolean;
   active: boolean;
-  translations: Record<string, {
-    name: string;
-    description: string;
-    material: string;
-    otherDetails: string;
-  }>;
+  translations: Record<
+    string,
+    {
+      name: string;
+      description: string;
+      material: string;
+      otherDetails: string;
+    }
+  >;
   countryPrices?: Record<string, number>;
   productVariants: ProductVariant[];
   productImages: ProductImage[];
@@ -231,12 +240,15 @@ export interface UpdateMultiLanguageProductRequest {
   inStock?: string;
   featured?: boolean;
   active?: boolean;
-  translations?: Record<string, {
-    name: string;
-    description: string;
-    material: string;
-    otherDetails: string;
-  }>;
+  translations?: Record<
+    string,
+    {
+      name: string;
+      description: string;
+      material: string;
+      otherDetails: string;
+    }
+  >;
   countryPrices?: Record<string, number>;
   productVariants?: ProductVariant[];
   productImages?: ProductImage[];
@@ -358,6 +370,8 @@ export interface Checkout {
   language?: string; // User's language preference
   totalAmount?: string; // Total amount with country-specific pricing
   transactionHash?: string; // Transaction hash from WLD payment
+  carrier?: string | null; // Shipping carrier name (e.g., "FedEx", "UPS")
+  trackingCode?: string | null; // Shipping tracking number
   createdAt: string;
   updatedAt: string;
   products?: CheckoutProductResponse[];

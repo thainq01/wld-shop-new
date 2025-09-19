@@ -43,15 +43,49 @@ export function CheckoutsManager() {
 
   // Status update
   const [showStatusModal, setShowStatusModal] = useState(false);
-  const [selectedCheckoutForStatus, setSelectedCheckoutForStatus] = useState<Checkout | null>(null);
+  const [selectedCheckoutForStatus, setSelectedCheckoutForStatus] =
+    useState<Checkout | null>(null);
   const [newStatus, setNewStatus] = useState("");
+  const [carrier, setCarrier] = useState("");
+  const [trackingCode, setTrackingCode] = useState("");
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const statusOptions = [
-    { value: "pending", label: "Pending", color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200" },
-    { value: "paid", label: "Paid", color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" },
-    { value: "out for delivery", label: "Out for Delivery", color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" },
-    { value: "delivered", label: "Delivered", color: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200" },
+    {
+      value: "pending",
+      label: "Pending",
+      color:
+        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+    },
+    {
+      value: "paid",
+      label: "Paid",
+      color:
+        "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+    },
+    {
+      value: "confirmed",
+      label: "Confirmed",
+      color:
+        "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+    },
+    {
+      value: "out for delivery",
+      label: "Out for Delivery",
+      color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+    },
+    {
+      value: "delivered",
+      label: "Delivered",
+      color:
+        "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+    },
+    {
+      value: "completed",
+      label: "Completed",
+      color:
+        "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
+    },
   ];
 
   useEffect(() => {
@@ -125,6 +159,8 @@ export function CheckoutsManager() {
   const handleStatusUpdate = (checkout: Checkout) => {
     setSelectedCheckoutForStatus(checkout);
     setNewStatus(checkout.status || "pending");
+    setCarrier(checkout.carrier || "");
+    setTrackingCode(checkout.trackingCode || "");
     setShowStatusModal(true);
   };
 
@@ -133,23 +169,42 @@ export function CheckoutsManager() {
 
     try {
       setUpdatingStatus(true);
-      const orderId = selectedCheckoutForStatus.orderId || selectedCheckoutForStatus.id.toString();
-      await checkoutApi.updateStatus(orderId, newStatus);
-      
+      const orderId =
+        selectedCheckoutForStatus.orderId ||
+        selectedCheckoutForStatus.id.toString();
+
+      // Pass empty string for blank fields, actual values for filled fields
+      const carrierParam = carrier.trim();
+      const trackingCodeParam = trackingCode.trim();
+
+      await checkoutApi.updateStatus(
+        orderId,
+        newStatus,
+        carrierParam,
+        trackingCodeParam
+      );
+
       toast.success("Status updated successfully");
-      
+
       // Update the local state
-      setCheckouts(prevCheckouts => 
-        prevCheckouts.map(checkout => 
-          checkout.id === selectedCheckoutForStatus.id 
-            ? { ...checkout, status: newStatus }
+      setCheckouts((prevCheckouts) =>
+        prevCheckouts.map((checkout) =>
+          checkout.id === selectedCheckoutForStatus.id
+            ? {
+                ...checkout,
+                status: newStatus,
+                carrier: carrierParam || null,
+                trackingCode: trackingCodeParam || null,
+              }
             : checkout
         )
       );
-      
+
       setShowStatusModal(false);
       setSelectedCheckoutForStatus(null);
       setNewStatus("");
+      setCarrier("");
+      setTrackingCode("");
     } catch (error) {
       console.error("Failed to update status:", error);
       toast.error("Failed to update status");
@@ -162,6 +217,8 @@ export function CheckoutsManager() {
     setShowStatusModal(false);
     setSelectedCheckoutForStatus(null);
     setNewStatus("");
+    setCarrier("");
+    setTrackingCode("");
   };
 
   const handlePageChange = (newPage: number) => {
@@ -178,7 +235,8 @@ export function CheckoutsManager() {
       checkout.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       checkout.walletAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
       checkout.id.toString().includes(searchTerm) ||
-      (checkout.orderId && checkout.orderId.toLowerCase().includes(searchTerm.toLowerCase()));
+      (checkout.orderId &&
+        checkout.orderId.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const matchesDate =
       !dateFilter ||
@@ -206,7 +264,9 @@ export function CheckoutsManager() {
   };
 
   const getStatusDisplay = (status: string | undefined) => {
-    const statusOption = statusOptions.find(option => option.value === status);
+    const statusOption = statusOptions.find(
+      (option) => option.value === status
+    );
     return statusOption || statusOptions[0]; // Default to pending if status not found
   };
 
@@ -415,12 +475,12 @@ export function CheckoutsManager() {
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredCheckouts?.map((checkout) => {
                   const statusDisplay = getStatusDisplay(checkout.status);
-                                     return (
-                     <tr
-                       key={checkout.id}
-                       className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
-                       onClick={() => handleViewDetails(checkout)}
-                     >
+                  return (
+                    <tr
+                      key={checkout.id}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                      onClick={() => handleViewDetails(checkout)}
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900 dark:text-white">
                           #{checkout.id}
@@ -432,7 +492,9 @@ export function CheckoutsManager() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusDisplay.color}`}>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusDisplay.color}`}
+                        >
                           {statusDisplay.label}
                         </span>
                       </td>
@@ -458,18 +520,18 @@ export function CheckoutsManager() {
                           </span>
                         </div>
                       </td>
-                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                         <button
-                           onClick={(e) => {
-                             e.stopPropagation();
-                             handleStatusUpdate(checkout);
-                           }}
-                           className="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 inline-flex items-center gap-1"
-                         >
-                           <Edit className="w-4 h-4" />
-                           Edit Status
-                         </button>
-                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleStatusUpdate(checkout);
+                          }}
+                          className="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 inline-flex items-center gap-1"
+                        >
+                          <Edit className="w-4 h-4" />
+                          Edit Status
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}
@@ -566,7 +628,7 @@ export function CheckoutsManager() {
       {/* Status Update Modal */}
       {showStatusModal && selectedCheckoutForStatus && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-lg mx-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white">
                 Update Order Status
@@ -578,17 +640,25 @@ export function CheckoutsManager() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="mb-4">
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                Order: <span className="font-medium">{selectedCheckoutForStatus.orderId || `#${selectedCheckoutForStatus.id}`}</span>
+                Order:{" "}
+                <span className="font-medium">
+                  {selectedCheckoutForStatus.orderId ||
+                    `#${selectedCheckoutForStatus.id}`}
+                </span>
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Customer: <span className="font-medium">{selectedCheckoutForStatus.firstName} {selectedCheckoutForStatus.lastName}</span>
+                Customer:{" "}
+                <span className="font-medium">
+                  {selectedCheckoutForStatus.firstName}{" "}
+                  {selectedCheckoutForStatus.lastName}
+                </span>
               </p>
             </div>
 
-            <div className="mb-6">
+            <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Status
               </label>
@@ -603,6 +673,32 @@ export function CheckoutsManager() {
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Carrier (Optional)
+              </label>
+              <input
+                type="text"
+                value={carrier}
+                onChange={(e) => setCarrier(e.target.value)}
+                placeholder="e.g., FedEx, UPS, DHL"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Tracking Code (Optional)
+              </label>
+              <input
+                type="text"
+                value={trackingCode}
+                onChange={(e) => setTrackingCode(e.target.value)}
+                placeholder="e.g., 1234567890"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
             </div>
 
             <div className="flex justify-end gap-3">

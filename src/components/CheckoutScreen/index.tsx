@@ -865,10 +865,10 @@ export const CheckoutScreen: React.FC = () => {
                   city: shippingAddress.city,
                   postcode: shippingAddress.postalCode,
                   phone: shippingAddress.phone,
-                  language: currentLanguage, // User's language preference
-                  totalAmount: total.toFixed(2), // Country-specific total amount
-                  status: "pending", // Mark as pending for backend verification
-                  transactionHash: txHash, // Store the transaction hash from WLD payment
+                  language: currentLanguage,
+                  totalAmount: total.toFixed(2),
+                  status: "paid",
+                  transactionHash: txHash,
                   products: buildCheckoutProducts(),
                 };
 

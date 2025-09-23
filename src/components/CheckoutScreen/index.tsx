@@ -768,7 +768,7 @@ export const CheckoutScreen: React.FC = () => {
                       item.productName}
                   </h3>
                   <p className="text-sm text-gray-500">
-                    Size: {item.size}
+                    {t("size")}: {item.size}
                     {itemPricing[item.productId] && (
                       <span className="ml-2 text-xs">
                         ({itemPricing[item.productId].effectivePrice.toFixed(2)}{" "}

@@ -28,7 +28,7 @@ const resources = {
       indonesian: "Bahasa Indonesia",
 
       // Product detail
-      selectSize: "Select Size",
+      selectSize: "Select Color",
       addToBag: "Add to bag",
       adding: "Adding...",
       outOfStock: "Out of stock",
@@ -44,7 +44,7 @@ const resources = {
       yourBag: "Your Bag",
       item: "item",
       items: "items",
-      size: "Size",
+      size: "Color",
       total: "Total",
       checkout: "Checkout",
       emptyBag: "Your bag is empty",
@@ -138,8 +138,8 @@ const resources = {
       paymentCompletedSuccessfully: "✅ Payment completed successfully!",
 
       // Toast messages
-      pleaseSelectSize: "Please select a size",
-      sizeOutOfStock: "This size is currently out of stock",
+      pleaseSelectSize: "Please select a color",
+      sizeOutOfStock: "This color is currently out of stock",
       addedToBag: "added to bag!",
       failedToAddToCart: "Failed to add to cart",
       paymentSuccessful:
@@ -182,7 +182,7 @@ const resources = {
       indonesian: "Bahasa Indonesia",
 
       // Product detail
-      selectSize: "เลือกขนาด",
+      selectSize: "เลือกสี",
       addToBag: "เพิ่มในกระเป๋า",
       adding: "กำลังเพิ่ม...",
       outOfStock: "สินค้าหมด",
@@ -198,7 +198,7 @@ const resources = {
       yourBag: "กระเป๋าของคุณ",
       item: "รายการ",
       items: "รายการ",
-      size: "ขนาด",
+      size: "สี",
       total: "รวม",
       checkout: "ชำระเงิน",
       emptyBag: "กระเป๋าของคุณว่างเปล่า",
@@ -292,8 +292,8 @@ const resources = {
       paymentCompletedSuccessfully: "✅ ชำระเงินสำเร็จแล้ว!",
 
       // Toast messages
-      pleaseSelectSize: "กรุณาเลือกขนาด",
-      sizeOutOfStock: "ขนาดนี้หมดสต็อก",
+      pleaseSelectSize: "กรุณาเลือกสี",
+      sizeOutOfStock: "สีนี้หมดแล้ว",
       addedToBag: "เพิ่มในกระเป๋าแล้ว!",
       failedToAddToCart: "ไม่สามารถเพิ่มในตะกร้าได้",
       paymentSuccessful:
@@ -336,7 +336,7 @@ const resources = {
       indonesian: "Bahasa Indonesia",
 
       // Product detail
-      selectSize: "Pilih Saiz",
+      selectSize: "Pilih Warna",
       addToBag: "Tambah ke beg",
       adding: "Menambah...",
       outOfStock: "Kehabisan stok",
@@ -352,7 +352,7 @@ const resources = {
       yourBag: "Beg Anda",
       item: "item",
       items: "item",
-      size: "Saiz",
+      size: "Warna",
       total: "Jumlah",
       checkout: "Bayar",
       emptyBag: "Beg anda kosong",
@@ -447,8 +447,8 @@ const resources = {
       paymentCompletedSuccessfully: "✅ Pembayaran selesai dengan jayanya!",
 
       // Toast messages
-      pleaseSelectSize: "Sila pilih saiz",
-      sizeOutOfStock: "Saiz ini kehabisan stok",
+      pleaseSelectSize: "Sila pilih warna",
+      sizeOutOfStock: "Warna ini kehabisan stok",
       addedToBag: "ditambah ke beg!",
       failedToAddToCart: "Gagal menambah ke beg",
       paymentSuccessful:
@@ -491,7 +491,7 @@ const resources = {
       indonesian: "Bahasa Indonesia",
 
       // Product detail
-      selectSize: "Piliin ang Laki",
+      selectSize: "Piliin ang Kulay",
       addToBag: "Idagdag sa bag",
       adding: "Nagdadagdag...",
       outOfStock: "Walang stock",
@@ -507,7 +507,7 @@ const resources = {
       yourBag: "Inyong Bag",
       item: "item",
       items: "mga item",
-      size: "Laki",
+      size: "Kulay",
       total: "Kabuuan",
       checkout: "Checkout",
       emptyBag: "Walang laman ang inyong bag",
@@ -603,8 +603,8 @@ const resources = {
       paymentCompletedSuccessfully: "✅ Tapos na ang bayad!",
 
       // Toast messages
-      pleaseSelectSize: "Pakipili ng laki",
-      sizeOutOfStock: "Walang stock ang laking ito",
+      pleaseSelectSize: "Pakipili ng kulay",
+      sizeOutOfStock: "Walang stock ang kulay na ito",
       addedToBag: "naidagdag sa bag!",
       failedToAddToCart: "Hindi naidagdag sa bag",
       paymentSuccessful:
@@ -647,7 +647,7 @@ const resources = {
       indonesian: "Bahasa Indonesia",
 
       // Product detail
-      selectSize: "Pilih Ukuran",
+      selectSize: "Pilih Warna",
       addToBag: "Tambah ke tas",
       adding: "Menambahkan...",
       outOfStock: "Stok habis",
@@ -663,7 +663,7 @@ const resources = {
       yourBag: "Tas Anda",
       item: "item",
       items: "item",
-      size: "Ukuran",
+      size: "Warna",
       total: "Total",
       checkout: "Checkout",
       emptyBag: "Tas anda kosong",
@@ -758,8 +758,8 @@ const resources = {
       paymentCompletedSuccessfully: "✅ Pembayaran berhasil diselesaikan!",
 
       // Toast messages
-      pleaseSelectSize: "Silakan pilih ukuran",
-      sizeOutOfStock: "Ukuran ini sedang habis",
+      pleaseSelectSize: "Silakan pilih warna",
+      sizeOutOfStock: "Warna ini sedang habis",
       addedToBag: "ditambahkan ke tas!",
       failedToAddToCart: "Gagal menambahkan ke tas",
       paymentSuccessful:

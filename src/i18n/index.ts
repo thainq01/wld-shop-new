@@ -63,6 +63,7 @@ const resources = {
       // Explore screen
       featuredProducts: "Featured Products",
       featured: "FEATURED",
+      viewProduct: "View Product",
       noFeaturedProducts: "No Featured Products",
       checkBackLater: "Check back later for featured items",
       seeAll: "See all",
@@ -217,6 +218,7 @@ const resources = {
       // Explore screen
       featuredProducts: "สินค้าแนะนำ",
       featured: "แนะนำ",
+      viewProduct: "ดูสินค้า",
       noFeaturedProducts: "ไม่มีสินค้าแนะนำ",
       checkBackLater: "กลับมาดูใหม่ภายหลังสำหรับสินค้าแนะนำ",
       seeAll: "ดูทั้งหมด",
@@ -371,6 +373,7 @@ const resources = {
       // Explore screen
       featuredProducts: "Produk Pilihan",
       featured: "PILIHAN",
+      viewProduct: "Lihat Produk",
       noFeaturedProducts: "Tiada Produk Pilihan",
       checkBackLater: "Kembali semula nanti untuk item pilihan",
       seeAll: "Lihat semua",
@@ -526,6 +529,7 @@ const resources = {
       // Explore screen
       featuredProducts: "Mga Piling Produkto",
       featured: "PILING",
+      viewProduct: "Tingnan ang Produkto",
       noFeaturedProducts: "Walang Piling Produkto",
       checkBackLater: "Bumalik mamaya para sa mga piling item",
       seeAll: "Tingnan lahat",
@@ -682,6 +686,7 @@ const resources = {
       // Explore screen
       featuredProducts: "Produk Unggulan",
       featured: "UNGGULAN",
+      viewProduct: "Lihat Produk",
       noFeaturedProducts: "Tidak Ada Produk Unggulan",
       checkBackLater: "Kembali lagi nanti untuk item unggulan",
       seeAll: "Lihat semua",

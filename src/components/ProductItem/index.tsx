@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -6,18 +6,71 @@ import { ProductItemProps } from "./types";
 // Product type is imported via ProductItemProps
 
 function ProductImage({ type }: { type: string }) {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
   const baseClasses = "w-full h-full bg-black flex items-center justify-center";
 
   if (type?.startsWith("http")) {
     return (
-      <img
-        src={type}
-        alt="Product"
-        className="w-full h-full object-cover"
-        onError={(e) => {
-          e.currentTarget.style.display = "none";
-        }}
-      />
+      <div className="relative w-full h-full">
+        {/* Blur-up placeholder */}
+        {!isLoaded && (
+          <div
+            className="absolute inset-0 bg-gray-300 dark:bg-gray-600"
+            style={{
+              filter: "blur(15px)",
+              transform: "scale(1.1)",
+              transition: "opacity 400ms ease-out",
+            }}
+          />
+        )}
+
+        {/* Error state */}
+        {hasError && (
+          <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+            <div className="text-gray-500 dark:text-gray-400 text-xs">
+              <svg
+                className="w-6 h-6 mx-auto mb-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              <span>No image</span>
+            </div>
+          </div>
+        )}
+
+        {/* Actual image */}
+        <img
+          src={type}
+          alt="Product"
+          className="w-full h-full object-cover"
+          style={{
+            opacity: isLoaded ? 1 : 0,
+            transition: "opacity 400ms ease-out",
+          }}
+          loading="lazy"
+          decoding="async"
+          onLoad={() => {
+            setIsLoading(false);
+            setIsLoaded(true);
+            setHasError(false);
+          }}
+          onError={() => {
+            setIsLoading(false);
+            setIsLoaded(false);
+            setHasError(true);
+          }}
+        />
+      </div>
     );
   }
 

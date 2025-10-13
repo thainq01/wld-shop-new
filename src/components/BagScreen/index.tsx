@@ -5,33 +5,20 @@ import { useCart } from "../../hooks/useCart";
 import { BottomNavigation } from "../BottomNavigation";
 import { LoginButton } from "../LoginButton";
 import { useTranslation } from "react-i18next";
+import { BlurUpImage } from "../BlurUpImage";
 
-// Simple placeholder component for product images in cart
+// Enhanced placeholder component with blur-up loading for product images in cart
 const ProductImagePlaceholder: React.FC<{
   productName: string;
   productImage?: string;
 }> = ({ productName, productImage }) => {
-  if (productImage) {
-    return (
-      <img
-        src={productImage}
-        alt={productName}
-        className="w-full h-full object-cover"
-        onError={(e) => {
-          // Show placeholder if image fails to load
-          e.currentTarget.style.display = "none";
-        }}
-      />
-    );
-  }
-
-  // Default placeholder for missing images
   return (
-    <div className="w-full h-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
-      <span className="text-gray-500 dark:text-gray-400 text-xs text-center px-2">
-        No Image
-      </span>
-    </div>
+    <BlurUpImage
+      src={productImage}
+      alt={productName}
+      className="w-full h-full"
+      eager={false}
+    />
   );
 };
 

@@ -1,13 +1,17 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Product } from "../types";
 import { Language } from "./Language";
 import { ThemeMode } from "./ThemeMode";
 import { useCollectionStore } from "../store/collectionStore";
+import { useImagePreloader } from "../hooks/useOptimizedImage";
+import { getHeroImageUrl } from "../utils/imageOptimization";
+import { useNavigationCache } from "../hooks/useNavigationCache";
+import { BlurUpImage } from "./BlurUpImage";
 
-// Helper function to get product image
-function getProductImage(product: Product): string {
+// Memoized helper function to get product image
+const getProductImage = (product: Product): string => {
   if (!product.images || product.images.length === 0) return "";
 
   // Find primary image
@@ -16,11 +20,21 @@ function getProductImage(product: Product): string {
 
   // Fallback to first image
   return product.images[0]?.url || "";
-}
+};
 
 export function HeroSection() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+
+  // Enhanced navigation caching for hero section state
+  const { isReturning, updateComponentState } = useNavigationCache(
+    "/explore/hero",
+    {
+      enableCache: true,
+      cacheTimeout: 10 * 60 * 1000, // 10 minutes
+      preserveComponentState: true,
+    }
+  );
 
   // Persist current slide state to prevent jumping back to 0 when returning from other screens
   const currentSlideRef = useRef(0);
@@ -39,6 +53,37 @@ export function HeroSection() {
   const featuredProducts = getFeaturedProducts();
   const isLoading = isFeaturedProductsLoading();
 
+  // Memoize product images to prevent re-computation on every render
+  const productImages = useMemo(() => {
+    return featuredProducts.map((product) => ({
+      id: product.id,
+      url: getHeroImageUrl(getProductImage(product)), // Optimize image URL for hero display
+      alt: product.name || "Product Image",
+    }));
+  }, [featuredProducts]);
+
+  // Preload all product images for better performance
+  const imageUrls = useMemo(
+    () => productImages.map((img) => img.url).filter(Boolean),
+    [productImages]
+  );
+
+  // Preload images in background for better performance
+  const { isPreloading, failedUrls, successRate } =
+    useImagePreloader(imageUrls);
+
+  // Log preloading performance for debugging
+  useEffect(() => {
+    if (!isPreloading && imageUrls.length > 0) {
+      console.log(
+        `Image preloading completed: ${successRate.toFixed(1)}% success rate`
+      );
+      if (failedUrls.length > 0) {
+        console.warn("Failed to preload images:", failedUrls);
+      }
+    }
+  }, [isPreloading, successRate, failedUrls, imageUrls.length]);
+
   // Fetch featured products on component mount
   useEffect(() => {
     // This will only fetch if not already cached
@@ -48,6 +93,11 @@ export function HeroSection() {
   // Auto-slide effect with proper state management
   useEffect(() => {
     if (!featuredProducts.length) return;
+
+    // Don't auto-slide immediately when returning to page
+    if (isReturning && isManualControl) {
+      return;
+    }
 
     if (isManualControl) {
       const resetTimer = setTimeout(() => {
@@ -65,7 +115,7 @@ export function HeroSection() {
     }, 2500);
 
     return () => clearInterval(intervalId);
-  }, [isManualControl, featuredProducts.length]);
+  }, [isManualControl, featuredProducts.length, isReturning]);
 
   // Initialize current slide from ref when featured products are loaded
   useEffect(() => {
@@ -85,6 +135,13 @@ export function HeroSection() {
     setCurrentSlide(index);
     currentSlideRef.current = index;
     setIsManualControl(true);
+
+    // Update component state in navigation cache
+    updateComponentState({
+      currentSlide: index,
+      isManualControl: true,
+      timestamp: Date.now(),
+    });
   };
 
   const onTouchStart = (e: React.TouchEvent) => {
@@ -172,58 +229,59 @@ export function HeroSection() {
                 </div>
               </div>
             ) : (
-              featuredProducts.map((product) => {
-                const productImage = getProductImage(product);
+              featuredProducts.map((product, index) => {
+                const productImageData = productImages[index];
                 return (
                   <div
                     key={product.id}
                     onClick={() => navigate(`/product/${product.id}`)}
-                    className="w-full flex-shrink-0 relative bg-white dark:bg-gray-900 h-full overflow-hidden cursor-pointer active:scale-95 transition-transform duration-150"
+                    className="w-full flex-shrink-0 relative h-full overflow-hidden cursor-pointer active:scale-95 transition-transform duration-150"
                   >
-                    {/* Clean background with subtle pattern */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900"></div>
+                    {/* Full-space product image with extracted background color - z-index 10 */}
+                    <BlurUpImage
+                      src={productImageData?.url}
+                      alt={productImageData?.alt || product.name}
+                      className="w-full h-full"
+                      eager={false}
+                    />
 
-                    {/* Mobile-optimized content container */}
-                    <div className="relative h-full flex flex-col">
-                      {/* Product image section - Centered and larger */}
-                      <div className="flex-1 flex items-center justify-center p-3 sm:p-6">
-                        <div className="relative">
-                          {productImage ? (
-                            <div className="relative">
-                              <img
-                                src={productImage}
-                                alt={product.name}
-                                className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 object-cover rounded-xl sm:rounded-2xl shadow-lg border border-white dark:border-gray-700"
+                    {/* Overlay gradient for better text readability - z-index 20 */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent z-20 pointer-events-none" />
+
+                    {/* Featured badge - positioned at top right - z-index 30 */}
+                    <div className="absolute top-4 right-4 bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold shadow-lg z-30">
+                      ★ {t("featured")}
+                    </div>
+
+                    {/* Product info overlay - positioned at bottom - z-index 30 */}
+                    <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 z-30">
+                      <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm rounded-xl p-4 shadow-lg">
+                        <h3 className="text-gray-900 dark:text-white text-lg sm:text-xl font-bold mb-2 leading-tight">
+                          {product.name || "Product Name"}
+                        </h3>
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-600 dark:text-gray-300 text-base sm:text-lg font-semibold">
+                            {product.effectivePrice ||
+                              product.countryPrice ||
+                              product.basePrice ||
+                              product.price}{" "}
+                            WLD
+                          </span>
+                          <div className="flex items-center text-gray-500 dark:text-gray-400 text-sm">
+                            <span className="mr-1">{t("viewProduct")}</span>
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 5l7 7-7 7"
                               />
-                              {/* Featured badge - smaller for mobile */}
-                              <div className="absolute -top-1 -right-1 bg-yellow-400 text-yellow-900 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-xs font-bold shadow-md">
-                                ★
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg border border-white dark:border-gray-700">
-                              <span className="text-gray-600 dark:text-gray-300 text-2xl sm:text-3xl md:text-4xl font-bold">
-                                {product.name.charAt(0)}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Minimal product info - Mobile optimized */}
-                      <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm p-3 sm:p-4">
-                        <div className="">
-                          <h3 className="text-gray-900 dark:text-white text-sm sm:text-base md:text-lg font-semibold mb-1 leading-tight truncate">
-                            {product.name || "Product Name"}
-                          </h3>
-                          <div className=" sm:justify-start gap-2">
-                            <span className="text-gray-500 dark:text-gray-400 sm:text-sm text-base font-semibold">
-                              {product.effectivePrice ||
-                                product.countryPrice ||
-                                product.basePrice ||
-                                product.price}{" "}
-                              WLD
-                            </span>
+                            </svg>
                           </div>
                         </div>
                       </div>

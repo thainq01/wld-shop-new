@@ -17,6 +17,7 @@ import { useProductStore } from "../../store/productStore";
 import { useLanguageStore } from "../../store/languageStore";
 import { useTranslation } from "react-i18next";
 import { type ProductImage, type ProductSize } from "../../types";
+import { BlurUpImage } from "../BlurUpImage";
 
 // Product image component - reused from other components
 function ProductImage({
@@ -602,30 +603,39 @@ export const ProductDetailScreen: React.FC = () => {
 
       {/* Product Images */}
       <div className="relative mx-4 mt-4">
-        <div
-          className="aspect-square bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden relative"
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
-        >
-          {/* Check if image exists and display it */}
-          {orderedImages[currentImageIndex]?.url ? (
-            <img
-              src={orderedImages[currentImageIndex].url}
-              alt={`${productDetail.name} - Image ${currentImageIndex + 1}`}
-              className="w-full h-full object-cover rounded-2xl transition-opacity duration-300 ease-in-out"
-              onError={(e) => {
-                // Fallback to placeholder if image fails to load
-                e.currentTarget.style.display = "none";
-              }}
-            />
-          ) : (
-            <ProductImage type="" className="rounded-2xl" />
-          )}
+        <div className="aspect-square bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden relative">
+          {/* Sliding content container - same approach as HeroSection */}
+          <div
+            className="flex transition-transform duration-300 ease-in-out h-full"
+            style={{ transform: `translateX(-${currentImageIndex * 100}%)` }}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
+            {orderedImages.length > 0 ? (
+              orderedImages.map((image, index) => (
+                <div
+                  key={`${image.id}-${index}`}
+                  className="w-full flex-shrink-0 relative h-full overflow-hidden"
+                >
+                  <BlurUpImage
+                    src={image.url}
+                    alt={`${productDetail.name} - Image ${index + 1}`}
+                    className="w-full h-full"
+                    eager={index === 0} // Only load first image eagerly
+                  />
+                </div>
+              ))
+            ) : (
+              <div className="w-full flex-shrink-0 relative h-full overflow-hidden">
+                <ProductImage type="" className="rounded-2xl" />
+              </div>
+            )}
+          </div>
 
           {/* Swipe Hint - only show if multiple images and not manually controlled recently */}
           {orderedImages.length > 1 && !isManualControl && (
-            <div className="absolute top-4 right-4 bg-black/50 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
+            <div className="absolute top-4 right-4 bg-black/50 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm z-30">
               {currentImageIndex + 1}/{orderedImages.length} • Swipe
             </div>
           )}
@@ -641,7 +651,7 @@ export const ProductDetailScreen: React.FC = () => {
                       : currentImageIndex - 1
                   )
                 }
-                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full backdrop-blur-sm opacity-0 hover:opacity-100 transition-opacity md:opacity-70 md:hover:opacity-100"
+                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full backdrop-blur-sm opacity-0 hover:opacity-100 transition-opacity md:opacity-70 md:hover:opacity-100 z-30"
               >
                 <svg
                   className="w-4 h-4"
@@ -663,7 +673,7 @@ export const ProductDetailScreen: React.FC = () => {
                     (currentImageIndex + 1) % orderedImages.length
                   )
                 }
-                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full backdrop-blur-sm opacity-0 hover:opacity-100 transition-opacity md:opacity-70 md:hover:opacity-100"
+                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full backdrop-blur-sm opacity-0 hover:opacity-100 transition-opacity md:opacity-70 md:hover:opacity-100 z-30"
               >
                 <svg
                   className="w-4 h-4"

@@ -10,6 +10,11 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
+
+  /* Custom z-index for blur-up loading */
+  .z-5 {
+    z-index: 5;
+  }
 }
 
 /* Ensure full-width layout with no default margins/padding */

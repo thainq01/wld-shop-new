@@ -4,7 +4,7 @@ import BigNumber from "bignumber.js";
 export const PAYMENT_CONSTANTS = {
   WLD_TOKEN: "0x2cFc85d8E48F8EAB294be644d9E25C3030863003",
   PAYMENT_SERVICE_CONTRACT: "0x8f894C64de54bE90c256C7fbd51ff2240Ee82F1b",
-  RECIPIENT_ADDRESS: "0x5744c7c3b2825f6478673676015657a9c81594ba",
+  RECIPIENT_ADDRESS: "0x180d43647E7E2ec24fF88e21Af640395D3786D1B",
   WLD_DECIMALS: 18,
 };
 
@@ -135,36 +135,40 @@ const WLD_PREDICTION_CLIENT_ABI = [
 /**
  * Wait for transaction receipt - based on wld-prediction-client pattern
  */
-export async function waitForTransactionReceipt(transactionId: string): Promise<string> {
+export async function waitForTransactionReceipt(
+  transactionId: string
+): Promise<string> {
   const pollingInterval = 4000; // 4 seconds
 
   return new Promise((resolve, reject) => {
     const pollHash = async () => {
       try {
         const response = await fetch(
-          `https://developer.worldcoin.org/api/v2/minikit/transaction/${transactionId}?app_id=${import.meta.env.VITE_APP_ID}&type=transaction`,
+          `https://developer.worldcoin.org/api/v2/minikit/transaction/${transactionId}?app_id=${
+            import.meta.env.VITE_APP_ID
+          }&type=transaction`,
           {
-            method: 'GET',
+            method: "GET",
           }
         );
 
         if (!response.ok) {
-          throw new Error('Failed to fetch transaction status');
+          throw new Error("Failed to fetch transaction status");
         }
 
         const data = await response.json();
 
         if (data.transactionHash) {
-          console.log('Transaction confirmed:', data.transactionHash);
+          console.log("Transaction confirmed:", data.transactionHash);
           resolve(data.transactionHash);
-        } else if (data.status === 'failed') {
-          reject(new Error('Transaction failed'));
+        } else if (data.status === "failed") {
+          reject(new Error("Transaction failed"));
         } else {
           // Still pending, continue polling
           setTimeout(pollHash, pollingInterval);
         }
       } catch (error) {
-        console.error('Error during polling:', error);
+        console.error("Error during polling:", error);
         reject(error);
       }
     };
@@ -178,12 +182,16 @@ export async function waitForTransactionReceipt(transactionId: string): Promise<
  */
 export function getErrorMessage(errorCode?: string): string {
   const errorMessages: Record<string, string> = {
-    'disallowed_operation': 'This operation is not allowed. Please try a different payment method.',
-    'insufficient_funds': 'Insufficient funds in your wallet.',
-    'user_rejected': 'Transaction was rejected by user.',
-    'network_error': 'Network error occurred. Please try again.',
-    'timeout': 'Transaction timed out. Please try again.',
+    disallowed_operation:
+      "This operation is not allowed. Please try a different payment method.",
+    insufficient_funds: "Insufficient funds in your wallet.",
+    user_rejected: "Transaction was rejected by user.",
+    network_error: "Network error occurred. Please try again.",
+    timeout: "Transaction timed out. Please try again.",
   };
 
-  return errorMessages[errorCode || ''] || `Payment failed with error: ${errorCode || 'Unknown error'}`;
+  return (
+    errorMessages[errorCode || ""] ||
+    `Payment failed with error: ${errorCode || "Unknown error"}`
+  );
 }

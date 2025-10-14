@@ -34,7 +34,7 @@ export function CMSSettings() {
               Appearance
             </h2>
           </div>
-          
+
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
@@ -89,16 +89,20 @@ export function CMSSettings() {
           </h2>
           <div className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
             <p>
-              World Shop CMS is a content management system designed for managing
-              your e-commerce store on the Worldchain platform.
+              World Shop CMS is a content management system designed for
+              managing your e-commerce store on the Worldchain platform.
             </p>
             <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
               <div>
-                <span className="font-medium text-gray-900 dark:text-white">Version:</span>
+                <span className="font-medium text-gray-900 dark:text-white">
+                  Version:
+                </span>
                 <span className="ml-2">1.0.0</span>
               </div>
               <div>
-                <span className="font-medium text-gray-900 dark:text-white">Platform:</span>
+                <span className="font-medium text-gray-900 dark:text-white">
+                  Platform:
+                </span>
                 <span className="ml-2">Worldchain</span>
               </div>
             </div>

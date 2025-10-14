@@ -54,9 +54,9 @@ export const useCountryStore = create<CountryState>()(
       isManuallySelected: false,
 
       setCountry: (country: CountryCode, isManual = false) => {
-        set({ 
+        set({
           selectedCountry: country,
-          isManuallySelected: isManual 
+          isManuallySelected: isManual,
         });
       },
 
@@ -73,7 +73,7 @@ export const useCountryStore = create<CountryState>()(
       },
 
       getCountryCodeFromName: (name: string) => {
-        const country = countries.find(c => c.name === name);
+        const country = countries.find((c) => c.name === name);
         return country?.code;
       },
 
@@ -83,7 +83,7 @@ export const useCountryStore = create<CountryState>()(
         const newCountry = languageToCountryMap[language] || "th";
         set({
           selectedCountry: newCountry,
-          isManuallySelected: false // Reset manual selection when language changes
+          isManuallySelected: false, // Reset manual selection when language changes
         });
       },
     }),
@@ -98,14 +98,14 @@ let previousLanguageForCountry = useLanguageStore.getState().currentLanguage;
 
 useLanguageStore.subscribe(() => {
   const currentLanguage = useLanguageStore.getState().currentLanguage;
-  
+
   // Only update if language actually changed
   if (currentLanguage !== previousLanguageForCountry) {
     console.log(
       `Language changed from ${previousLanguageForCountry} to ${currentLanguage}, updating country...`
     );
     previousLanguageForCountry = currentLanguage;
-    
+
     // Update country based on new language
     useCountryStore.getState().updateCountryFromLanguage(currentLanguage);
   }

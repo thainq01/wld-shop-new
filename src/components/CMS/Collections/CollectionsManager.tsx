@@ -1,14 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import {
-  Plus,
-  Edit,
-  Trash2,
-  Tag,
-  Search,
-  MoreVertical,
-  Eye,
-  EyeOff,
-} from "lucide-react";
+import { Plus, Edit, Trash2, Tag, Search, MoreVertical } from "lucide-react";
 import { collectionsApi } from "../../../utils/api";
 import {
   MultiLanguageCollection,
@@ -22,9 +13,8 @@ export function CollectionsManager() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingCollection, setEditingCollection] = useState<MultiLanguageCollection | null>(
-    null
-  );
+  const [editingCollection, setEditingCollection] =
+    useState<MultiLanguageCollection | null>(null);
 
   const loadCollections = useCallback(async () => {
     setLoading(true);
@@ -57,7 +47,10 @@ export function CollectionsManager() {
     }
   };
 
-  const handleUpdate = async (id: number, data: UpdateMultiLanguageCollectionRequest) => {
+  const handleUpdate = async (
+    id: number,
+    data: UpdateMultiLanguageCollectionRequest
+  ) => {
     try {
       await collectionsApi.updateMultiLanguage(id, data);
       setModalOpen(false);
@@ -82,35 +75,25 @@ export function CollectionsManager() {
     }
   };
 
-  const handleToggleActive = async (collection: MultiLanguageCollection) => {
-    try {
-      await collectionsApi.updateMultiLanguage(collection?.id, {
-        isActive: !collection?.isActive,
-      });
-      // Refetch collections to get the latest data
-      await loadCollections();
-    } catch (error) {
-      console.error("Failed to toggle collection status:", error);
-    }
-  };
-
   // Helper function to get collection name (defaults to English)
   const getCollectionName = (collection: MultiLanguageCollection) => {
-    return collection?.translations.en?.name ||
-           collection?.translations[collection?.defaultLanguage]?.name ||
-           Object.values(collection?.translations || {})[0]?.name ||
-           "Untitled";
+    return (
+      collection?.translations.en?.name ||
+      collection?.translations[collection?.defaultLanguage]?.name ||
+      Object.values(collection?.translations || {})[0]?.name ||
+      "Untitled"
+    );
   };
 
-  const filteredCollections = collections?.filter(
-    (collection) => {
-      const name = getCollectionName(collection);
-      return name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-             collection?.slug.toLowerCase().includes(searchTerm.toLowerCase());
-    }
-  );
+  const filteredCollections = collections?.filter((collection) => {
+    const name = getCollectionName(collection);
+    return (
+      name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      collection?.slug.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
-  console.log("filteredCollections", filteredCollections)
+  console.log("filteredCollections", filteredCollections);
 
   if (loading) {
     return (
@@ -196,13 +179,18 @@ export function CollectionsManager() {
                       /{collection?.slug}
                     </p>
                     {(() => {
-                      const description = collection?.translations.en?.description ||
-                                         collection?.translations[collection?.defaultLanguage]?.description ||
-                                         Object.values(collection?.translations || {})[0]?.description;
-                      return description && (
-                        <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
-                          {description}
-                        </p>
+                      const description =
+                        collection?.translations.en?.description ||
+                        collection?.translations[collection?.defaultLanguage]
+                          ?.description ||
+                        Object.values(collection?.translations || {})[0]
+                          ?.description;
+                      return (
+                        description && (
+                          <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
+                            {description}
+                          </p>
+                        )
                       );
                     })()}
                   </div>
@@ -250,7 +238,8 @@ export function CollectionsManager() {
                     {collection?.isActive ? "Active" : "Inactive"}
                   </span>
                   <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 px-2 py-1 rounded">
-                    {collection?.availableLanguages.length} language{collection?.availableLanguages.length !== 1 ? 's' : ''}
+                    {collection?.availableLanguages.length} language
+                    {collection?.availableLanguages.length !== 1 ? "s" : ""}
                   </span>
                 </div>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -306,7 +295,8 @@ export function CollectionsManager() {
                   editingCollection?.id,
                   data as UpdateMultiLanguageCollectionRequest
                 )
-            : (data) => handleCreate(data as CreateMultiLanguageCollectionRequest)
+            : (data) =>
+                handleCreate(data as CreateMultiLanguageCollectionRequest)
         }
       />
     </div>

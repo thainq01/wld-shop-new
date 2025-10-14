@@ -5,19 +5,24 @@ import { useNavigate } from "react-router-dom";
 import { collectionsApi, productsApi } from "../../utils/api";
 import { useCollectionStore } from "../../store/collectionStore";
 import { useAuthStore } from "../../store/authStore";
-import type { 
-  Collection, 
-  Product, 
-  CreateCollectionRequest, 
+import type {
+  Collection,
+  Product,
+  CreateCollectionRequest,
   UpdateCollectionRequest,
   CreateProductRequest,
   UpdateProductRequest,
   ProductVariant,
-  ProductImage
+  ProductImage,
 } from "../../types";
 
 type ActiveTab = "collections" | "products";
-type ActiveModal = null | "create-collection" | "edit-collection" | "create-product" | "edit-product";
+type ActiveModal =
+  | null
+  | "create-collection"
+  | "edit-collection"
+  | "create-product"
+  | "edit-product";
 
 export function CMSScreen() {
   const [activeTab, setActiveTab] = useState<ActiveTab>("collections");
@@ -25,7 +30,9 @@ export function CMSScreen() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<Collection | Product | null>(null);
+  const [selectedItem, setSelectedItem] = useState<Collection | Product | null>(
+    null
+  );
 
   // Get cache refresh function and auth
   const { refreshAllData } = useCollectionStore();
@@ -97,7 +104,7 @@ export function CMSScreen() {
 
   const handleDeleteCollection = async (id: number) => {
     if (!confirm("Are you sure you want to delete this collection?")) return;
-    
+
     try {
       setLoading(true);
       const response = await collectionsApi.delete(id);
@@ -106,7 +113,8 @@ export function CMSScreen() {
       // Refresh explore page cache since collections changed
       await refreshExploreCache();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to delete collection";
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to delete collection";
       toast.error(errorMessage);
       console.error(error);
     } finally {
@@ -116,7 +124,7 @@ export function CMSScreen() {
 
   const handleDeleteProduct = async (id: number) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
-    
+
     try {
       setLoading(true);
       const response = await productsApi.delete(id);
@@ -125,7 +133,8 @@ export function CMSScreen() {
       // Refresh explore page cache since products changed
       await refreshExploreCache();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to delete product";
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to delete product";
       toast.error(errorMessage);
       console.error(error);
     } finally {
@@ -150,7 +159,7 @@ export function CMSScreen() {
               Logout
             </button>
           </div>
-          
+
           {/* Tabs */}
           <div className="flex space-x-8 -mb-px">
             <button
@@ -229,7 +238,10 @@ export function CMSScreen() {
           onSave={async (data) => {
             try {
               setLoading(true);
-              await collectionsApi.update((selectedItem as Collection).id, data as UpdateCollectionRequest);
+              await collectionsApi.update(
+                (selectedItem as Collection).id,
+                data as UpdateCollectionRequest
+              );
               toast.success("Collection updated successfully");
               loadCollections();
               // Refresh explore page cache since collections changed
@@ -273,10 +285,13 @@ export function CMSScreen() {
           product={selectedItem as Product}
           collections={collections}
           onClose={() => setActiveModal(null)}
-           onSave={async (data) => {
+          onSave={async (data) => {
             try {
               setLoading(true);
-              await productsApi.update((selectedItem as Product).id, data as UpdateProductRequest);
+              await productsApi.update(
+                (selectedItem as Product).id,
+                data as UpdateProductRequest
+              );
               toast.success("Product updated successfully");
               loadProducts();
               // Refresh explore page cache since products changed
@@ -304,12 +319,12 @@ interface CollectionsTabProps {
   loading: boolean;
 }
 
-function CollectionsTab({ 
-  collections, 
-  onCreateCollection, 
-  onEditCollection, 
-  onDeleteCollection, 
-  loading 
+function CollectionsTab({
+  collections,
+  onCreateCollection,
+  onEditCollection,
+  onDeleteCollection,
+  loading,
 }: CollectionsTabProps) {
   return (
     <div>
@@ -349,7 +364,10 @@ function CollectionsTab({
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {collections.map((collection) => (
-                <tr key={collection.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                <tr
+                  key={collection.id}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900 dark:text-white">
                       {collection.name}
@@ -362,12 +380,14 @@ function CollectionsTab({
                     {collection.slug}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                      collection.isActive 
-                        ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
-                    }`}>
-                      {collection.isActive ? 'Active' : 'Inactive'}
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                        collection.isActive
+                          ? "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200"
+                          : "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                      }`}
+                    >
+                      {collection.isActive ? "Active" : "Inactive"}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
@@ -408,16 +428,14 @@ interface ProductsTabProps {
   loading: boolean;
 }
 
-function ProductsTab({ 
-  products, 
-  collections, 
-  onCreateProduct, 
-  onEditProduct, 
-  onDeleteProduct, 
-  loading 
+function ProductsTab({
+  products,
+  collections,
+  onCreateProduct,
+  onEditProduct,
+  onDeleteProduct,
+  loading,
 }: ProductsTabProps) {
-
-
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -456,14 +474,20 @@ function ProductsTab({
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {products.map((product) => (
-                <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                <tr
+                  key={product.id}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       {(() => {
                         // Show primary image, fallback to first image
-                        const primaryImage = product.images?.find(img => img.isPrimary);
-                        const displayImage = primaryImage || product.images?.[0];
-                        
+                        const primaryImage = product.images?.find(
+                          (img) => img.isPrimary
+                        );
+                        const displayImage =
+                          primaryImage || product.images?.[0];
+
                         return displayImage ? (
                           <img
                             className="h-10 w-10 rounded-md object-cover mr-3"
@@ -490,11 +514,13 @@ function ProductsTab({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center space-x-2">
-                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                        product.inStock === 'Available' 
-                          ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                          : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
-                      }`}>
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                          product.inStock === "Available"
+                            ? "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200"
+                            : "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200"
+                        }`}
+                      >
                         {product.inStock}
                       </span>
                       {product.featured && (
@@ -533,10 +559,16 @@ function ProductsTab({
 interface CollectionModalProps {
   collection?: Collection;
   onClose: () => void;
-  onSave: (data: CreateCollectionRequest | UpdateCollectionRequest) => Promise<void>;
+  onSave: (
+    data: CreateCollectionRequest | UpdateCollectionRequest
+  ) => Promise<void>;
 }
 
-function CollectionModal({ collection, onClose, onSave }: CollectionModalProps) {
+function CollectionModal({
+  collection,
+  onClose,
+  onSave,
+}: CollectionModalProps) {
   const [formData, setFormData] = useState({
     name: collection?.name || "",
     slug: collection?.slug || "",
@@ -552,15 +584,15 @@ function CollectionModal({ collection, onClose, onSave }: CollectionModalProps) 
   const generateSlug = (name: string) => {
     return name
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
   };
 
   const handleNameChange = (name: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       name,
-      slug: !collection ? generateSlug(name) : prev.slug
+      slug: !collection ? generateSlug(name) : prev.slug,
     }));
   };
 
@@ -575,8 +607,18 @@ function CollectionModal({ collection, onClose, onSave }: CollectionModalProps) 
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -603,7 +645,9 @@ function CollectionModal({ collection, onClose, onSave }: CollectionModalProps) 
               <input
                 type="text"
                 value={formData.slug}
-                onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, slug: e.target.value }))
+                }
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                 required
               />
@@ -615,7 +659,12 @@ function CollectionModal({ collection, onClose, onSave }: CollectionModalProps) 
               </label>
               <textarea
                 value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                 required
@@ -627,10 +676,18 @@ function CollectionModal({ collection, onClose, onSave }: CollectionModalProps) 
                 type="checkbox"
                 id="isActive"
                 checked={formData.isActive}
-                onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    isActive: e.target.checked,
+                  }))
+                }
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
-              <label htmlFor="isActive" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="isActive"
+                className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
+              >
                 Active
               </label>
             </div>
@@ -665,12 +722,17 @@ interface ProductModalProps {
   onSave: (data: CreateProductRequest | UpdateProductRequest) => Promise<void>;
 }
 
-function ProductModal({ product, collections, onClose, onSave }: ProductModalProps) {
+function ProductModal({
+  product,
+  collections,
+  onClose,
+  onSave,
+}: ProductModalProps) {
   const [formData, setFormData] = useState({
     name: product?.name || "",
     description: product?.description || "",
     price: product?.price || 0,
-    collectionId: product?.collection?.id || (collections[0]?.id || 0),
+    collectionId: product?.collection?.id || collections[0]?.id || 0,
     category: product?.category || "",
     material: product?.material || "",
     madeBy: product?.madeBy || "",
@@ -680,14 +742,12 @@ function ProductModal({ product, collections, onClose, onSave }: ProductModalPro
   });
 
   const [variants, setVariants] = useState<ProductVariant[]>(
-    product?.sizes?.map(size => ({
+    product?.sizes?.map((size) => ({
       size: size.size,
       price: product.price,
       stockQuantity: size.stockQuantity,
       available: size.available,
-    })) || [
-      { size: "S", price: 0, stockQuantity: 0, available: true },
-    ]
+    })) || [{ size: "S", price: 0, stockQuantity: 0, available: true }]
   );
 
   const [images, setImages] = useState<ProductImage[]>(() => {
@@ -698,37 +758,37 @@ function ProductModal({ product, collections, onClose, onSave }: ProductModalPro
         isPrimary: img.isPrimary,
         orderIndex: index,
       }));
-      
+
       // Ensure at least one image is primary
-      const hasPrimary = mappedImages.some(img => img.isPrimary);
+      const hasPrimary = mappedImages.some((img) => img.isPrimary);
       if (!hasPrimary && mappedImages.length > 0) {
         mappedImages[0].isPrimary = true;
       }
-      
+
       return mappedImages;
     }
-    
+
     // Default for new products
     return [{ url: "", altText: "", isPrimary: true, orderIndex: 0 }];
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const validImages = images.filter(i => i.url && i.altText);
-    
+
+    const validImages = images.filter((i) => i.url && i.altText);
+
     // Ensure at least one image is primary if there are valid images
     if (validImages.length > 0) {
-      const hasPrimary = validImages.some(img => img.isPrimary);
+      const hasPrimary = validImages.some((img) => img.isPrimary);
       if (!hasPrimary) {
         toast.error("Please select one image as primary");
         return;
       }
     }
-    
+
     const data = {
       ...formData,
-      productVariants: variants.filter(v => v.size),
+      productVariants: variants.filter((v) => v.size),
       productImages: validImages,
     };
 
@@ -736,26 +796,35 @@ function ProductModal({ product, collections, onClose, onSave }: ProductModalPro
   };
 
   const addVariant = () => {
-    setVariants(prev => [...prev, {
-      size: "",
-      price: formData.price,
-      stockQuantity: 0,
-      available: true,
-    }]);
+    setVariants((prev) => [
+      ...prev,
+      {
+        size: "",
+        price: formData.price,
+        stockQuantity: 0,
+        available: true,
+      },
+    ]);
   };
 
   const removeVariant = (index: number) => {
-    setVariants(prev => prev.filter((_, i) => i !== index));
+    setVariants((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const updateVariant = (index: number, field: keyof ProductVariant, value: any) => {
-    setVariants(prev => prev.map((variant, i) => 
-      i === index ? { ...variant, [field]: value } : variant
-    ));
+  const updateVariant = (
+    index: number,
+    field: keyof ProductVariant,
+    value: any
+  ) => {
+    setVariants((prev) =>
+      prev.map((variant, i) =>
+        i === index ? { ...variant, [field]: value } : variant
+      )
+    );
   };
 
   const addImage = () => {
-    setImages(prev => {
+    setImages((prev) => {
       const newImage = {
         url: "",
         altText: "",
@@ -767,34 +836,38 @@ function ProductModal({ product, collections, onClose, onSave }: ProductModalPro
   };
 
   const removeImage = (index: number) => {
-    setImages(prev => {
+    setImages((prev) => {
       const newImages = prev.filter((_, i) => i !== index);
-      
+
       // If we removed the primary image and there are still images left,
       // make the first remaining image primary
       if (prev[index]?.isPrimary && newImages.length > 0) {
-        const hasOtherPrimary = newImages.some(img => img.isPrimary);
+        const hasOtherPrimary = newImages.some((img) => img.isPrimary);
         if (!hasOtherPrimary) {
           newImages[0].isPrimary = true;
         }
       }
-      
+
       return newImages;
     });
   };
 
-  const updateImage = (index: number, field: keyof ProductImage, value: any) => {
-    setImages(prev => {
+  const updateImage = (
+    index: number,
+    field: keyof ProductImage,
+    value: any
+  ) => {
+    setImages((prev) => {
       const newImages = [...prev];
 
-      if (field === 'isPrimary' && value === true) {
+      if (field === "isPrimary" && value === true) {
         newImages.forEach((img, i) => {
           if (i !== index) {
             img.isPrimary = false;
           }
         });
       }
-      
+
       newImages[index] = { ...newImages[index], [field]: value };
       return newImages;
     });
@@ -811,8 +884,18 @@ function ProductModal({ product, collections, onClose, onSave }: ProductModalPro
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -821,8 +904,10 @@ function ProductModal({ product, collections, onClose, onSave }: ProductModalPro
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Basic Information */}
             <div className="space-y-4">
-              <h4 className="text-md font-medium text-gray-900 dark:text-white">Basic Information</h4>
-              
+              <h4 className="text-md font-medium text-gray-900 dark:text-white">
+                Basic Information
+              </h4>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Product Name
@@ -830,7 +915,9 @@ function ProductModal({ product, collections, onClose, onSave }: ProductModalPro
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, name: e.target.value }))
+                  }
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                   required
                 />
@@ -842,7 +929,12 @@ function ProductModal({ product, collections, onClose, onSave }: ProductModalPro
                 </label>
                 <textarea
                   value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                   required
@@ -858,7 +950,12 @@ function ProductModal({ product, collections, onClose, onSave }: ProductModalPro
                     type="number"
                     step="0.01"
                     value={formData.price}
-                    onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        price: parseFloat(e.target.value),
+                      }))
+                    }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                     required
                   />
@@ -870,11 +967,16 @@ function ProductModal({ product, collections, onClose, onSave }: ProductModalPro
                   </label>
                   <select
                     value={formData.collectionId}
-                    onChange={(e) => setFormData(prev => ({ ...prev, collectionId: parseInt(e.target.value) }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        collectionId: parseInt(e.target.value),
+                      }))
+                    }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                     required
                   >
-                    {collections.map(collection => (
+                    {collections.map((collection) => (
                       <option key={collection.id} value={collection.id}>
                         {collection.name}
                       </option>
@@ -891,7 +993,12 @@ function ProductModal({ product, collections, onClose, onSave }: ProductModalPro
                   <input
                     type="text"
                     value={formData.category}
-                    onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        category: e.target.value,
+                      }))
+                    }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                     required
                   />
@@ -904,7 +1011,12 @@ function ProductModal({ product, collections, onClose, onSave }: ProductModalPro
                   <input
                     type="text"
                     value={formData.material}
-                    onChange={(e) => setFormData(prev => ({ ...prev, material: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        material: e.target.value,
+                      }))
+                    }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                     required
                   />
@@ -919,7 +1031,12 @@ function ProductModal({ product, collections, onClose, onSave }: ProductModalPro
                   <input
                     type="text"
                     value={formData.madeBy}
-                    onChange={(e) => setFormData(prev => ({ ...prev, madeBy: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        madeBy: e.target.value,
+                      }))
+                    }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                     required
                   />
@@ -931,7 +1048,12 @@ function ProductModal({ product, collections, onClose, onSave }: ProductModalPro
                   </label>
                   <select
                     value={formData.inStock}
-                    onChange={(e) => setFormData(prev => ({ ...prev, inStock: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        inStock: e.target.value,
+                      }))
+                    }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                     required
                   >
@@ -948,7 +1070,12 @@ function ProductModal({ product, collections, onClose, onSave }: ProductModalPro
                 </label>
                 <textarea
                   value={formData.otherDetails}
-                  onChange={(e) => setFormData(prev => ({ ...prev, otherDetails: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      otherDetails: e.target.value,
+                    }))
+                  }
                   rows={2}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                 />
@@ -959,10 +1086,18 @@ function ProductModal({ product, collections, onClose, onSave }: ProductModalPro
                   type="checkbox"
                   id="featured"
                   checked={formData.featured}
-                  onChange={(e) => setFormData(prev => ({ ...prev, featured: e.target.checked }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      featured: e.target.checked,
+                    }))
+                  }
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
-                <label htmlFor="featured" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="featured"
+                  className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
+                >
                   Featured Product
                 </label>
               </div>
@@ -973,7 +1108,9 @@ function ProductModal({ product, collections, onClose, onSave }: ProductModalPro
               {/* Product Variants */}
               <div>
                 <div className="flex justify-between items-center mb-4">
-                  <h4 className="text-md font-medium text-gray-900 dark:text-white">Product Variants</h4>
+                  <h4 className="text-md font-medium text-gray-900 dark:text-white">
+                    Product Variants
+                  </h4>
                   <button
                     type="button"
                     onClick={addVariant}
@@ -982,16 +1119,21 @@ function ProductModal({ product, collections, onClose, onSave }: ProductModalPro
                     + Add Variant
                   </button>
                 </div>
-                
+
                 <div className="space-y-3">
                   {variants.map((variant, index) => (
-                    <div key={index} className="p-3 border border-gray-200 dark:border-gray-600 rounded-md">
+                    <div
+                      key={index}
+                      className="p-3 border border-gray-200 dark:border-gray-600 rounded-md"
+                    >
                       <div className="mb-2">
                         <input
                           type="text"
                           placeholder="Size"
                           value={variant.size}
-                          onChange={(e) => updateVariant(index, 'size', e.target.value)}
+                          onChange={(e) =>
+                            updateVariant(index, "size", e.target.value)
+                          }
                           className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                         />
                       </div>
@@ -1001,14 +1143,26 @@ function ProductModal({ product, collections, onClose, onSave }: ProductModalPro
                           step="0.01"
                           placeholder="Price"
                           value={variant.price}
-                          onChange={(e) => updateVariant(index, 'price', parseFloat(e.target.value))}
+                          onChange={(e) =>
+                            updateVariant(
+                              index,
+                              "price",
+                              parseFloat(e.target.value)
+                            )
+                          }
                           className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                         />
                         <input
                           type="number"
                           placeholder="Stock"
                           value={variant.stockQuantity}
-                          onChange={(e) => updateVariant(index, 'stockQuantity', parseInt(e.target.value))}
+                          onChange={(e) =>
+                            updateVariant(
+                              index,
+                              "stockQuantity",
+                              parseInt(e.target.value)
+                            )
+                          }
                           className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                         />
                       </div>
@@ -1017,7 +1171,13 @@ function ProductModal({ product, collections, onClose, onSave }: ProductModalPro
                           <input
                             type="checkbox"
                             checked={variant.available}
-                            onChange={(e) => updateVariant(index, 'available', e.target.checked)}
+                            onChange={(e) =>
+                              updateVariant(
+                                index,
+                                "available",
+                                e.target.checked
+                              )
+                            }
                             className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-1"
                           />
                           Available
@@ -1038,7 +1198,9 @@ function ProductModal({ product, collections, onClose, onSave }: ProductModalPro
               {/* Product Images */}
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <h4 className="text-md font-medium text-gray-900 dark:text-white">Product Images</h4>
+                  <h4 className="text-md font-medium text-gray-900 dark:text-white">
+                    Product Images
+                  </h4>
                   <button
                     type="button"
                     onClick={addImage}
@@ -1048,25 +1210,34 @@ function ProductModal({ product, collections, onClose, onSave }: ProductModalPro
                   </button>
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                  Select one image as primary. Only one image can be primary at a time. The primary image will be displayed in product listings.
+                  Select one image as primary. Only one image can be primary at
+                  a time. The primary image will be displayed in product
+                  listings.
                 </p>
-                
+
                 <div className="space-y-3">
                   {images.map((image, index) => (
-                    <div key={index} className="p-3 border border-gray-200 dark:border-gray-600 rounded-md">
+                    <div
+                      key={index}
+                      className="p-3 border border-gray-200 dark:border-gray-600 rounded-md"
+                    >
                       <div className="space-y-2">
                         <input
                           type="url"
                           placeholder="Image URL"
                           value={image.url}
-                          onChange={(e) => updateImage(index, 'url', e.target.value)}
+                          onChange={(e) =>
+                            updateImage(index, "url", e.target.value)
+                          }
                           className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                         />
                         <input
                           type="text"
                           placeholder="Alt Text"
                           value={image.altText}
-                          onChange={(e) => updateImage(index, 'altText', e.target.value)}
+                          onChange={(e) =>
+                            updateImage(index, "altText", e.target.value)
+                          }
                           className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                         />
                         <div className="flex justify-between items-center">
@@ -1074,11 +1245,28 @@ function ProductModal({ product, collections, onClose, onSave }: ProductModalPro
                             <input
                               type="checkbox"
                               checked={image.isPrimary}
-                              onChange={(e) => updateImage(index, 'isPrimary', e.target.checked)}
-                              disabled={!image.isPrimary && images.some((img, i) => i !== index && img.isPrimary)}
+                              onChange={(e) =>
+                                updateImage(
+                                  index,
+                                  "isPrimary",
+                                  e.target.checked
+                                )
+                              }
+                              disabled={
+                                !image.isPrimary &&
+                                images.some(
+                                  (img, i) => i !== index && img.isPrimary
+                                )
+                              }
                               className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-1 disabled:opacity-50 disabled:cursor-not-allowed"
                             />
-                            <span className={image.isPrimary ? "text-blue-600 dark:text-blue-400 font-medium" : ""}>
+                            <span
+                              className={
+                                image.isPrimary
+                                  ? "text-blue-600 dark:text-blue-400 font-medium"
+                                  : ""
+                              }
+                            >
                               Primary Image {image.isPrimary ? "✓" : ""}
                             </span>
                           </label>
@@ -1117,4 +1305,4 @@ function ProductModal({ product, collections, onClose, onSave }: ProductModalPro
       </div>
     </div>
   );
-} 
+}

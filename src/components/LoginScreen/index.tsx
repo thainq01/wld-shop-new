@@ -9,7 +9,7 @@ export function LoginScreen() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const { login } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
@@ -19,7 +19,7 @@ export function LoginScreen() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!username.trim() || !password.trim()) {
       toast.error("Please enter both username and password");
       return;
@@ -28,10 +28,10 @@ export function LoginScreen() {
     setIsLoading(true);
 
     // Simulate a small delay for better UX
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     const success = login(username, password);
-    
+
     if (success) {
       toast.success("Login successful!");
       navigate(redirectPath, { replace: true });
@@ -63,7 +63,10 @@ export function LoginScreen() {
         <div className="bg-white dark:bg-gray-800 py-8 px-4 shadow-lg sm:rounded-lg sm:px-10 border dark:border-gray-700">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="username"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 Username
               </label>
               <div className="mt-1 relative">
@@ -86,7 +89,10 @@ export function LoginScreen() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 Password
               </label>
               <div className="mt-1 relative">
@@ -154,7 +160,8 @@ export function LoginScreen() {
         {import.meta.env.DEV && (
           <div className="mt-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-md p-4">
             <div className="text-sm text-yellow-800 dark:text-yellow-200">
-              <strong>Development Note:</strong> Set VITE_CMS_USERNAME and VITE_CMS_PASSWORD in your .env file.
+              <strong>Development Note:</strong> Set VITE_CMS_USERNAME and
+              VITE_CMS_PASSWORD in your .env file.
               <br />
               Default credentials: admin / password
             </div>
@@ -163,4 +170,4 @@ export function LoginScreen() {
       </div>
     </div>
   );
-} 
+}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 
 export interface BlurUpImageProps {
   src: string | null | undefined;
@@ -17,8 +17,8 @@ export interface BlurUpImageProps {
 export const BlurUpImage: React.FC<BlurUpImageProps> = ({
   src,
   alt,
-  className = '',
-  placeholderClassName = '',
+  className = "",
+  placeholderClassName = "",
   eager = false,
   onLoad,
   onError,
@@ -40,7 +40,7 @@ export const BlurUpImage: React.FC<BlurUpImageProps> = ({
         }
       },
       {
-        rootMargin: '50px', // Start loading 50px before entering viewport
+        rootMargin: "50px", // Start loading 50px before entering viewport
         threshold: 0.1,
       }
     );
@@ -68,7 +68,9 @@ export const BlurUpImage: React.FC<BlurUpImageProps> = ({
   if (!src) {
     return (
       <div className={`relative w-full h-full ${className}`}>
-        <div className={`absolute inset-0 bg-gray-300 dark:bg-gray-600 flex items-center justify-center ${placeholderClassName}`}>
+        <div
+          className={`absolute inset-0 bg-gray-300 dark:bg-gray-600 flex items-center justify-center ${placeholderClassName}`}
+        >
           <span className="text-gray-500 dark:text-gray-400 text-xs text-center px-2">
             No Image
           </span>
@@ -78,18 +80,18 @@ export const BlurUpImage: React.FC<BlurUpImageProps> = ({
   }
 
   return (
-    <div 
+    <div
       id={`blur-up-${src}`}
       className={`relative w-full h-full ${className}`}
     >
       {/* Blurred placeholder background */}
-      <div 
+      <div
         className={`absolute inset-0 bg-gray-200 dark:bg-gray-700 ${placeholderClassName}`}
         style={{
-          filter: 'blur(20px)',
-          transform: 'scale(1.1)', // Slightly larger to hide blur edges
+          filter: "blur(20px)",
+          transform: "scale(1.1)", // Slightly larger to hide blur edges
           opacity: isLoaded ? 0 : 1,
-          transition: 'opacity 500ms ease-out',
+          transition: "opacity 500ms ease-out",
         }}
       />
 
@@ -110,9 +112,9 @@ export const BlurUpImage: React.FC<BlurUpImageProps> = ({
           className="absolute inset-0 w-full h-full object-cover"
           style={{
             opacity: isLoaded ? 1 : 0,
-            transition: 'opacity 500ms ease-out',
+            transition: "opacity 500ms ease-out",
           }}
-          loading={eager ? 'eager' : 'lazy'}
+          loading={eager ? "eager" : "lazy"}
           decoding="async"
           onLoad={handleLoad}
           onError={handleError}
@@ -125,7 +127,9 @@ export const BlurUpImage: React.FC<BlurUpImageProps> = ({
 /**
  * Specialized version for hero images (eager loading)
  */
-export const HeroBlurUpImage: React.FC<Omit<BlurUpImageProps, 'eager'>> = (props) => {
+export const HeroBlurUpImage: React.FC<Omit<BlurUpImageProps, "eager">> = (
+  props
+) => {
   return <BlurUpImage {...props} eager={true} />;
 };
 
@@ -139,25 +143,33 @@ export const ProductBlurUpImage: React.FC<BlurUpImageProps> = (props) => {
 /**
  * Enhanced version with gradient overlay for better text readability
  */
-export const BlurUpImageWithGradient: React.FC<BlurUpImageProps & {
-  gradientDirection?: 'top' | 'bottom' | 'left' | 'right';
-  gradientOpacity?: number;
-}> = ({
-  gradientDirection = 'bottom',
-  gradientOpacity = 0.6,
-  ...props
-}) => {
+export const BlurUpImageWithGradient: React.FC<
+  BlurUpImageProps & {
+    gradientDirection?: "top" | "bottom" | "left" | "right";
+    gradientOpacity?: number;
+  }
+> = ({ gradientDirection = "bottom", gradientOpacity = 0.6, ...props }) => {
   const gradientClasses = {
-    top: `bg-gradient-to-b from-black/${Math.round(gradientOpacity * 100)} to-transparent`,
-    bottom: `bg-gradient-to-t from-black/${Math.round(gradientOpacity * 100)} to-transparent`,
-    left: `bg-gradient-to-r from-black/${Math.round(gradientOpacity * 100)} to-transparent`,
-    right: `bg-gradient-to-l from-black/${Math.round(gradientOpacity * 100)} to-transparent`,
+    top: `bg-gradient-to-b from-black/${Math.round(
+      gradientOpacity * 100
+    )} to-transparent`,
+    bottom: `bg-gradient-to-t from-black/${Math.round(
+      gradientOpacity * 100
+    )} to-transparent`,
+    left: `bg-gradient-to-r from-black/${Math.round(
+      gradientOpacity * 100
+    )} to-transparent`,
+    right: `bg-gradient-to-l from-black/${Math.round(
+      gradientOpacity * 100
+    )} to-transparent`,
   };
 
   return (
     <div className="relative w-full h-full">
       <BlurUpImage {...props} />
-      <div className={`absolute inset-0 ${gradientClasses[gradientDirection]} pointer-events-none`} />
+      <div
+        className={`absolute inset-0 ${gradientClasses[gradientDirection]} pointer-events-none`}
+      />
     </div>
   );
 };

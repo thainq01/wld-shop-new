@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { X, Tag, Save, Globe, Plus, Trash2 } from "lucide-react";
-import { 
-  MultiLanguageCollection, 
-  CreateMultiLanguageCollectionRequest, 
+import { X, Tag, Save, Trash2 } from "lucide-react";
+import {
+  MultiLanguageCollection,
+  CreateMultiLanguageCollectionRequest,
   UpdateMultiLanguageCollectionRequest,
-  CollectionTranslation 
 } from "../../../types";
 import { cmsLanguages } from "../../../store/languageStore";
 
@@ -12,7 +11,11 @@ interface MultiLanguageCollectionModalProps {
   isOpen: boolean;
   onClose: () => void;
   collection?: MultiLanguageCollection | null;
-  onSubmit: (data: CreateMultiLanguageCollectionRequest | UpdateMultiLanguageCollectionRequest) => Promise<void>;
+  onSubmit: (
+    data:
+      | CreateMultiLanguageCollectionRequest
+      | UpdateMultiLanguageCollectionRequest
+  ) => Promise<void>;
 }
 
 export function MultiLanguageCollectionModal({
@@ -22,17 +25,19 @@ export function MultiLanguageCollectionModal({
   onSubmit,
 }: MultiLanguageCollectionModalProps) {
   const isEditing = !!collection;
-  
+
   const [formData, setFormData] = useState({
     slug: "",
     isActive: true,
     translations: {} as Record<string, { name: string; description: string }>,
   });
-  
+
   const [activeTab, setActiveTab] = useState<string>("en");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [availableLanguages, setAvailableLanguages] = useState<string[]>(["en"]);
+  const [availableLanguages, setAvailableLanguages] = useState<string[]>([
+    "en",
+  ]);
 
   useEffect(() => {
     if (collection) {
@@ -42,7 +47,7 @@ export function MultiLanguageCollectionModal({
         translations: Object.fromEntries(
           Object.entries(collection.translations).map(([lang, translation]) => [
             lang,
-            { name: translation.name, description: translation.description }
+            { name: translation.name, description: translation.description },
           ])
         ),
       });
@@ -54,7 +59,7 @@ export function MultiLanguageCollectionModal({
         slug: "",
         isActive: true,
         translations: {
-          en: { name: "", description: "" }
+          en: { name: "", description: "" },
         },
       });
       setAvailableLanguages(["en"]);
@@ -65,47 +70,50 @@ export function MultiLanguageCollectionModal({
 
   const handleInputChange = (field: string, value: string | boolean) => {
     if (field === "slug" || field === "isActive") {
-      setFormData(prev => ({ ...prev, [field]: value }));
+      setFormData((prev) => ({ ...prev, [field]: value }));
     } else {
       // Handle translation fields
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         translations: {
           ...prev.translations,
           [activeTab]: {
             ...prev.translations[activeTab],
-            [field]: value
-          }
-        }
+            [field]: value,
+          },
+        },
       }));
     }
-    
+
     // Clear error for this field
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: "" }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
   // Auto-generate slug from English name
   const handleNameChange = (name: string) => {
     handleInputChange("name", name);
-    
+
     // Auto-generate slug only for new collections and only from English name
     if (!isEditing && activeTab === "en" && name) {
-      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-      setFormData(prev => ({ ...prev, slug }));
+      const slug = name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+      setFormData((prev) => ({ ...prev, slug }));
     }
   };
 
   const addLanguageTab = (languageCode: string) => {
     if (!availableLanguages.includes(languageCode)) {
-      setAvailableLanguages(prev => [...prev, languageCode]);
-      setFormData(prev => ({
+      setAvailableLanguages((prev) => [...prev, languageCode]);
+      setFormData((prev) => ({
         ...prev,
         translations: {
           ...prev.translations,
-          [languageCode]: { name: "", description: "" }
-        }
+          [languageCode]: { name: "", description: "" },
+        },
       }));
       setActiveTab(languageCode);
     }
@@ -113,14 +121,16 @@ export function MultiLanguageCollectionModal({
 
   const removeLanguageTab = (languageCode: string) => {
     if (languageCode === "en") return; // Can't remove English
-    
-    setAvailableLanguages(prev => prev.filter(lang => lang !== languageCode));
-    setFormData(prev => {
+
+    setAvailableLanguages((prev) =>
+      prev.filter((lang) => lang !== languageCode)
+    );
+    setFormData((prev) => {
       const newTranslations = { ...prev.translations };
       delete newTranslations[languageCode];
       return { ...prev, translations: newTranslations };
     });
-    
+
     if (activeTab === languageCode) {
       setActiveTab("en");
     }
@@ -132,7 +142,8 @@ export function MultiLanguageCollectionModal({
     if (!formData.slug.trim()) {
       newErrors.slug = "Slug is required";
     } else if (!/^[a-z0-9-]+$/.test(formData.slug)) {
-      newErrors.slug = "Slug can only contain lowercase letters, numbers, and hyphens";
+      newErrors.slug =
+        "Slug can only contain lowercase letters, numbers, and hyphens";
     }
 
     // Validate English translation (required)
@@ -146,7 +157,7 @@ export function MultiLanguageCollectionModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setLoading(true);
@@ -163,11 +174,15 @@ export function MultiLanguageCollectionModal({
 
   const getLanguageDisplay = (langCode: string) => {
     const language = cmsLanguages.find((lang) => lang.code === langCode);
-    return language ? `${language.flag} ${language.name}` : langCode.toUpperCase();
+    return language
+      ? `${language.flag} ${language.name}`
+      : langCode.toUpperCase();
   };
 
   const getAvailableLanguagesToAdd = () => {
-    return cmsLanguages.filter(lang => !availableLanguages.includes(lang.code));
+    return cmsLanguages.filter(
+      (lang) => !availableLanguages.includes(lang.code)
+    );
   };
 
   if (!isOpen) return null;
@@ -198,7 +213,9 @@ export function MultiLanguageCollectionModal({
             {/* General Error */}
             {errors.general && (
               <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                <p className="text-sm text-red-600 dark:text-red-400">{errors.general}</p>
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  {errors.general}
+                </p>
               </div>
             )}
 
@@ -213,14 +230,16 @@ export function MultiLanguageCollectionModal({
                   value={formData.slug}
                   onChange={(e) => handleInputChange("slug", e.target.value)}
                   className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 transition-colors ${
-                    errors.slug 
-                      ? "border-red-300 dark:border-red-600 focus:ring-red-500" 
+                    errors.slug
+                      ? "border-red-300 dark:border-red-600 focus:ring-red-500"
                       : "border-gray-300 dark:border-gray-600 focus:ring-blue-500"
                   }`}
                   placeholder="collection-slug"
                 />
                 {errors.slug && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.slug}</p>
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.slug}
+                  </p>
                 )}
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   URL-friendly version (lowercase, no spaces)
@@ -232,10 +251,15 @@ export function MultiLanguageCollectionModal({
                   type="checkbox"
                   id="isActive"
                   checked={formData.isActive}
-                  onChange={(e) => handleInputChange("isActive", e.target.checked)}
+                  onChange={(e) =>
+                    handleInputChange("isActive", e.target.checked)
+                  }
                   className="w-4 h-4 text-blue-600 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
                 />
-                <label htmlFor="isActive" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="isActive"
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
                   Active Collection
                 </label>
               </div>
@@ -314,14 +338,18 @@ export function MultiLanguageCollectionModal({
                     value={formData.translations[activeTab]?.name || ""}
                     onChange={(e) => handleNameChange(e.target.value)}
                     className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 transition-colors ${
-                      errors[`${activeTab}-name`] 
-                        ? "border-red-300 dark:border-red-600 focus:ring-red-500" 
+                      errors[`${activeTab}-name`]
+                        ? "border-red-300 dark:border-red-600 focus:ring-red-500"
                         : "border-gray-300 dark:border-gray-600 focus:ring-blue-500"
                     }`}
-                    placeholder={`Collection name in ${getLanguageDisplay(activeTab)}`}
+                    placeholder={`Collection name in ${getLanguageDisplay(
+                      activeTab
+                    )}`}
                   />
                   {errors[`${activeTab}-name`] && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors[`${activeTab}-name`]}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {errors[`${activeTab}-name`]}
+                    </p>
                   )}
                 </div>
 
@@ -331,10 +359,14 @@ export function MultiLanguageCollectionModal({
                   </label>
                   <textarea
                     value={formData.translations[activeTab]?.description || ""}
-                    onChange={(e) => handleInputChange("description", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("description", e.target.value)
+                    }
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-                    placeholder={`Collection description in ${getLanguageDisplay(activeTab)}`}
+                    placeholder={`Collection description in ${getLanguageDisplay(
+                      activeTab
+                    )}`}
                   />
                 </div>
               </div>
@@ -360,7 +392,11 @@ export function MultiLanguageCollectionModal({
               ) : (
                 <Save className="w-4 h-4" />
               )}
-              {loading ? "Saving..." : isEditing ? "Update Collection" : "Create Collection"}
+              {loading
+                ? "Saving..."
+                : isEditing
+                ? "Update Collection"
+                : "Create Collection"}
             </button>
           </div>
         </form>

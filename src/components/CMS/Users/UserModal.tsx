@@ -2,7 +2,11 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { X, User as UserIcon, Wallet, Image } from "lucide-react";
 import { usersApi } from "../../../utils/api";
-import type { User, CreateUserRequest, UpdateUserRequest } from "../../../types";
+import type {
+  User,
+  CreateUserRequest,
+  UpdateUserRequest,
+} from "../../../types";
 
 interface UserModalProps {
   user?: User | null;
@@ -50,7 +54,8 @@ export function UserModal({ user, onClose, onSave }: UserModalProps) {
     if (!formData.username.trim()) {
       newErrors.username = "Username is required";
     } else if (!/^[a-zA-Z0-9_-]+$/.test(formData.username)) {
-      newErrors.username = "Username can only contain letters, numbers, underscores, and hyphens";
+      newErrors.username =
+        "Username can only contain letters, numbers, underscores, and hyphens";
     }
 
     if (formData.profilePictureUrl && !isValidUrl(formData.profilePictureUrl)) {
@@ -99,23 +104,25 @@ export function UserModal({ user, onClose, onSave }: UserModalProps) {
       onSave();
     } catch (error: any) {
       console.error("Failed to save user:", error);
-      
+
       // Handle validation errors from API
       if (error.message.includes("Validation errors:")) {
         const validationPart = error.message.split("Validation errors: ")[1];
         const validationErrors: Record<string, string> = {};
-        
+
         validationPart.split(", ").forEach((errorPair: string) => {
           const [field, message] = errorPair.split(": ");
           if (field && message) {
             validationErrors[field] = message;
           }
         });
-        
+
         setErrors(validationErrors);
         toast.error("Please fix the validation errors");
       } else if (error.message.includes("already exists")) {
-        setErrors({ walletAddress: "User with this wallet address already exists" });
+        setErrors({
+          walletAddress: "User with this wallet address already exists",
+        });
         toast.error("User with this wallet address already exists");
       } else {
         toast.error(`Failed to ${isEditing ? "update" : "create"} user`);
@@ -126,10 +133,10 @@ export function UserModal({ user, onClose, onSave }: UserModalProps) {
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: "" }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
@@ -160,7 +167,9 @@ export function UserModal({ user, onClose, onSave }: UserModalProps) {
             <input
               type="text"
               value={formData.walletAddress}
-              onChange={(e) => handleInputChange("walletAddress", e.target.value)}
+              onChange={(e) =>
+                handleInputChange("walletAddress", e.target.value)
+              }
               disabled={isEditing} // Can't change wallet address when editing
               placeholder="0x..."
               className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
@@ -209,7 +218,9 @@ export function UserModal({ user, onClose, onSave }: UserModalProps) {
             <input
               type="url"
               value={formData.profilePictureUrl}
-              onChange={(e) => handleInputChange("profilePictureUrl", e.target.value)}
+              onChange={(e) =>
+                handleInputChange("profilePictureUrl", e.target.value)
+              }
               placeholder="https://example.com/avatar.jpg"
               className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                 errors.profilePictureUrl
@@ -225,26 +236,27 @@ export function UserModal({ user, onClose, onSave }: UserModalProps) {
           </div>
 
           {/* Preview */}
-          {formData.profilePictureUrl && isValidUrl(formData.profilePictureUrl) && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Preview
-              </label>
-              <div className="flex items-center space-x-3">
-                <img
-                  src={formData.profilePictureUrl}
-                  alt="Profile preview"
-                  className="w-12 h-12 rounded-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Profile picture preview
-                </span>
+          {formData.profilePictureUrl &&
+            isValidUrl(formData.profilePictureUrl) && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Preview
+                </label>
+                <div className="flex items-center space-x-3">
+                  <img
+                    src={formData.profilePictureUrl}
+                    alt="Profile preview"
+                    className="w-12 h-12 rounded-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Profile picture preview
+                  </span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* Actions */}
           <div className="flex justify-end space-x-3 pt-4">
@@ -260,7 +272,11 @@ export function UserModal({ user, onClose, onSave }: UserModalProps) {
               disabled={loading}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
             >
-              {loading ? "Saving..." : isEditing ? "Update User" : "Create User"}
+              {loading
+                ? "Saving..."
+                : isEditing
+                ? "Update User"
+                : "Create User"}
             </button>
           </div>
         </form>

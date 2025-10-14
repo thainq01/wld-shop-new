@@ -8,7 +8,7 @@ import { useAutoLogin } from "./store/authStore";
 
 export function Container({ children }: { children: ReactNode }) {
   const { address } = useAuthWorld();
-  
+
   // Auto-login hook - this will handle login automatically
   useAutoLogin();
 

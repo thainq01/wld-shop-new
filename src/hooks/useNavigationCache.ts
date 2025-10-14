@@ -1,5 +1,5 @@
-import { useEffect, useRef, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useEffect, useRef, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 
 interface NavigationState {
   path: string;
@@ -49,55 +49,58 @@ export function useNavigationCache(
   // Check if we have valid cached data
   const hasCachedData = useCallback(() => {
     if (!enableCache) return false;
-    
+
     const cached = navigationCache[routePath];
     if (!cached) return false;
-    
+
     // Check if cache is still valid (not expired)
     const isExpired = Date.now() - cached.timestamp > cacheTimeout;
     if (isExpired) {
       delete navigationCache[routePath];
       return false;
     }
-    
+
     return true;
   }, [routePath, enableCache, cacheTimeout]);
 
   // Save navigation state
-  const saveNavigationState = useCallback((componentState?: any) => {
-    if (!enableCache) return;
-    
-    const state: NavigationState = {
-      path: routePath,
-      timestamp: Date.now(),
-      scrollPosition: {
-        x: window.scrollX,
-        y: window.scrollY,
-      },
-      componentState: preserveComponentState ? componentState : undefined,
-    };
-    
-    navigationCache[routePath] = state;
-    
-    if (import.meta.env.DEV) {
-      console.log(`💾 Saved navigation state for ${routePath}:`, state);
-    }
-  }, [routePath, enableCache, preserveComponentState]);
+  const saveNavigationState = useCallback(
+    (componentState?: any) => {
+      if (!enableCache) return;
+
+      const state: NavigationState = {
+        path: routePath,
+        timestamp: Date.now(),
+        scrollPosition: {
+          x: window.scrollX,
+          y: window.scrollY,
+        },
+        componentState: preserveComponentState ? componentState : undefined,
+      };
+
+      navigationCache[routePath] = state;
+
+      if (import.meta.env.DEV) {
+        console.log(`💾 Saved navigation state for ${routePath}:`, state);
+      }
+    },
+    [routePath, enableCache, preserveComponentState]
+  );
 
   // Get cached navigation state
   const getCachedState = useCallback(() => {
     if (!enableCache) return null;
-    
+
     const cached = navigationCache[routePath];
     if (!cached) return null;
-    
+
     // Check if cache is still valid
     const isExpired = Date.now() - cached.timestamp > cacheTimeout;
     if (isExpired) {
       delete navigationCache[routePath];
       return null;
     }
-    
+
     return cached;
   }, [routePath, enableCache, cacheTimeout]);
 
@@ -105,25 +108,25 @@ export function useNavigationCache(
   const restoreNavigationState = useCallback(() => {
     const cached = getCachedState();
     if (!cached) return false;
-    
+
     // Restore scroll position
     requestAnimationFrame(() => {
       window.scrollTo({
         left: cached.scrollPosition.x,
         top: cached.scrollPosition.y,
-        behavior: 'instant',
+        behavior: "instant",
       });
     });
-    
+
     // Restore component state if available
     if (cached.componentState && preserveComponentState) {
       componentStateRef.current = cached.componentState;
     }
-    
+
     if (import.meta.env.DEV) {
       console.log(`🔄 Restored navigation state for ${routePath}:`, cached);
     }
-    
+
     return true;
   }, [getCachedState, routePath, preserveComponentState]);
 
@@ -131,7 +134,7 @@ export function useNavigationCache(
   useEffect(() => {
     const isReturning = isReturningToPage();
     isReturningRef.current = isReturning;
-    
+
     if (isReturning && hasCachedData()) {
       // Restore previous state
       restoreNavigationState();
@@ -140,9 +143,9 @@ export function useNavigationCache(
       window.scrollTo({
         top: 0,
         left: 0,
-        behavior: 'instant',
+        behavior: "instant",
       });
-      
+
       if (import.meta.env.DEV) {
         console.log(`⬆️ Fresh visit to ${routePath}, scrolled to top`);
       }
@@ -162,12 +165,14 @@ export function useNavigationCache(
       delete navigationCache[path];
       visitedPaths.delete(path);
     } else {
-      Object.keys(navigationCache).forEach(key => delete navigationCache[key]);
+      Object.keys(navigationCache).forEach(
+        (key) => delete navigationCache[key]
+      );
       visitedPaths.clear();
     }
-    
+
     if (import.meta.env.DEV) {
-      console.log(`🗑️ Cleared navigation cache for ${path || 'all paths'}`);
+      console.log(`🗑️ Cleared navigation cache for ${path || "all paths"}`);
     }
   }, []);
 
@@ -184,11 +189,14 @@ export function useNavigationCache(
   }, [routePath, hasCachedData]);
 
   // Update component state reference
-  const updateComponentState = useCallback((state: any) => {
-    if (preserveComponentState) {
-      componentStateRef.current = state;
-    }
-  }, [preserveComponentState]);
+  const updateComponentState = useCallback(
+    (state: any) => {
+      if (preserveComponentState) {
+        componentStateRef.current = state;
+      }
+    },
+    [preserveComponentState]
+  );
 
   return {
     isReturning: isReturningRef.current,

@@ -1,15 +1,19 @@
-import { PhoneNumberUtil, PhoneNumberFormat, PhoneNumber } from 'google-libphonenumber';
-import type { CountryCode } from '../store/countryStore';
+import {
+  PhoneNumberUtil,
+  PhoneNumberFormat,
+  PhoneNumber,
+} from "google-libphonenumber";
+import type { CountryCode } from "../store/countryStore";
 
 const phoneUtil = PhoneNumberUtil.getInstance();
 
 // Map our country codes to ISO country codes for libphonenumber
 const countryCodeMap: Record<CountryCode, string> = {
-  'th': 'TH', // Thailand
-  'ms': 'MY', // Malaysia
-  'ph': 'PH', // Philippines
-  'id': 'ID', // Indonesia
-  'en': 'TH', // English defaults to Thailand
+  th: "TH", // Thailand
+  ms: "MY", // Malaysia
+  ph: "PH", // Philippines
+  id: "ID", // Indonesia
+  en: "TH", // English defaults to Thailand
 };
 
 export interface PhoneValidationResult {
@@ -21,30 +25,39 @@ export interface PhoneValidationResult {
 /**
  * Validate a phone number for a specific country
  */
-export function validatePhoneNumber(phoneNumber: string, countryCode: CountryCode): PhoneValidationResult {
-  if (!phoneNumber || phoneNumber.trim() === '') {
+export function validatePhoneNumber(
+  phoneNumber: string,
+  countryCode: CountryCode
+): PhoneValidationResult {
+  if (!phoneNumber || phoneNumber.trim() === "") {
     return {
       isValid: false,
-      error: 'Phone number is required',
+      error: "Phone number is required",
     };
   }
 
   try {
     const isoCountryCode = countryCodeMap[countryCode];
     const parsedNumber = phoneUtil.parse(phoneNumber, isoCountryCode);
-    
+
     // Check if the number is valid for the country
-    const isValid = phoneUtil.isValidNumberForRegion(parsedNumber, isoCountryCode);
-    
+    const isValid = phoneUtil.isValidNumberForRegion(
+      parsedNumber,
+      isoCountryCode
+    );
+
     if (!isValid) {
       return {
         isValid: false,
-        error: 'Invalid phone number for selected country',
+        error: "Invalid phone number for selected country",
       };
     }
 
     // Format the number for display
-    const formattedNumber = phoneUtil.format(parsedNumber, PhoneNumberFormat.NATIONAL);
+    const formattedNumber = phoneUtil.format(
+      parsedNumber,
+      PhoneNumberFormat.NATIONAL
+    );
 
     return {
       isValid: true,
@@ -54,7 +67,7 @@ export function validatePhoneNumber(phoneNumber: string, countryCode: CountryCod
   } catch (error) {
     return {
       isValid: false,
-      error: 'Invalid phone number format',
+      error: "Invalid phone number format",
     };
   }
 }
@@ -63,22 +76,23 @@ export function validatePhoneNumber(phoneNumber: string, countryCode: CountryCod
  * Format a phone number for display
  */
 export function formatPhoneNumber(
-  phoneNumber: string, 
-  countryCode: CountryCode, 
-  format: 'national' | 'international' = 'national'
+  phoneNumber: string,
+  countryCode: CountryCode,
+  format: "national" | "international" = "national"
 ): string {
   try {
     const isoCountryCode = countryCodeMap[countryCode];
     const parsedNumber = phoneUtil.parse(phoneNumber, isoCountryCode);
-    
+
     if (phoneUtil.isValidNumber(parsedNumber)) {
-      const phoneFormat = format === 'international' 
-        ? PhoneNumberFormat.INTERNATIONAL 
-        : PhoneNumberFormat.NATIONAL;
-      
+      const phoneFormat =
+        format === "international"
+          ? PhoneNumberFormat.INTERNATIONAL
+          : PhoneNumberFormat.NATIONAL;
+
       return phoneUtil.format(parsedNumber, phoneFormat);
     }
-    
+
     return phoneNumber; // Return original if can't format
   } catch (error) {
     return phoneNumber; // Return original if can't format
@@ -94,7 +108,7 @@ export function getCountryCallingCode(countryCode: CountryCode): string {
     const callingCode = phoneUtil.getCountryCodeForRegion(isoCountryCode);
     return `+${callingCode}`;
   } catch (error) {
-    return '+66'; // Default to Thailand
+    return "+66"; // Default to Thailand
   }
 }
 
@@ -105,30 +119,33 @@ export function getExamplePhoneNumber(countryCode: CountryCode): string {
   try {
     const isoCountryCode = countryCodeMap[countryCode];
     const exampleNumber = phoneUtil.getExampleNumber(isoCountryCode);
-    
+
     if (exampleNumber) {
       return phoneUtil.format(exampleNumber, PhoneNumberFormat.NATIONAL);
     }
-    
+
     // Fallback examples
     const examples: Record<CountryCode, string> = {
-      'th': '02 123 4567',
-      'ms': '03-1234 5678',
-      'ph': '(02) 1234 5678',
-      'id': '021 1234 5678',
-      'en': '02 123 4567',
+      th: "02 123 4567",
+      ms: "03-1234 5678",
+      ph: "(02) 1234 5678",
+      id: "021 1234 5678",
+      en: "02 123 4567",
     };
-    
+
     return examples[countryCode];
   } catch (error) {
-    return '02 123 4567'; // Default example
+    return "02 123 4567"; // Default example
   }
 }
 
 /**
  * Check if a phone number is possible (basic format check)
  */
-export function isPossiblePhoneNumber(phoneNumber: string, countryCode: CountryCode): boolean {
+export function isPossiblePhoneNumber(
+  phoneNumber: string,
+  countryCode: CountryCode
+): boolean {
   try {
     const isoCountryCode = countryCodeMap[countryCode];
     const parsedNumber = phoneUtil.parse(phoneNumber, isoCountryCode);
@@ -141,7 +158,10 @@ export function isPossiblePhoneNumber(phoneNumber: string, countryCode: CountryC
 /**
  * Parse phone number and return PhoneNumber object
  */
-export function parsePhoneNumber(phoneNumber: string, countryCode: CountryCode): PhoneNumber | null {
+export function parsePhoneNumber(
+  phoneNumber: string,
+  countryCode: CountryCode
+): PhoneNumber | null {
   try {
     const isoCountryCode = countryCodeMap[countryCode];
     return phoneUtil.parse(phoneNumber, isoCountryCode);
@@ -153,6 +173,9 @@ export function parsePhoneNumber(phoneNumber: string, countryCode: CountryCode):
 /**
  * Get international format of phone number
  */
-export function getInternationalFormat(phoneNumber: string, countryCode: CountryCode): string {
-  return formatPhoneNumber(phoneNumber, countryCode, 'international');
+export function getInternationalFormat(
+  phoneNumber: string,
+  countryCode: CountryCode
+): string {
+  return formatPhoneNumber(phoneNumber, countryCode, "international");
 }

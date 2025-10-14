@@ -584,9 +584,6 @@ export const ProductDetailScreen: React.FC = () => {
         </button>
 
         <div className="flex items-center gap-2">
-          <button className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full transition-colors">
-            <Share className="w-6 h-6 text-gray-700 dark:text-gray-300" />
-          </button>
           <button
             onClick={() => navigate("/bag")}
             className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full transition-colors relative"

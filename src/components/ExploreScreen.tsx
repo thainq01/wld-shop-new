@@ -1,6 +1,7 @@
 import { HeroSection } from "./HeroSection";
 import { ProductList } from "./ProductList";
 import { BottomNavigation } from "./BottomNavigation";
+import { DraggableSupport } from "./DraggableSupport";
 import { useEffect } from "react";
 import { useExploreCache } from "../hooks/useExploreCache";
 import { useScrollCache } from "../hooks/useScrollCache";
@@ -58,6 +59,7 @@ export function ExploreScreen() {
         <ProductList />
       </div>
       <BottomNavigation />
+      <DraggableSupport />
       <CacheDebugPanel />
     </div>
   );

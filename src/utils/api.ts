@@ -175,13 +175,20 @@ export const collectionsApi = {
 
   getProducts: (
     slug: string,
-    params?: { lang?: string; country?: string; active?: boolean }
+    params?: {
+      lang?: string;
+      country?: string;
+      active?: boolean;
+      sort?: string;
+    }
   ) => {
     const searchParams = new URLSearchParams();
     if (params?.lang) searchParams.append("lang", params.lang);
     if (params?.country) searchParams.append("country", params.country);
     if (params?.active !== undefined)
       searchParams.append("active", params.active.toString());
+    // Always include sort parameter, default to 'asc' if not provided
+    searchParams.append("sort", params?.sort || "asc");
 
     const query = searchParams.toString();
     return apiFetch<Product[]>(
@@ -237,6 +244,7 @@ export const productsApi = {
     lang?: string;
     country?: string;
     active?: boolean;
+    sort?: string;
   }) => {
     const searchParams = new URLSearchParams();
     if (params?.collection)
@@ -247,6 +255,8 @@ export const productsApi = {
     if (params?.country) searchParams.append("country", params.country);
     if (params?.active !== undefined)
       searchParams.append("active", params.active.toString());
+    // Always include sort parameter, default to 'asc' if not provided
+    searchParams.append("sort", params?.sort || "asc");
 
     const query = searchParams.toString();
     return apiFetch<Product[]>(`/api/products${query ? `?${query}` : ""}`);

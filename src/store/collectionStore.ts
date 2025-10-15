@@ -117,7 +117,8 @@ export const useCollectionStore = create<CollectionState>()(
 
     fetchCollectionProducts: async (
       collectionSlug: string,
-      forceRefresh = false
+      forceRefresh = false,
+      sort?: string
     ) => {
       const { collectionProducts, loadingStates, lastFetched, cacheHits } =
         get();
@@ -157,6 +158,7 @@ export const useCollectionStore = create<CollectionState>()(
           lang: productLanguage,
           country: productLanguage, // Use same value for country as lang
           active: true,
+          sort,
         });
         set((state) => {
           const newTotalProducts = Object.values({
@@ -198,7 +200,7 @@ export const useCollectionStore = create<CollectionState>()(
       }
     },
 
-    fetchFeaturedProducts: async (forceRefresh = false) => {
+    fetchFeaturedProducts: async (forceRefresh = false, sort?: string) => {
       const {
         featuredProducts,
         featuredProductsLoading,
@@ -236,6 +238,7 @@ export const useCollectionStore = create<CollectionState>()(
           lang: currentLanguage,
           country: currentLanguage,
           active: true,
+          sort,
         });
         const featured = allProducts.filter((product) => product.featured);
 

@@ -113,7 +113,7 @@ export const useProductStore = create<ProductState>()(
       }
     },
 
-    fetchSliderProducts: async () => {
+    fetchSliderProducts: async (sort?: string) => {
       set({ isLoadingSlider: true, error: null });
 
       try {
@@ -125,6 +125,7 @@ export const useProductStore = create<ProductState>()(
           lang: currentLanguage,
           country: currentLanguage,
           active: true,
+          sort,
         });
         set({
           sliderProducts: products,

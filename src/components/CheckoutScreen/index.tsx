@@ -19,6 +19,12 @@ import { CitySelector } from "../checkout/CitySelector";
 import { getCitiesForCountry } from "../../data/cities";
 import { PhoneInput } from "../PhoneInput";
 
+// Email validation function
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
 interface ShippingAddress {
   email: string;
   firstName: string;
@@ -537,12 +543,13 @@ export const CheckoutScreen: React.FC = () => {
   const isFormValid = () => {
     // For giftcard-only orders, only email is required
     if (allItemsAreGiftcards) {
-      return shippingAddress.email && canProceedWithPayment;
+      return shippingAddress.email && isValidEmail(shippingAddress.email) && canProceedWithPayment;
     }
 
     // For regular orders, all delivery fields are required
     const formFieldsValid =
       shippingAddress.email &&
+      isValidEmail(shippingAddress.email) &&
       shippingAddress.firstName &&
       shippingAddress.lastName &&
       shippingAddress.address &&
@@ -586,13 +593,24 @@ export const CheckoutScreen: React.FC = () => {
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
             {t("contact")}
           </h2>
-          <input
-            type="email"
-            placeholder={t("email")}
-            value={shippingAddress.email}
-            onChange={(e) => handleInputChange("email", e.target.value)}
-            className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 mb-4 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
-          />
+          <div className="mb-4">
+            <input
+              type="email"
+              placeholder={t("email")}
+              value={shippingAddress.email}
+              onChange={(e) => handleInputChange("email", e.target.value)}
+              className={`w-full px-4 py-4 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:border-transparent ${
+                shippingAddress.email && !isValidEmail(shippingAddress.email)
+                  ? "border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400"
+                  : "border-gray-300 dark:border-gray-600 focus:ring-black dark:focus:ring-white"
+              }`}
+            />
+            {shippingAddress.email && !isValidEmail(shippingAddress.email) && (
+              <p className="text-red-500 dark:text-red-400 text-sm mt-1">
+                {t("invalidEmail") || "Please enter a valid email address"}
+              </p>
+            )}
+          </div>
         </div>
         {/* Delivery Section - Hidden for giftcard orders */}
         {!allItemsAreGiftcards && (

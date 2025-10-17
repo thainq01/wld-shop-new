@@ -166,6 +166,49 @@ export function UsersManager() {
         </button>
       </div>
 
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <div className="flex items-center">
+            <UserIcon className="h-8 w-8 text-blue-600" />
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Total Users
+              </p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {users.length}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <div className="flex items-center">
+            <UserIcon className="h-8 w-8 text-green-600" />
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                With Profile Pictures
+              </p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {users.filter((u) => u.profilePictureUrl).length}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <div className="flex items-center">
+            <Wallet className="h-8 w-8 text-purple-600" />
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Unique Wallets
+              </p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {new Set(users.map((u) => u.walletAddress)).size}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -307,49 +350,6 @@ export function UsersManager() {
               )}
             </tbody>
           </table>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-          <div className="flex items-center">
-            <UserIcon className="h-8 w-8 text-blue-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Total Users
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {users.length}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-          <div className="flex items-center">
-            <UserIcon className="h-8 w-8 text-green-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                With Profile Pictures
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {users.filter((u) => u.profilePictureUrl).length}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-          <div className="flex items-center">
-            <Wallet className="h-8 w-8 text-purple-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Unique Wallets
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {new Set(users.map((u) => u.walletAddress)).size}
-              </p>
-            </div>
-          </div>
         </div>
       </div>
 

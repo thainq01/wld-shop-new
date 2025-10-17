@@ -11,7 +11,10 @@ import { useCheckout } from "../../hooks/useCheckout";
 import { useAuthWorld } from "../../store/authStore";
 import { useLanguageStore } from "../../store/languageStore";
 import { useCountryStore, countries } from "../../store/countryStore";
-import { generateOrderId, generateGiftcardOrderId } from "../../utils/orderIdGenerator";
+import {
+  generateOrderId,
+  generateGiftcardOrderId,
+} from "../../utils/orderIdGenerator";
 import { productsApi } from "../../utils/api";
 import type { CreateCheckoutRequest, Product, ProductImage } from "../../types";
 import { WLDPaymentButton } from "../checkout/WLDPaymentButton";
@@ -543,7 +546,11 @@ export const CheckoutScreen: React.FC = () => {
   const isFormValid = () => {
     // For giftcard-only orders, only email is required
     if (allItemsAreGiftcards) {
-      return shippingAddress.email && isValidEmail(shippingAddress.email) && canProceedWithPayment;
+      return (
+        shippingAddress.email &&
+        isValidEmail(shippingAddress.email) &&
+        canProceedWithPayment
+      );
     }
 
     // For regular orders, all delivery fields are required

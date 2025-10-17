@@ -2,11 +2,11 @@ import { useLanguageStore } from "../store/languageStore";
 
 // Language to country code mapping for order IDs
 const LANGUAGE_TO_COUNTRY_CODE: Record<string, string> = {
-  'en': 'th', // English → Thailand (consistent with country store)
-  'th': 'th', // Thailand
-  'ms': 'my', // Malaysia (using 'my' for order IDs)
-  'ph': 'ph', // Philippines
-  'id': 'id', // Indonesia
+  en: "th", // English → Thailand (consistent with country store)
+  th: "th", // Thailand
+  ms: "my", // Malaysia (using 'my' for order IDs)
+  ph: "ph", // Philippines
+  id: "id", // Indonesia
 };
 
 /**
@@ -16,11 +16,11 @@ const LANGUAGE_TO_COUNTRY_CODE: Record<string, string> = {
  */
 export function generateOrderId(): string {
   const currentLanguage = useLanguageStore.getState().currentLanguage;
-  const countryCode = LANGUAGE_TO_COUNTRY_CODE[currentLanguage] || 'th';
-  
+  const countryCode = LANGUAGE_TO_COUNTRY_CODE[currentLanguage] || "th";
+
   // Generate a short UUID (first 8 characters) - includes both letters and numbers
-  const uuid = crypto.randomUUID().replace(/-/g, '').substring(0, 8);
-  
+  const uuid = crypto.randomUUID().replace(/-/g, "").substring(0, 8);
+
   return `${countryCode}${uuid}`;
 }
 
@@ -31,8 +31,8 @@ export function generateOrderId(): string {
  */
 export function generateGiftcardOrderId(): string {
   // Generate a short UUID (first 8 characters) - includes both letters and numbers
-  const uuid = crypto.randomUUID().replace(/-/g, '').substring(0, 8);
-  
+  const uuid = crypto.randomUUID().replace(/-/g, "").substring(0, 8);
+
   return `GC${uuid}`;
 }
 
@@ -43,11 +43,11 @@ export function generateGiftcardOrderId(): string {
  */
 export function generateOrderIdWithUUID(): string {
   const currentLanguage = useLanguageStore.getState().currentLanguage;
-  const countryCode = LANGUAGE_TO_COUNTRY_CODE[currentLanguage] || 'th';
-  
+  const countryCode = LANGUAGE_TO_COUNTRY_CODE[currentLanguage] || "th";
+
   // Generate a short UUID (first 8 characters) - includes both letters and numbers
-  const uuid = crypto.randomUUID().replace(/-/g, '').substring(0, 8);
-  
+  const uuid = crypto.randomUUID().replace(/-/g, "").substring(0, 8);
+
   return `${countryCode}${uuid}`;
 }
 
@@ -58,20 +58,21 @@ export function generateOrderIdWithUUID(): string {
  */
 export function generateOrderIdWithTimestamp(): string {
   const currentLanguage = useLanguageStore.getState().currentLanguage;
-  const countryCode = LANGUAGE_TO_COUNTRY_CODE[currentLanguage] || 'th';
-  
+  const countryCode = LANGUAGE_TO_COUNTRY_CODE[currentLanguage] || "th";
+
   // Get current timestamp (YYYYMMDDHHMMSS)
   const now = new Date();
-  const timestamp = now.getFullYear().toString() +
-    (now.getMonth() + 1).toString().padStart(2, '0') +
-    now.getDate().toString().padStart(2, '0') +
-    now.getHours().toString().padStart(2, '0') +
-    now.getMinutes().toString().padStart(2, '0') +
-    now.getSeconds().toString().padStart(2, '0');
-  
+  const timestamp =
+    now.getFullYear().toString() +
+    (now.getMonth() + 1).toString().padStart(2, "0") +
+    now.getDate().toString().padStart(2, "0") +
+    now.getHours().toString().padStart(2, "0") +
+    now.getMinutes().toString().padStart(2, "0") +
+    now.getSeconds().toString().padStart(2, "0");
+
   // Add 3 random digits for uniqueness
   const random = Math.floor(100 + Math.random() * 900);
-  
+
   return `${countryCode}${timestamp}${random}`;
 }
 
@@ -82,17 +83,17 @@ export function generateOrderIdWithTimestamp(): string {
  */
 export function generateOrderIdAlphanumeric(): string {
   const currentLanguage = useLanguageStore.getState().currentLanguage;
-  const countryCode = LANGUAGE_TO_COUNTRY_CODE[currentLanguage] || 'th';
-  
+  const countryCode = LANGUAGE_TO_COUNTRY_CODE[currentLanguage] || "th";
+
   // Generate 4 random uppercase letters
-  const letters = Array.from({ length: 4 }, () => 
+  const letters = Array.from({ length: 4 }, () =>
     String.fromCharCode(65 + Math.floor(Math.random() * 26))
-  ).join('');
-  
+  ).join("");
+
   // Generate 4 random numbers
-  const numbers = Array.from({ length: 4 }, () => 
+  const numbers = Array.from({ length: 4 }, () =>
     Math.floor(Math.random() * 10)
-  ).join('');
-  
+  ).join("");
+
   return `${countryCode}-${letters}-${numbers}`;
 }

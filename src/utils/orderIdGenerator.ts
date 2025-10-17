@@ -25,6 +25,18 @@ export function generateOrderId(): string {
 }
 
 /**
+ * Generates a unique order ID for giftcard orders
+ * Format: GC{random-8-chars}
+ * Example: "GCa1b2c3d4", "GCx9y8z7w6"
+ */
+export function generateGiftcardOrderId(): string {
+  // Generate a short UUID (first 8 characters) - includes both letters and numbers
+  const uuid = crypto.randomUUID().replace(/-/g, '').substring(0, 8);
+  
+  return `GC${uuid}`;
+}
+
+/**
  * Generates a unique order ID using UUID for more uniqueness
  * Format: {countryCode}{uuid-short}
  * Example: "th-a1b2c3", "my-d4e5f6", "ph-x9y8z7"

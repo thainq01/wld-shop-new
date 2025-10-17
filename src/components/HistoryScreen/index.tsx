@@ -7,7 +7,6 @@ import {
   Phone,
   Mail,
   DollarSign,
-  Hash,
   Truck,
   ExternalLink,
   Copy,
@@ -502,8 +501,8 @@ const HistoryScreen: React.FC = () => {
                                 </div>
                               )}
 
-                              {/* Email - Hidden for giftcard orders */}
-                              {!isGiftcardOrder && (
+                              {/* Email - Show for giftcard orders, hide for regular orders */}
+                              {isGiftcardOrder && (
                                 <div className="flex items-start space-x-2">
                                   <Mail className="w-4 h-4 text-gray-400 mt-0.5" />
                                   <span className="text-sm text-gray-600 dark:text-gray-400">
@@ -643,13 +642,7 @@ const HistoryScreen: React.FC = () => {
                         })()}
                       </div>
 
-                      {/* Order ID */}
-                      <div className="flex items-center space-x-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-                        <Hash className="w-4 h-4 text-gray-400" />
-                        <span className="text-xs text-gray-500 dark:text-gray-400 font-mono">
-                          ID: {order.id}
-                        </span>
-                      </div>
+                      {/* Order ID section removed */}
                     </div>
                   </div>
                 </div>

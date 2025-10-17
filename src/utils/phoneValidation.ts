@@ -13,6 +13,7 @@ const countryCodeMap: Record<CountryCode, string> = {
   ms: "MY", // Malaysia
   ph: "PH", // Philippines
   id: "ID", // Indonesia
+  vn: "VN", // Vietnam
   en: "TH", // English defaults to Thailand
 };
 
@@ -130,6 +131,7 @@ export function getExamplePhoneNumber(countryCode: CountryCode): string {
       ms: "03-1234 5678",
       ph: "(02) 1234 5678",
       id: "021 1234 5678",
+      vn: "024 1234 5678",
       en: "02 123 4567",
     };
 

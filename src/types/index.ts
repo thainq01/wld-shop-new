@@ -297,6 +297,7 @@ export interface User {
   walletAddress: string;
   username: string;
   profilePictureUrl: string | null;
+  userMetadata?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -305,11 +306,26 @@ export interface CreateUserRequest {
   walletAddress: string;
   username: string;
   profilePictureUrl?: string | null;
+  userMetadata?: string | null;
 }
 
 export interface UpdateUserRequest {
   username?: string;
   profilePictureUrl?: string | null;
+  userMetadata?: string | null;
+}
+
+// IPInfo.io API Response Types
+export interface IPInfoResponse {
+  ip: string;
+  city?: string;
+  region?: string;
+  country?: string;
+  loc?: string;
+  org?: string;
+  postal?: string;
+  timezone?: string;
+  readme?: string;
 }
 
 export interface UserApiResponse<T> {

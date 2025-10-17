@@ -11,7 +11,7 @@ import { useCheckout } from "../../hooks/useCheckout";
 import { useAuthWorld } from "../../store/authStore";
 import { useLanguageStore } from "../../store/languageStore";
 import { useCountryStore, countries } from "../../store/countryStore";
-import { generateOrderId } from "../../utils/orderIdGenerator";
+import { generateOrderId, generateGiftcardOrderId } from "../../utils/orderIdGenerator";
 import { productsApi } from "../../utils/api";
 import type { CreateCheckoutRequest, Product, ProductImage } from "../../types";
 import { WLDPaymentButton } from "../checkout/WLDPaymentButton";
@@ -302,9 +302,9 @@ export const CheckoutScreen: React.FC = () => {
 
   // Generate order ID when component mounts or language changes
   useEffect(() => {
-    // For giftcard orders, prefix with "GC"
+    // For giftcard orders, use GC prefix with unique ID
     const orderId = allItemsAreGiftcards
-      ? `GC${generateOrderId()}`
+      ? generateGiftcardOrderId()
       : generateOrderId();
     setGeneratedOrderId(orderId);
   }, [currentLanguage, allItemsAreGiftcards]);
@@ -315,8 +315,7 @@ export const CheckoutScreen: React.FC = () => {
     setShippingAddress((prev) => ({
       ...prev,
       country: newCountryName,
-      // Auto-fill defaults for giftcard orders
-      email: allItemsAreGiftcards ? "giftcard@wpaymall.com" : prev.email,
+      // Auto-fill defaults for giftcard orders (but not email)
       firstName:
         allItemsAreGiftcards && !prev.firstName ? "giftcard" : prev.firstName,
       lastName:
@@ -536,9 +535,9 @@ export const CheckoutScreen: React.FC = () => {
   };
 
   const isFormValid = () => {
-    // For giftcard-only orders, all fields are auto-filled, just check payment
+    // For giftcard-only orders, only email is required
     if (allItemsAreGiftcards) {
-      return canProceedWithPayment;
+      return shippingAddress.email && canProceedWithPayment;
     }
 
     // For regular orders, all delivery fields are required
@@ -582,21 +581,19 @@ export const CheckoutScreen: React.FC = () => {
           </h2>
         </div>
 
-        {/* Contact Section - Hidden for giftcard orders */}
-        {!allItemsAreGiftcards && (
-          <div className="pt-6">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-              {t("contact")}
-            </h2>
-            <input
-              type="email"
-              placeholder={t("email")}
-              value={shippingAddress.email}
-              onChange={(e) => handleInputChange("email", e.target.value)}
-              className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 mb-4 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
-            />
-          </div>
-        )}
+        {/* Contact Section - Always shown */}
+        <div className="pt-6">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            {t("contact")}
+          </h2>
+          <input
+            type="email"
+            placeholder={t("email")}
+            value={shippingAddress.email}
+            onChange={(e) => handleInputChange("email", e.target.value)}
+            className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 mb-4 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
+          />
+        </div>
         {/* Delivery Section - Hidden for giftcard orders */}
         {!allItemsAreGiftcards && (
           <div className="py-6">
@@ -713,12 +710,12 @@ export const CheckoutScreen: React.FC = () => {
         {/* Shipping Method - Modified for giftcards */}
         <div className="py-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-            {allItemsAreGiftcards ? "Delivery Method" : t("shippingMethod")}
+            {allItemsAreGiftcards ? t("deliveryMethod") : t("shippingMethod")}
           </h2>
           <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 flex justify-between items-center">
             <span className="text-gray-900 dark:text-gray-100">
               {allItemsAreGiftcards
-                ? "Digital Delivery"
+                ? t("digitalDelivery")
                 : t("worldwideFlatRate")}
             </span>
             <span className="font-medium text-gray-900 dark:text-gray-100">

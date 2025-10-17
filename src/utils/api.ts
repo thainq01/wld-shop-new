@@ -395,6 +395,16 @@ export const usersApi = {
       body: JSON.stringify(data),
     }),
 
+  // Update user metadata by wallet address
+  updateMetadata: (walletAddress: string, userMetadata: string) =>
+    userApiFetch<User>(
+      `/api/users/metadata/${encodeURIComponent(walletAddress)}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ userMetadata }),
+      }
+    ),
+
   delete: (id: number) => apiDelete(`/api/users/${id}`),
 
   createOrUpdate: async (userData: CreateUserRequest): Promise<User> => {

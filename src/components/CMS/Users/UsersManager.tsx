@@ -7,8 +7,10 @@ import {
   Trash2,
   User as UserIcon,
   Wallet,
+  RefreshCw,
 } from "lucide-react";
 import { usersApi } from "../../../utils/api";
+import { useUserMetadata } from "../../../hooks/useUserMetadata";
 import type { User } from "../../../types";
 import { UserModal } from "./UserModal";
 
@@ -18,6 +20,7 @@ export function UsersManager() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const { updateMetadata, isUpdating } = useUserMetadata();
 
   useEffect(() => {
     loadUsers();
@@ -71,6 +74,21 @@ export function UsersManager() {
     handleModalClose();
   };
 
+  const handleRefreshMetadata = async (user: User) => {
+    try {
+      const success = await updateMetadata(user.walletAddress);
+      if (success) {
+        toast.success(`Metadata updated for ${user.username}`);
+        loadUsers(); // Reload to show updated data
+      } else {
+        toast.error("Failed to update metadata");
+      }
+    } catch (error) {
+      console.error("Failed to refresh metadata:", error);
+      toast.error("Failed to update metadata");
+    }
+  };
+
   const filteredUsers = users.filter(
     (user) =>
       user?.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -89,6 +107,34 @@ export function UsersManager() {
 
   const truncateAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  const getUserLocation = (user: User) => {
+    try {
+      if (!user.userMetadata) return "Unknown";
+
+      const metadata = JSON.parse(user.userMetadata);
+      const parts = [];
+
+      if (metadata.city) parts.push(metadata.city);
+      if (metadata.region) parts.push(metadata.region);
+      if (metadata.country) parts.push(metadata.country);
+
+      return parts.length > 0 ? parts.join(", ") : "Unknown";
+    } catch (error) {
+      return "Unknown";
+    }
+  };
+
+  const getUserIP = (user: User) => {
+    try {
+      if (!user.userMetadata) return "N/A";
+
+      const metadata = JSON.parse(user.userMetadata);
+      return metadata.ip || "N/A";
+    } catch (error) {
+      return "N/A";
+    }
   };
 
   if (loading) {
@@ -145,6 +191,9 @@ export function UsersManager() {
                   Wallet Address
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Location
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Created
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -158,7 +207,7 @@ export function UsersManager() {
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center">
+                  <td colSpan={6} className="px-6 py-12 text-center">
                     <UserIcon className="mx-auto h-12 w-12 text-gray-400" />
                     <h3 className="mt-2 text-gray-900 dark:text-white text-base font-semibold">
                       No users found
@@ -209,6 +258,14 @@ export function UsersManager() {
                         </span>
                       </div>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        {getUserLocation(user)}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        IP: {getUserIP(user)}
+                      </div>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       {formatDate(user.createdAt)}
                     </td>
@@ -217,6 +274,18 @@ export function UsersManager() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleRefreshMetadata(user)}
+                          disabled={isUpdating}
+                          className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 disabled:opacity-50"
+                          title="Refresh user metadata"
+                        >
+                          <RefreshCw
+                            className={`w-4 h-4 ${
+                              isUpdating ? "animate-spin" : ""
+                            }`}
+                          />
+                        </button>
                         <button
                           onClick={() => handleEditUser(user)}
                           className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"

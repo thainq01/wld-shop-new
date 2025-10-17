@@ -157,10 +157,28 @@ export function CheckoutsManager() {
     setCheckoutProducts([]);
   };
 
+  // Check if checkout contains giftcard products
+  const isGiftcardOrder = (checkout: Checkout) => {
+    try {
+      if (!checkout.products || checkout.products.length === 0) return false;
+      
+      return checkout.products.every((item: any) => {
+        return item.product?.collection?.slug === "giftcard";
+      });
+    } catch (error) {
+      console.error("Error checking if giftcard order:", error);
+      return false;
+    }
+  };
+
   const handleStatusUpdate = (checkout: Checkout) => {
     setSelectedCheckoutForStatus(checkout);
     setNewStatus(checkout.status || "pending");
-    setCarrier(checkout.carrier || "");
+    
+    // Auto-fill carrier with "giftcard" for giftcard orders
+    const isGiftcard = isGiftcardOrder(checkout);
+    setCarrier(isGiftcard ? "giftcard" : (checkout.carrier || ""));
+    
     setTrackingCode(checkout.trackingCode || "");
     setShowStatusModal(true);
   };
@@ -650,13 +668,23 @@ export function CheckoutsManager() {
                     `#${selectedCheckoutForStatus.id}`}
                 </span>
               </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                 Customer:{" "}
                 <span className="font-medium">
                   {selectedCheckoutForStatus.firstName}{" "}
                   {selectedCheckoutForStatus.lastName}
                 </span>
               </p>
+              {isGiftcardOrder(selectedCheckoutForStatus) && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mt-2">
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                    📱 <strong>Digital Gift Card Order</strong>
+                  </p>
+                  <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">
+                    Carrier is automatically set to "giftcard" for digital products. You can update the tracking code with voucher information.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="mb-4">
@@ -679,13 +707,23 @@ export function CheckoutsManager() {
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Carrier (Optional)
+                {isGiftcardOrder(selectedCheckoutForStatus) && (
+                  <span className="text-xs text-blue-600 dark:text-blue-400 ml-2">
+                    (Auto-filled for digital products)
+                  </span>
+                )}
               </label>
               <input
                 type="text"
                 value={carrier}
                 onChange={(e) => setCarrier(e.target.value)}
                 placeholder="e.g., FedEx, UPS, DHL"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={isGiftcardOrder(selectedCheckoutForStatus)}
+                className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  isGiftcardOrder(selectedCheckoutForStatus)
+                    ? "bg-gray-100 dark:bg-gray-600 cursor-not-allowed"
+                    : "bg-white dark:bg-gray-700"
+                }`}
               />
             </div>
 

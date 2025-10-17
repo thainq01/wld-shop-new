@@ -105,7 +105,11 @@ const resources = {
       statusLabel: "Status",
       noProductsFound: "No products found",
       shippingInformation: "Shipping Information",
+      customerInformation: "Customer Information",
       viewOrderHistory: "View Order History",
+  voucherCode: "Voucher code",
+  copyCode: "Copy code",
+  copied: "Copied",
 
       // Checkout screen
       contact: "Contact",
@@ -127,6 +131,7 @@ const resources = {
       subtotal: "Subtotal",
       shipping: "Shipping",
       freeship: "Freeship",
+      digitalGiftCardOrder: "Digital Gift Card Order",
 
       // Payment button
       processingPayment: "Processing Payment...",
@@ -147,6 +152,10 @@ const resources = {
       paymentSuccessful:
         "Payment successful but failed to create order. Please contact support.",
       paymentFailed: "Payment failed:",
+
+      // Giftcard delivery
+      giftcardDeliveryTitle: "Digital Gift Card Order",
+      giftcardDeliveryMessage: "The voucher code will be sent directly to you in your Order History once your order has been successfully confirmed. You can view and use the code anytime",
 
       // Common
       back: "Back",
@@ -261,7 +270,11 @@ const resources = {
       statusLabel: "สถานะ",
       noProductsFound: "ไม่พบสินค้า",
       shippingInformation: "ข้อมูลการจัดส่ง",
-      viewOrderHistory: "ดูประวัติการสั่งซื้อ",
+      customerInformation: "ข้อมูลลูกค้า",
+  viewOrderHistory: "ดูประวัติการสั่งซื้อ",
+  voucherCode: "รหัสบัตรกำนัล",
+  copyCode: "คัดลอกรหัส",
+  copied: "คัดลอกแล้ว",
 
       // Checkout screen
       contact: "ติดต่อ",
@@ -283,6 +296,8 @@ const resources = {
       subtotal: "ยอดรวมย่อย",
       shipping: "การจัดส่ง",
       freeship: "ส่งฟรี",
+      digitalGiftCardOrder: "คำสั่งซื้อบัตรของขวัญดิจิทัล",
+      giftCardDeliveryNotice: "รหัสบัตรกำนัลจะถูกส่งให้คุณโดยตรงในประวัติการสั่งซื้อของคุณ เมื่อคำสั่งซื้อของคุณได้รับการยืนยันเรียบร้อยแล้ว คุณสามารถดูและใช้รหัสได้ตลอดเวลา",
 
       // Payment button
       processingPayment: "กำลังดำเนินการชำระเงิน...",
@@ -303,6 +318,10 @@ const resources = {
       paymentSuccessful:
         "ชำระเงินสำเร็จแต่ไม่สามารถสร้างคำสั่งซื้อได้ กรุณาติดต่อฝ่ายสนับสนุน",
       paymentFailed: "การชำระเงินล้มเหลว:",
+
+      // Giftcard delivery
+      giftcardDeliveryTitle: "คำสั่งซื้อกิฟต์การ์ดดิจิทัล",
+      giftcardDeliveryMessage: "รหัสบัตรกำนัลจะถูกส่งไปยังคุณโดยตรงในประวัติการสั่งซื้อของคุณเมื่อคำสั่งซื้อของคุณได้รับการยืนยันเรียบร้อยแล้ว คุณสามารถดูและใช้รหัสได้ทุกเวลา",
 
       // Common
       back: "กลับ",
@@ -418,7 +437,11 @@ const resources = {
       statusLabel: "Status",
       noProductsFound: "Tiada produk dijumpai",
       shippingInformation: "Maklumat Penghantaran",
-      viewOrderHistory: "Lihat Sejarah Pesanan",
+      customerInformation: "Maklumat Pelanggan",
+  viewOrderHistory: "Lihat Sejarah Pesanan",
+  voucherCode: "Kod baucar",
+  copyCode: "Salin kod",
+  copied: "Disalin",
 
       // Checkout screen
       contact: "Hubungi",
@@ -440,6 +463,8 @@ const resources = {
       subtotal: "Subjumlah",
       shipping: "Penghantaran",
       freeship: "Penghantaran percuma",
+      digitalGiftCardOrder: "Pesanan Kad Hadiah Digital",
+      giftCardDeliveryNotice: "Kod baucar akan dihantar terus kepada anda dalam Sejarah Pesanan anda setelah pesanan anda berjaya disahkan. Anda boleh melihat dan menggunakan kod tersebut pada bila-bila masa",
 
       // Payment button
       processingPayment: "Memproses Pembayaran...",
@@ -460,6 +485,10 @@ const resources = {
       paymentSuccessful:
         "Pembayaran berjaya tetapi gagal membuat pesanan. Sila hubungi sokongan.",
       paymentFailed: "Pembayaran gagal:",
+
+      // Giftcard delivery
+      giftcardDeliveryTitle: "Pesanan Kad Hadiah Digital",
+      giftcardDeliveryMessage: "Kod baucar akan dihantar terus kepada anda dalam Sejarah Pesanan anda setelah pesanan anda berjaya disahkan. Anda boleh melihat dan menggunakan kod tersebut pada bila-bila masa",
 
       // Common
       back: "Kembali",
@@ -576,7 +605,11 @@ const resources = {
       statusLabel: "Status",
       noProductsFound: "Walang nahanap na produkto",
       shippingInformation: "Impormasyon ng Shipping",
-      viewOrderHistory: "Tingnan ang Kasaysayan ng Order",
+      customerInformation: "Impormasyon ng Customer",
+  viewOrderHistory: "Tingnan ang Kasaysayan ng Order",
+  voucherCode: "Voucher code",
+  copyCode: "Kopyahin ang code",
+  copied: "Nakopya",
 
       // Checkout screen
       contact: "Kontak",
@@ -598,6 +631,8 @@ const resources = {
       subtotal: "Subtotal",
       shipping: "Paghahatid",
       freeship: "Libreng hatid",
+      digitalGiftCardOrder: "Digital Gift Card Order",
+      giftCardDeliveryNotice: "Ang voucher code ay direktang ipapadala sa iyo sa inyong Order History kapag na-confirm na ang inyong order. Maaari ninyong tingnan at gamitin ang code anumang oras",
 
       // Payment button
       processingPayment: "Ginagawa ang Bayad...",
@@ -618,6 +653,10 @@ const resources = {
       paymentSuccessful:
         "Matagumpay ang bayad pero hindi nagawa ang order. Makipag-ugnayan sa support.",
       paymentFailed: "Hindi natagumpay ang bayad:",
+
+      // Giftcard delivery
+      giftcardDeliveryTitle: "Digital Gift Card Order",
+      giftcardDeliveryMessage: "Ang voucher code ay ipapadala sa iyo nang direkta sa inyong Order History kapag na-confirm na ang inyong order. Makikita at magagamit ninyo ang code anumang oras",
 
       // Common
       back: "Balik",
@@ -733,7 +772,11 @@ const resources = {
       statusLabel: "Status",
       noProductsFound: "Tidak ada produk ditemukan",
       shippingInformation: "Informasi Pengiriman",
-      viewOrderHistory: "Lihat Riwayat Pesanan",
+      customerInformation: "Informasi Pelanggan",
+  viewOrderHistory: "Lihat Riwayat Pesanan",
+  voucherCode: "Kode voucher",
+  copyCode: "Salin kode",
+  copied: "Disalin",
 
       // Checkout screen
       contact: "Kontak",
@@ -755,6 +798,8 @@ const resources = {
       subtotal: "Subtotal",
       shipping: "Pengiriman",
       freeship: "Gratis ongkir",
+      digitalGiftCardOrder: "Pesanan Kartu Hadiah Digital",
+      giftCardDeliveryNotice: "Kode voucher akan dikirim langsung kepada Anda di Riwayat Pesanan Anda setelah pesanan Anda berhasil dikonfirmasi. Anda dapat melihat dan menggunakan kode tersebut kapan saja",
 
       // Payment button
       processingPayment: "Memproses Pembayaran...",
@@ -775,6 +820,10 @@ const resources = {
       paymentSuccessful:
         "Pembayaran berhasil tetapi gagal membuat pesanan. Silakan hubungi dukungan.",
       paymentFailed: "Pembayaran gagal:",
+
+      // Giftcard delivery
+      giftcardDeliveryTitle: "Pesanan Kartu Hadiah Digital",
+      giftcardDeliveryMessage: "Kode voucher akan dikirim langsung kepada Anda di Riwayat Pesanan setelah pesanan Anda berhasil dikonfirmasi. Anda dapat melihat dan menggunakan kode kapan saja",
 
       // Common
       back: "Kembali",
@@ -889,7 +938,11 @@ const resources = {
       statusLabel: "Trạng thái",
       noProductsFound: "Không tìm thấy sản phẩm",
       shippingInformation: "Thông tin giao hàng",
-      viewOrderHistory: "Xem lịch sử đơn hàng",
+      customerInformation: "Thông tin khách hàng",
+  viewOrderHistory: "Xem lịch sử đơn hàng",
+  voucherCode: "Mã voucher",
+  copyCode: "Sao chép mã",
+  copied: "Đã sao chép",
 
       // Checkout screen
       contact: "Liên hệ",
@@ -911,6 +964,8 @@ const resources = {
       subtotal: "Tạm tính",
       shipping: "Phí giao hàng",
       freeship: "Miễn phí giao hàng",
+      digitalGiftCardOrder: "Đơn hàng thẻ quà tặng số",
+      giftCardDeliveryNotice: "Mã voucher sẽ được gửi trực tiếp cho bạn trong Lịch sử đơn hàng của bạn sau khi đơn hàng của bạn được xác nhận thành công. Bạn có thể xem và sử dụng mã bất cứ lúc nào",
 
       // Payment button
       processingPayment: "Đang xử lý thanh toán...",
@@ -931,6 +986,10 @@ const resources = {
       paymentSuccessful:
         "Thanh toán thành công nhưng không thể tạo đơn hàng. Vui lòng liên hệ hỗ trợ.",
       paymentFailed: "Thanh toán thất bại:",
+
+      // Giftcard delivery
+      giftcardDeliveryTitle: "Đơn hàng thẻ quà tặng kỹ thuật số",
+      giftcardDeliveryMessage: "Mã voucher sẽ được gửi trực tiếp cho bạn trong Lịch sử đơn hàng của bạn sau khi đơn hàng của bạn được xác nhận thành công. Bạn có thể xem và sử dụng mã bất cứ lúc nào",
 
       // Common
       back: "Quay lại",

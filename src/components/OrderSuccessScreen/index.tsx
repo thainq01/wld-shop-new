@@ -124,6 +124,22 @@ const OrderSuccessScreen: React.FC = () => {
     }
   };
 
+  // Check if all items in the order are giftcards
+  const isGiftcardOnlyOrder = () => {
+    try {
+      if (!order.products || order.products.length === 0) return false;
+      
+      return order.products.every((item: any) => {
+        return item.product?.collection?.slug === "giftcard";
+      });
+    } catch (error) {
+      console.error("Error checking if giftcard-only order:", error);
+      return false;
+    }
+  };
+
+  const allItemsAreGiftcards = isGiftcardOnlyOrder();
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6 pt-10">
@@ -245,7 +261,7 @@ const OrderSuccessScreen: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Shipping Information */}
+        {/* Shipping Information - Modified for giftcard orders */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -254,11 +270,11 @@ const OrderSuccessScreen: React.FC = () => {
         >
           <div className="p-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              {t("shippingInformation")}
+              {allItemsAreGiftcards ? t("customerInformation") : t("shippingInformation")}
             </h2>
 
             <div className="space-y-4">
-              {/* Customer Name */}
+              {/* Customer Name - Always shown */}
               <div className="flex items-start space-x-3">
                 <Package className="w-5 h-5 text-gray-400 mt-0.5" />
                 <div>
@@ -268,17 +284,19 @@ const OrderSuccessScreen: React.FC = () => {
                 </div>
               </div>
 
-              {/* Address */}
-              <div className="flex items-start space-x-3">
-                <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
-                <div>
-                  <p className="text-sm text-gray-900 dark:text-white">
-                    {formatAddress()}
-                  </p>
+              {/* Address - Hidden for giftcard orders */}
+              {!allItemsAreGiftcards && (
+                <div className="flex items-start space-x-3">
+                  <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-gray-900 dark:text-white">
+                      {formatAddress()}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Contact Info */}
+              {/* Contact Info - Email always shown */}
               <div className="flex items-start space-x-3">
                 <Mail className="w-5 h-5 text-gray-400 mt-0.5" />
                 <div>
@@ -288,14 +306,29 @@ const OrderSuccessScreen: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-start space-x-3">
-                <Phone className="w-5 h-5 text-gray-400 mt-0.5" />
-                <div>
-                  <p className="text-sm text-gray-900 dark:text-white">
-                    {order.phone || "N/A"}
+              {/* Phone - Hidden for giftcard orders */}
+              {!allItemsAreGiftcards && (
+                <div className="flex items-start space-x-3">
+                  <Phone className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-gray-900 dark:text-white">
+                      {order.phone || "N/A"}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Giftcard delivery notice */}
+              {allItemsAreGiftcards && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">
+                    {t("giftcardDeliveryTitle")}
+                  </h3>
+                  <p className="text-sm text-blue-600 dark:text-blue-300">
+                    {t("giftcardDeliveryMessage")}
                   </p>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </motion.div>

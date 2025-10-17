@@ -128,7 +128,7 @@ const OrderSuccessScreen: React.FC = () => {
   const isGiftcardOnlyOrder = () => {
     try {
       if (!order.products || order.products.length === 0) return false;
-      
+
       return order.products.every((item: any) => {
         return item.product?.collection?.slug === "giftcard";
       });
@@ -270,7 +270,9 @@ const OrderSuccessScreen: React.FC = () => {
         >
           <div className="p-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              {allItemsAreGiftcards ? t("customerInformation") : t("shippingInformation")}
+              {allItemsAreGiftcards
+                ? t("customerInformation")
+                : t("shippingInformation")}
             </h2>
 
             <div className="space-y-4">

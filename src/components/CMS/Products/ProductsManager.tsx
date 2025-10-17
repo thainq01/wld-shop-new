@@ -21,7 +21,8 @@ export function ProductsManager() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<MultiLanguageProduct | null>(null);
+  const [editingProduct, setEditingProduct] =
+    useState<MultiLanguageProduct | null>(null);
 
   const loadProducts = useCallback(async () => {
     setLoading(true);
@@ -53,7 +54,10 @@ export function ProductsManager() {
     }
   };
 
-  const handleUpdate = async (id: number, data: UpdateMultiLanguageProductRequest) => {
+  const handleUpdate = async (
+    id: number,
+    data: UpdateMultiLanguageProductRequest
+  ) => {
     try {
       await productsApi.updateMultiLanguage(id, data);
       setModalOpen(false);
@@ -83,20 +87,22 @@ export function ProductsManager() {
 
   // Helper function to get product name (defaults to English)
   const getProductName = (product: MultiLanguageProduct) => {
-    return product?.translations.en?.name ||
-           product?.translations[product?.defaultLanguage]?.name ||
-           Object.values(product?.translations || {})[0]?.name ||
-           "Untitled";
+    return (
+      product?.translations.en?.name ||
+      product?.translations[product?.defaultLanguage]?.name ||
+      Object.values(product?.translations || {})[0]?.name ||
+      "Untitled"
+    );
   };
 
-  const filteredProducts = products.filter(
-    (product) => {
-      const name = getProductName(product);
-      const collectionName = product.collection?.name || "";
-      return name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-             collectionName.toLowerCase().includes(searchTerm.toLowerCase());
-    }
-  );
+  const filteredProducts = products.filter((product) => {
+    const name = getProductName(product);
+    const collectionName = product.collection?.name || "";
+    return (
+      name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      collectionName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   if (loading) {
     return (
@@ -166,7 +172,7 @@ export function ProductsManager() {
 
       {/* Products List - Desktop Table View */}
       <div className="hidden lg:block bg-white dark:bg-gray-800 shadow rounded-lg border border-gray-200 dark:border-gray-700">
-        <div className="overflow-hidden">
+        <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-900/50">
               <tr>
@@ -226,8 +232,8 @@ export function ProductsManager() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900 dark:text-white">
-                      {product.collection?.name}
+                    <div className="text-sm text-gray-900 dark:text-white truncate max-w-[120px]">
+                      {product.collection?.slug || "N/A"}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -236,14 +242,14 @@ export function ProductsManager() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 px-2 py-1 rounded">
+                    <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 px-2 py-1 rounded truncate block max-w-[100px]">
                       {product.availableLanguages.join(", ").toUpperCase()}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 flex-wrap min-w-[200px]">
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                           product.active
                             ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
                             : "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-300"
@@ -252,7 +258,7 @@ export function ProductsManager() {
                         {product.active ? "Active" : "Inactive"}
                       </span>
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                           product.inStock !== "Out of Stock"
                             ? "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"
                             : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300"
@@ -454,7 +460,10 @@ export function ProductsManager() {
         onSubmit={
           editingProduct
             ? (data) =>
-                handleUpdate(editingProduct.id, data as UpdateMultiLanguageProductRequest)
+                handleUpdate(
+                  editingProduct.id,
+                  data as UpdateMultiLanguageProductRequest
+                )
             : (data) => handleCreate(data as CreateMultiLanguageProductRequest)
         }
       />

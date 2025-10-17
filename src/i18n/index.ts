@@ -26,6 +26,7 @@ const resources = {
       malay: "Bahasa Melayu",
       filipino: "Filipino",
       indonesian: "Bahasa Indonesia",
+      vietnamese: "Tiếng Việt",
 
       // Product detail
       selectSize: "Select Color",
@@ -181,6 +182,7 @@ const resources = {
       malay: "Bahasa Melayu",
       filipino: "Filipino",
       indonesian: "Bahasa Indonesia",
+      vietnamese: "Tiếng Việt",
 
       // Product detail
       selectSize: "เลือกสี",
@@ -336,6 +338,7 @@ const resources = {
       malay: "Bahasa Melayu",
       filipino: "Filipino",
       indonesian: "Bahasa Indonesia",
+      vietnamese: "Tiếng Việt",
 
       // Product detail
       selectSize: "Pilih Warna",
@@ -492,6 +495,7 @@ const resources = {
       malay: "Bahasa Melayu",
       filipino: "Filipino",
       indonesian: "Bahasa Indonesia",
+      vietnamese: "Tiếng Việt",
 
       // Product detail
       selectSize: "Piliin ang Kulay",
@@ -649,6 +653,7 @@ const resources = {
       malay: "Bahasa Melayu",
       filipino: "Filipino",
       indonesian: "Bahasa Indonesia",
+      vietnamese: "Tiếng Việt",
 
       // Product detail
       selectSize: "Pilih Warna",
@@ -781,6 +786,162 @@ const resources = {
       tryAgain: "Coba Lagi",
       signIn: "Masuk",
       paid: "Dibayar",
+    },
+  },
+  vi: {
+    translation: {
+      // Navigation
+      explore: "Khám phá",
+      bag: "Giỏ hàng",
+      history: "Lịch sử",
+      settings: "Cài đặt",
+
+      // Settings screen
+      settingsTitle: "Cài đặt",
+      appearance: "Giao diện",
+      language: "Ngôn ngữ",
+      darkMode: "Chế độ tối",
+      lightMode: "Chế độ sáng",
+      systemMode: "Theo hệ thống",
+
+      // Languages
+      english: "English",
+      thai: "ไทย",
+      malay: "Bahasa Melayu",
+      filipino: "Filipino",
+      indonesian: "Bahasa Indonesia",
+      vietnamese: "Tiếng Việt",
+
+      // Product detail
+      selectSize: "Chọn màu",
+      addToBag: "Thêm vào giỏ",
+      adding: "Đang thêm...",
+      outOfStock: "Hết hàng",
+      about: "Giới thiệu",
+      material: "Chất liệu",
+      otherDetails: "Chi tiết khác",
+      madeBy: "Được sản xuất bởi",
+      inStock: "Còn hàng",
+      collection: "Bộ sưu tập",
+      onlyLeft: "Chỉ còn {{count}} sản phẩm",
+
+      // Cart
+      yourBag: "Giỏ hàng của bạn",
+      item: "sản phẩm",
+      items: "sản phẩm",
+      size: "Màu",
+      total: "Tổng cộng",
+      checkout: "Thanh toán",
+      emptyBag: "Giỏ hàng trống",
+      continueShopping: "Tiếp tục mua sắm",
+
+      // History
+      orderHistory: "Lịch sử đơn hàng",
+      noOrdersYet: "Chưa có đơn hàng",
+      noOrdersMessage:
+        "Bạn chưa đặt đơn hàng nào. Bắt đầu mua sắm để xem lịch sử đơn hàng tại đây.",
+      startShopping: "Bắt đầu mua sắm",
+      orderId: "Đơn hàng #",
+      totalAmount: "Tổng tiền",
+      loadingOrderHistory: "Đang tải lịch sử đơn hàng...",
+
+      // Explore screen
+      featuredProducts: "Sản phẩm nổi bật",
+      featured: "NỔI BẬT",
+      viewProduct: "Xem sản phẩm",
+      noFeaturedProducts: "Không có sản phẩm nổi bật",
+      checkBackLater: "Quay lại sau để xem các sản phẩm nổi bật",
+      seeAll: "Xem tất cả",
+      noProductsAvailable: "Không có sản phẩm trong bộ sưu tập này",
+
+      // Product detail screen
+      additionalDetailsNotAvailable: "Không có thông tin chi tiết bổ sung",
+      connectWalletToAddItems:
+        "Vui lòng kết nối ví để thêm sản phẩm vào giỏ hàng",
+      productNotFound: "Không tìm thấy sản phẩm",
+
+      // Bag screen
+      loginRequired: "Yêu cầu đăng nhập",
+      signInWithWorldId: "Vui lòng đăng nhập bằng World ID để xem giỏ hàng",
+      signInWithWorldIdHistory:
+        "Vui lòng đăng nhập bằng World ID để xem lịch sử đơn hàng",
+      noItemsYet: "Chưa có sản phẩm nào",
+      itemsDisplayedHere: "Sản phẩm của bạn sẽ hiển thị ở đây",
+      orderHistoryDisplayedHere: "Lịch sử đơn hàng sẽ hiển thị ở đây",
+      loadingCart: "Đang tải giỏ hàng...",
+      retrying: "Đang thử lại...",
+
+      // Order details
+      productsOrdered: "Sản phẩm đã đặt",
+      productNameNotAvailable: "Tên sản phẩm không có sẵn",
+      quantity: "Số lượng",
+
+      // Order success screen
+      noOrderDataFound: "Không tìm thấy dữ liệu đơn hàng",
+      unableToDisplayOrder: "Không thể hiển thị thông tin đơn hàng.",
+      backToShop: "Quay lại cửa hàng",
+      orderConfirmed: "Đơn hàng đã được xác nhận!",
+      thankYouPurchase:
+        "Cảm ơn bạn đã mua hàng. Đơn hàng của bạn đã được đặt thành công.",
+      orderDetails: "Chi tiết đơn hàng",
+      orderIdLabel: "Mã đơn hàng",
+      totalAmountLabel: "Tổng tiền",
+      statusLabel: "Trạng thái",
+      noProductsFound: "Không tìm thấy sản phẩm",
+      shippingInformation: "Thông tin giao hàng",
+      viewOrderHistory: "Xem lịch sử đơn hàng",
+
+      // Checkout screen
+      contact: "Liên hệ",
+      delivery: "Giao hàng",
+      country: "Quốc gia",
+      firstName: "Tên",
+      lastName: "Họ",
+      address: "Địa chỉ",
+      apartment: "Căn hộ, suite, v.v. (tùy chọn)",
+      city: "Thành phố",
+      postalCode: "Mã bưu điện (tùy chọn)",
+      phone: "Số điện thoại",
+      email: "Email",
+      selectCity: "Chọn thành phố",
+      shippingMethod: "Phương thức giao hàng",
+      worldwideFlatRate: "Phí giao hàng",
+      orderSummary: "Tóm tắt đơn hàng",
+      pricesUpdatedFor: "✓ Giá đã được cập nhật cho {{country}}",
+      subtotal: "Tạm tính",
+      shipping: "Phí giao hàng",
+      freeship: "Miễn phí giao hàng",
+
+      // Payment button
+      processingPayment: "Đang xử lý thanh toán...",
+      paymentSuccessfulButton: "Thanh toán thành công!",
+      paymentFailedRetry: "Thanh toán thất bại - Thử lại",
+      insufficientBalance: "Số dư không đủ (Cần thêm {{amount}} WLD)",
+      processing: "Đang xử lý...",
+      payWLD: "Thanh toán {{amount}} WLD",
+      insufficientWLDBalance:
+        "Số dư WLD không đủ. Bạn cần thêm {{amount}} WLD để hoàn tất thanh toán.",
+      paymentCompletedSuccessfully: "✅ Thanh toán thành công!",
+
+      // Toast messages
+      pleaseSelectSize: "Vui lòng chọn màu",
+      sizeOutOfStock: "Màu này hiện đã hết hàng",
+      addedToBag: "đã thêm vào giỏ!",
+      failedToAddToCart: "Không thể thêm vào giỏ hàng",
+      paymentSuccessful:
+        "Thanh toán thành công nhưng không thể tạo đơn hàng. Vui lòng liên hệ hỗ trợ.",
+      paymentFailed: "Thanh toán thất bại:",
+
+      // Common
+      back: "Quay lại",
+      cancel: "Hủy",
+      confirm: "Xác nhận",
+      save: "Lưu",
+      loading: "Đang tải...",
+      error: "Lỗi",
+      tryAgain: "Thử lại",
+      signIn: "Đăng nhập",
+      paid: "Đã thanh toán",
     },
   },
 };

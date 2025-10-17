@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import i18n from "../i18n";
 
-export type Language = "en" | "th" | "ms" | "ph" | "id";
+export type Language = "en" | "th" | "ms" | "ph" | "id" | "vi";
 
 export interface LanguageOption {
   code: Language;
@@ -22,6 +22,7 @@ export const languages: LanguageOption[] = [
     nativeName: "Bahasa Indonesia",
     flag: "🇮🇩",
   },
+  { code: "vi", name: "Vietnamese", nativeName: "Tiếng Việt", flag: "🇻🇳" },
 ];
 
 // CMS languages (excludes English since there are no English products)
@@ -35,6 +36,7 @@ export const cmsLanguages: LanguageOption[] = [
     nativeName: "Bahasa Indonesia",
     flag: "🇮🇩",
   },
+  { code: "vi", name: "Vietnamese", nativeName: "Tiếng Việt", flag: "🇻🇳" },
 ];
 
 interface LanguageState {
@@ -47,7 +49,7 @@ interface LanguageState {
 export const useLanguageStore = create<LanguageState>()(
   persist(
     (set) => ({
-      currentLanguage: "en",
+      currentLanguage: "en" as Language,
       setLanguage: (language: Language) => {
         set({ currentLanguage: language });
         i18n.changeLanguage(language);
@@ -55,9 +57,9 @@ export const useLanguageStore = create<LanguageState>()(
       getLanguageOption: (code: Language) => {
         return languages.find((lang) => lang.code === code);
       },
-      getProductLanguage: () => {
+      getProductLanguage: (): Language => {
         const { currentLanguage } = useLanguageStore.getState();
-        return currentLanguage
+        return currentLanguage;
       },
     }),
     {

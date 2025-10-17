@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 import { useLanguageStore } from "./languageStore";
 import type { Language } from "./languageStore";
 
-export type CountryCode = "en" | "th" | "ms" | "ph" | "id";
+export type CountryCode = "en" | "th" | "ms" | "ph" | "id" | "vn";
 
 export interface CountryOption {
   code: CountryCode;
@@ -16,6 +16,7 @@ export const countries: CountryOption[] = [
   { code: "ms", name: "Malaysia", flag: "🇲🇾" },
   { code: "ph", name: "Philippines", flag: "🇵🇭" },
   { code: "id", name: "Indonesia", flag: "🇮🇩" },
+  { code: "vn", name: "Vietnam", flag: "🇻🇳" },
 ];
 
 // Language to country mapping based on user requirements
@@ -25,6 +26,7 @@ const languageToCountryMap: Record<Language, CountryCode> = {
   ms: "ms", // Malaysia
   ph: "ph", // Philippines (note: language code is "ph" not "tl")
   id: "id", // Indonesia
+  vi: "vn", // Vietnamese → Vietnam
 };
 
 // Country to language mapping for API calls
@@ -33,6 +35,7 @@ const countryToLanguageMap: Record<CountryCode, Language> = {
   ms: "ms", // Malaysia → Malay
   ph: "ph", // Philippines → Filipino
   id: "id", // Indonesia → Indonesian
+  vn: "vi", // Vietnam → Vietnamese
   en: "en", // English (fallback)
 };
 
@@ -49,7 +52,7 @@ interface CountryState {
 
 export const useCountryStore = create<CountryState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       selectedCountry: "th", // Default to Thailand
       isManuallySelected: false,
 

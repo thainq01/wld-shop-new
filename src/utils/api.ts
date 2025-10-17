@@ -74,14 +74,10 @@ async function apiFetch<T>(
       ...options,
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
     const result: ApiResponse<T> | ApiError | ApiValidationError =
       await response.json();
 
-    if (!result.success) {
+    if (!response.ok || !result.success) {
       // Handle validation errors (like the checkout API response)
       if ("validation" in result && result.validation) {
         const errorMessage = result.message || "Validation failed";
@@ -93,10 +89,12 @@ async function apiFetch<T>(
         );
       }
 
-      // Handle regular API errors
+      // Handle regular API errors - extract message from response
       const error = result as ApiError;
       const errorMessage =
-        error.message || error.error?.message || "API request failed";
+        error.message ||
+        error.error?.message ||
+        `HTTP error! status: ${response.status}`;
       console.log("🔍 Extracted error message from API:", errorMessage);
       throw new Error(errorMessage);
     }

@@ -248,23 +248,20 @@ export const CheckoutScreen: React.FC = () => {
   // Check if all items are giftcards
   const allItemsAreGiftcards = React.useMemo(() => {
     if (!items || items.length === 0) return false;
-    
+
     // Check if we have country-specific product data for all items
-    const hasAllProductData = items.every(item => 
-      countrySpecificProducts[item.productId]?.collection
+    const hasAllProductData = items.every(
+      (item) => countrySpecificProducts[item.productId]?.collection
     );
-    
+
     if (!hasAllProductData) return false;
-    
+
     // Check if all items have collection slug "giftcard"
-    return items.every(item => {
+    return items.every((item) => {
       const product = countrySpecificProducts[item.productId];
       return product?.collection?.slug === "giftcard";
     });
   }, [items, countrySpecificProducts]);
-
-  // Determine if only giftcard items exist (no physical products)
-  const hasOnlyGiftcards = allItemsAreGiftcards;
 
   // Country selection is now fully interactive in checkout
   const isCountryAutoSelected = false;
@@ -291,20 +288,27 @@ export const CheckoutScreen: React.FC = () => {
 
   // Generate order ID when component mounts or language changes
   useEffect(() => {
-    const orderId = generateOrderId();
+    // For giftcard orders, prefix with "GC"
+    const orderId = allItemsAreGiftcards
+      ? `GC${generateOrderId()}`
+      : generateOrderId();
     setGeneratedOrderId(orderId);
-  }, [currentLanguage]);
+  }, [currentLanguage, allItemsAreGiftcards]);
 
-  // Update country when selected country changes
+  // Update country when selected country changes and auto-fill giftcard defaults
   useEffect(() => {
     const newCountryName = selectedCountryName;
     setShippingAddress((prev) => ({
       ...prev,
       country: newCountryName,
+      // Auto-fill defaults for giftcard orders
+      email: allItemsAreGiftcards ? "giftcard@wpaymall.com" : prev.email,
+      firstName:
+        allItemsAreGiftcards && !prev.firstName ? "giftcard" : prev.firstName,
+      lastName:
+        allItemsAreGiftcards && !prev.lastName ? "giftcard" : prev.lastName,
     }));
-  }, [selectedCountryName]);
-
-
+  }, [selectedCountryName, allItemsAreGiftcards]);
 
   // Function to fetch country-specific pricing for all cart items
   const fetchCountrySpecificPricing = useCallback(
@@ -406,7 +410,7 @@ export const CheckoutScreen: React.FC = () => {
     if (allItemsAreGiftcards) {
       return;
     }
-    
+
     const expectedCountry = getCountryFromLanguage(currentLanguage);
 
     // If the country doesn't match the expected country for the current language
@@ -518,16 +522,11 @@ export const CheckoutScreen: React.FC = () => {
   };
 
   const isFormValid = () => {
-    // For giftcard-only orders, only email, firstName, and lastName are required
+    // For giftcard-only orders, all fields are auto-filled, just check payment
     if (allItemsAreGiftcards) {
-      return (
-        shippingAddress.email &&
-        shippingAddress.firstName &&
-        shippingAddress.lastName &&
-        canProceedWithPayment
-      );
+      return canProceedWithPayment;
     }
-    
+
     // For regular orders, all delivery fields are required
     const formFieldsValid =
       shippingAddress.email &&
@@ -569,116 +568,124 @@ export const CheckoutScreen: React.FC = () => {
           </h2>
         </div>
 
-        {/* Contact Section */}
-        <div className="pt-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-            {t("contact")}
-          </h2>
-          <input
-            type="email"
-            placeholder={t("email")}
-            value={shippingAddress.email}
-            onChange={(e) => handleInputChange("email", e.target.value)}
-            className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 mb-4 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
-          />
-        </div>
-        {/* Delivery Section - Modified for giftcard orders */}
-        <div className="py-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-            {t("delivery")}
-          </h2>
-
-          {/* Country - Always shown */}
-          <div className="mb-4">
-            <CountrySelector
-              countries={availableCountries}
-              selectedCountry={shippingAddress.country}
-              onCountryChange={handleCountryChange}
-              disabled={isCountryAutoSelected}
-              reason={countryDisabledReason}
+        {/* Contact Section - Hidden for giftcard orders */}
+        {!allItemsAreGiftcards && (
+          <div className="pt-6">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+              {t("contact")}
+            </h2>
+            <input
+              type="email"
+              placeholder={t("email")}
+              value={shippingAddress.email}
+              onChange={(e) => handleInputChange("email", e.target.value)}
+              className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 mb-4 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
             />
           </div>
+        )}
+        {/* Delivery Section - Hidden for giftcard orders */}
+        {!allItemsAreGiftcards && (
+          <div className="py-6">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+              {t("delivery")}
+            </h2>
 
-          {/* Name Fields - Always shown */}
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <input
-              type="text"
-              placeholder={t("firstName")}
-              value={shippingAddress.firstName}
-              onChange={(e) => handleInputChange("firstName", e.target.value)}
-              className="px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
-            />
-            <input
-              type="text"
-              placeholder={t("lastName")}
-              value={shippingAddress.lastName}
-              onChange={(e) => handleInputChange("lastName", e.target.value)}
-              className="px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
-            />
-          </div>
+            {/* Country - Always shown */}
+            <div className="mb-4">
+              <CountrySelector
+                countries={availableCountries}
+                selectedCountry={shippingAddress.country}
+                onCountryChange={handleCountryChange}
+                disabled={isCountryAutoSelected}
+                reason={countryDisabledReason}
+              />
+            </div>
 
-          {/* Physical delivery fields - Hidden for giftcards */}
-          {!allItemsAreGiftcards && (
-            <>
-              {/* Address */}
+            {/* Name Fields - Always shown */}
+            <div className="grid grid-cols-2 gap-4 mb-4">
               <input
                 type="text"
-                placeholder={t("address")}
-                value={shippingAddress.address}
-                onChange={(e) => handleInputChange("address", e.target.value)}
-                className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 mb-4 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
+                placeholder={t("firstName")}
+                value={shippingAddress.firstName}
+                onChange={(e) => handleInputChange("firstName", e.target.value)}
+                className="px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
               />
-
-              {/* Apartment */}
               <input
                 type="text"
-                placeholder={t("apartment")}
-                value={shippingAddress.apartment}
-                onChange={(e) => handleInputChange("apartment", e.target.value)}
-                className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 mb-4 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
+                placeholder={t("lastName")}
+                value={shippingAddress.lastName}
+                onChange={(e) => handleInputChange("lastName", e.target.value)}
+                className="px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
               />
+            </div>
 
-              {/* City and Postal Code */}
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <CitySelector
-                  cities={availableCities}
-                  selectedCity={shippingAddress.city}
-                  onCityChange={handleCityChange}
-                  disabled={availableCities.length === 0}
-                  reason={
-                    availableCities.length === 0
-                      ? "No cities available for selected country"
-                      : undefined
-                  }
-                />
+            {/* Physical delivery fields - Hidden for giftcards */}
+            {!allItemsAreGiftcards && (
+              <>
+                {/* Address */}
                 <input
                   type="text"
-                  placeholder={t("postalCode")}
-                  value={shippingAddress.postalCode}
-                  onChange={(e) => handleInputChange("postalCode", e.target.value)}
-                  className="px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
+                  placeholder={t("address")}
+                  value={shippingAddress.address}
+                  onChange={(e) => handleInputChange("address", e.target.value)}
+                  className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 mb-4 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
                 />
-              </div>
 
-              {/* Phone */}
-              <div className="mb-4">
-                <PhoneInput
-                  value={shippingAddress.phone}
-                  onChange={handlePhoneChange}
-                  countryCode={selectedCountry}
-                  placeholder={t("phone")}
-                  required={true}
-                  showValidation={true}
+                {/* Apartment */}
+                <input
+                  type="text"
+                  placeholder={t("apartment")}
+                  value={shippingAddress.apartment}
+                  onChange={(e) =>
+                    handleInputChange("apartment", e.target.value)
+                  }
+                  className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 mb-4 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
                 />
-              </div>
-            </>
-          )}
-        </div>
+
+                {/* City and Postal Code */}
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <CitySelector
+                    cities={availableCities}
+                    selectedCity={shippingAddress.city}
+                    onCityChange={handleCityChange}
+                    disabled={availableCities.length === 0}
+                    reason={
+                      availableCities.length === 0
+                        ? "No cities available for selected country"
+                        : undefined
+                    }
+                  />
+                  <input
+                    type="text"
+                    placeholder={t("postalCode")}
+                    value={shippingAddress.postalCode}
+                    onChange={(e) =>
+                      handleInputChange("postalCode", e.target.value)
+                    }
+                    className="px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
+                  />
+                </div>
+
+                {/* Phone */}
+                <div className="mb-4">
+                  <PhoneInput
+                    value={shippingAddress.phone}
+                    onChange={handlePhoneChange}
+                    countryCode={selectedCountry}
+                    placeholder={t("phone")}
+                    required={true}
+                    showValidation={true}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         {/* Display giftcard delivery notice */}
         {allItemsAreGiftcards && (
-          <div className="py-6">
-                        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <div className="py-2">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
               <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">
                 {t("giftcardDeliveryTitle")}
               </h3>
@@ -696,7 +703,9 @@ export const CheckoutScreen: React.FC = () => {
           </h2>
           <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 flex justify-between items-center">
             <span className="text-gray-900 dark:text-gray-100">
-              {allItemsAreGiftcards ? "Digital Delivery" : t("worldwideFlatRate")}
+              {allItemsAreGiftcards
+                ? "Digital Delivery"
+                : t("worldwideFlatRate")}
             </span>
             <span className="font-medium text-gray-900 dark:text-gray-100">
               {t("freeship")}
@@ -847,14 +856,6 @@ export const CheckoutScreen: React.FC = () => {
 
           {/* Totals */}
           <div className="space-y-2 my-7">
-            {countrySpecificTotal !== null && (
-              <div className="text-xs text-green-600 dark:text-green-400 mb-2">
-                {t("pricesUpdatedFor", {
-                  country:
-                    getCountryOption(selectedCountry)?.name || selectedCountry,
-                })}
-              </div>
-            )}
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-400">
                 {t("subtotal")}
@@ -924,13 +925,27 @@ export const CheckoutScreen: React.FC = () => {
                   email: shippingAddress.email,
                   country: shippingAddress.country,
                   // For giftcards, use actual user input or default "giftcard" if empty
-                  firstName: allItemsAreGiftcards && !shippingAddress.firstName ? "giftcard" : shippingAddress.firstName,
-                  lastName: allItemsAreGiftcards && !shippingAddress.lastName ? "giftcard" : shippingAddress.lastName,
+                  firstName:
+                    allItemsAreGiftcards && !shippingAddress.firstName
+                      ? "giftcard"
+                      : shippingAddress.firstName,
+                  lastName:
+                    allItemsAreGiftcards && !shippingAddress.lastName
+                      ? "giftcard"
+                      : shippingAddress.lastName,
                   // For giftcards, use default values for physical delivery fields
-                  address: allItemsAreGiftcards ? "giftcard" : shippingAddress.address,
-                  apartment: allItemsAreGiftcards ? undefined : (shippingAddress.apartment || undefined),
-                  city: allItemsAreGiftcards ? "giftcard" : shippingAddress.city,
-                  postcode: allItemsAreGiftcards ? "" : shippingAddress.postalCode,
+                  address: allItemsAreGiftcards
+                    ? "giftcard"
+                    : shippingAddress.address,
+                  apartment: allItemsAreGiftcards
+                    ? undefined
+                    : shippingAddress.apartment || undefined,
+                  city: allItemsAreGiftcards
+                    ? "giftcard"
+                    : shippingAddress.city,
+                  postcode: allItemsAreGiftcards
+                    ? ""
+                    : shippingAddress.postalCode,
                   phone: allItemsAreGiftcards ? "0" : shippingAddress.phone,
                   language: currentLanguage,
                   totalAmount: total.toFixed(2),

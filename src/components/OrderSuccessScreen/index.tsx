@@ -274,15 +274,17 @@ const OrderSuccessScreen: React.FC = () => {
             </h2>
 
             <div className="space-y-4">
-              {/* Customer Name - Always shown */}
-              <div className="flex items-start space-x-3">
-                <Package className="w-5 h-5 text-gray-400 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {order.firstName || "N/A"} {order.lastName || ""}
-                  </p>
+              {/* Customer Name - Hidden for giftcard orders */}
+              {!allItemsAreGiftcards && (
+                <div className="flex items-start space-x-3">
+                  <Package className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      {order.firstName || "N/A"} {order.lastName || ""}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Address - Hidden for giftcard orders */}
               {!allItemsAreGiftcards && (
@@ -296,15 +298,17 @@ const OrderSuccessScreen: React.FC = () => {
                 </div>
               )}
 
-              {/* Contact Info - Email always shown */}
-              <div className="flex items-start space-x-3">
-                <Mail className="w-5 h-5 text-gray-400 mt-0.5" />
-                <div>
-                  <p className="text-sm text-gray-900 dark:text-white">
-                    {order.email || "N/A"}
-                  </p>
+              {/* Email - Hidden for giftcard orders */}
+              {!allItemsAreGiftcards && (
+                <div className="flex items-start space-x-3">
+                  <Mail className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-gray-900 dark:text-white">
+                      {order.email || "N/A"}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Phone - Hidden for giftcard orders */}
               {!allItemsAreGiftcards && (

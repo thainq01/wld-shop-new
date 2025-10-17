@@ -6,6 +6,7 @@ import { useShallow } from "zustand/react/shallow";
 import { useEffect } from "react";
 import { MiniKit } from "@worldcoin/minikit-js";
 import { usersApi } from "../utils/api";
+import { getUserMetadata, updateUserMetadata } from "../utils/ipInfo";
 import type { User } from "../types";
 
 interface AuthState {
@@ -121,14 +122,44 @@ export const useAuthWorld = create<AuthWorldStore & Actions>()(
           state.isUserSyncing = true;
         });
 
-        const userData = {
-          walletAddress: state.address,
-          username: state.username,
-          profilePictureUrl: state.profile_picture_url || null,
-        };
+        // Check if user already exists
+        let user: User;
+        try {
+          console.log("🔍 Checking for existing user...");
+          user = await usersApi.getByWalletAddress(state.address);
 
-        console.log("Calling usersApi.createOrUpdate with:", userData);
-        const user = await usersApi.createOrUpdate(userData);
+          // User exists - update metadata separately and update other fields if needed
+          console.log("👤 User found, updating metadata...");
+          await updateUserMetadata(state.address);
+
+          // Update other user fields if they've changed
+          const hasChanges =
+            user.username !== state.username ||
+            user.profilePictureUrl !== (state.profile_picture_url || null);
+
+          if (hasChanges) {
+            console.log("🔄 Updating user profile fields...");
+            const updateData = {
+              username: state.username,
+              profilePictureUrl: state.profile_picture_url || null,
+            };
+            user = await usersApi.partialUpdate(user.id, updateData);
+          }
+        } catch (error) {
+          // User doesn't exist - create new user with metadata
+          console.log("� User not found, creating new user with metadata...");
+          const userMetadata = await getUserMetadata();
+
+          const userData = {
+            walletAddress: state.address,
+            username: state.username,
+            profilePictureUrl: state.profile_picture_url || null,
+            userMetadata: userMetadata,
+          };
+
+          console.log("Calling usersApi.create with:", userData);
+          user = await usersApi.create(userData);
+        }
 
         set((state) => {
           state.user = user;
@@ -224,6 +255,19 @@ export function useAutoLogin() {
         const storedAddress = localStorage.getItem(KEY_AUTH_WORLDAPP);
         if (storedAddress && address === storedAddress) {
           console.log("User already logged in with address:", storedAddress);
+
+          // Still update metadata for already logged-in users
+          console.log("🌍 Updating metadata for already logged-in user...");
+          try {
+            await updateUserMetadata(storedAddress);
+            console.log("✅ Metadata updated for logged-in user");
+          } catch (error) {
+            console.log(
+              "⚠️ Failed to update metadata for logged-in user:",
+              error
+            );
+          }
+
           return;
         }
 
@@ -292,6 +336,18 @@ export function useAutoLogin() {
 
             console.log("Setting user info from stored address:", userInfo);
             setUserInfo(userInfo);
+
+            // Update metadata for this restored session
+            console.log("🌍 Updating metadata for restored session...");
+            try {
+              await updateUserMetadata(storedAddress);
+              console.log("✅ Metadata updated for restored session");
+            } catch (error) {
+              console.log(
+                "⚠️ Failed to update metadata for restored session:",
+                error
+              );
+            }
           }
         }
       } catch (error) {

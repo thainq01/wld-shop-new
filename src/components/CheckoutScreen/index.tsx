@@ -245,18 +245,32 @@ export const CheckoutScreen: React.FC = () => {
   const selectedCountryOption = getCountryOption(selectedCountry);
   const selectedCountryName = selectedCountryOption?.name || "Thailand";
 
-  // Check if all items are giftcards
+  // Check if all items are giftcards - with immediate fallback check
   const allItemsAreGiftcards = React.useMemo(() => {
     if (!items || items.length === 0) return false;
+
+    // First, try immediate check based on product names (faster)
+    const immediateGiftcardCheck = items.every(
+      (item) =>
+        item.productName?.toLowerCase().includes("giftcard") ||
+        item.productName?.toLowerCase().includes("gift card") ||
+        item.productName?.toLowerCase().includes("voucher")
+    );
+
+    // If immediate check suggests giftcards, return true to avoid UI flash
+    if (immediateGiftcardCheck) return true;
 
     // Check if we have country-specific product data for all items
     const hasAllProductData = items.every(
       (item) => countrySpecificProducts[item.productId]?.collection
     );
 
-    if (!hasAllProductData) return false;
+    if (!hasAllProductData) {
+      // If we don't have product data yet, use the immediate check result
+      return immediateGiftcardCheck;
+    }
 
-    // Check if all items have collection slug "giftcard"
+    // Check if all items have collection slug "giftcard" (most accurate)
     return items.every((item) => {
       const product = countrySpecificProducts[item.productId];
       return product?.collection?.slug === "giftcard";

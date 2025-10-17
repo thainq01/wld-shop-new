@@ -161,7 +161,7 @@ export function CheckoutsManager() {
   const isGiftcardOrder = (checkout: Checkout) => {
     try {
       if (!checkout.products || checkout.products.length === 0) return false;
-      
+
       return checkout.products.every((item: any) => {
         return item.product?.collection?.slug === "giftcard";
       });
@@ -174,11 +174,11 @@ export function CheckoutsManager() {
   const handleStatusUpdate = (checkout: Checkout) => {
     setSelectedCheckoutForStatus(checkout);
     setNewStatus(checkout.status || "pending");
-    
+
     // Auto-fill carrier with "giftcard" for giftcard orders
     const isGiftcard = isGiftcardOrder(checkout);
-    setCarrier(isGiftcard ? "giftcard" : (checkout.carrier || ""));
-    
+    setCarrier(isGiftcard ? "giftcard" : checkout.carrier || "");
+
     setTrackingCode(checkout.trackingCode || "");
     setShowStatusModal(true);
   };
@@ -681,7 +681,9 @@ export function CheckoutsManager() {
                     📱 <strong>Digital Gift Card Order</strong>
                   </p>
                   <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">
-                    Carrier is automatically set to "giftcard" for digital products. You can update the tracking code with voucher information.
+                    Carrier is automatically set to "giftcard" for digital
+                    products. You can update the tracking code with voucher
+                    information.
                   </p>
                 </div>
               )}

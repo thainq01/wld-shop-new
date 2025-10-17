@@ -107,9 +107,9 @@ const resources = {
       shippingInformation: "Shipping Information",
       customerInformation: "Customer Information",
       viewOrderHistory: "View Order History",
-  voucherCode: "Voucher code",
-  copyCode: "Copy code",
-  copied: "Copied",
+      voucherCode: "Voucher code",
+      copyCode: "Copy code",
+      copied: "Copied",
 
       // Checkout screen
       contact: "Contact",
@@ -155,7 +155,8 @@ const resources = {
 
       // Giftcard delivery
       giftcardDeliveryTitle: "Digital Gift Card Order",
-      giftcardDeliveryMessage: "The voucher code will be sent directly to you in your Order History once your order has been successfully confirmed. You can view and use the code anytime",
+      giftcardDeliveryMessage:
+        "The voucher code will be sent directly to you in your Order History once your order has been successfully confirmed. You can view and use the code anytime",
 
       // Common
       back: "Back",
@@ -271,10 +272,10 @@ const resources = {
       noProductsFound: "ไม่พบสินค้า",
       shippingInformation: "ข้อมูลการจัดส่ง",
       customerInformation: "ข้อมูลลูกค้า",
-  viewOrderHistory: "ดูประวัติการสั่งซื้อ",
-  voucherCode: "รหัสบัตรกำนัล",
-  copyCode: "คัดลอกรหัส",
-  copied: "คัดลอกแล้ว",
+      viewOrderHistory: "ดูประวัติการสั่งซื้อ",
+      voucherCode: "รหัสบัตรกำนัล",
+      copyCode: "คัดลอกรหัส",
+      copied: "คัดลอกแล้ว",
 
       // Checkout screen
       contact: "ติดต่อ",
@@ -297,7 +298,8 @@ const resources = {
       shipping: "การจัดส่ง",
       freeship: "ส่งฟรี",
       digitalGiftCardOrder: "คำสั่งซื้อบัตรของขวัญดิจิทัล",
-      giftCardDeliveryNotice: "รหัสบัตรกำนัลจะถูกส่งให้คุณโดยตรงในประวัติการสั่งซื้อของคุณ เมื่อคำสั่งซื้อของคุณได้รับการยืนยันเรียบร้อยแล้ว คุณสามารถดูและใช้รหัสได้ตลอดเวลา",
+      giftCardDeliveryNotice:
+        "รหัสบัตรกำนัลจะถูกส่งให้คุณโดยตรงในประวัติการสั่งซื้อของคุณ เมื่อคำสั่งซื้อของคุณได้รับการยืนยันเรียบร้อยแล้ว คุณสามารถดูและใช้รหัสได้ตลอดเวลา",
 
       // Payment button
       processingPayment: "กำลังดำเนินการชำระเงิน...",
@@ -321,7 +323,8 @@ const resources = {
 
       // Giftcard delivery
       giftcardDeliveryTitle: "คำสั่งซื้อกิฟต์การ์ดดิจิทัล",
-      giftcardDeliveryMessage: "รหัสบัตรกำนัลจะถูกส่งไปยังคุณโดยตรงในประวัติการสั่งซื้อของคุณเมื่อคำสั่งซื้อของคุณได้รับการยืนยันเรียบร้อยแล้ว คุณสามารถดูและใช้รหัสได้ทุกเวลา",
+      giftcardDeliveryMessage:
+        "รหัสบัตรกำนัลจะถูกส่งไปยังคุณโดยตรงในประวัติการสั่งซื้อของคุณเมื่อคำสั่งซื้อของคุณได้รับการยืนยันเรียบร้อยแล้ว คุณสามารถดูและใช้รหัสได้ทุกเวลา",
 
       // Common
       back: "กลับ",
@@ -438,10 +441,10 @@ const resources = {
       noProductsFound: "Tiada produk dijumpai",
       shippingInformation: "Maklumat Penghantaran",
       customerInformation: "Maklumat Pelanggan",
-  viewOrderHistory: "Lihat Sejarah Pesanan",
-  voucherCode: "Kod baucar",
-  copyCode: "Salin kod",
-  copied: "Disalin",
+      viewOrderHistory: "Lihat Sejarah Pesanan",
+      voucherCode: "Kod baucar",
+      copyCode: "Salin kod",
+      copied: "Disalin",
 
       // Checkout screen
       contact: "Hubungi",
@@ -464,7 +467,8 @@ const resources = {
       shipping: "Penghantaran",
       freeship: "Penghantaran percuma",
       digitalGiftCardOrder: "Pesanan Kad Hadiah Digital",
-      giftCardDeliveryNotice: "Kod baucar akan dihantar terus kepada anda dalam Sejarah Pesanan anda setelah pesanan anda berjaya disahkan. Anda boleh melihat dan menggunakan kod tersebut pada bila-bila masa",
+      giftCardDeliveryNotice:
+        "Kod baucar akan dihantar terus kepada anda dalam Sejarah Pesanan anda setelah pesanan anda berjaya disahkan. Anda boleh melihat dan menggunakan kod tersebut pada bila-bila masa",
 
       // Payment button
       processingPayment: "Memproses Pembayaran...",
@@ -488,7 +492,8 @@ const resources = {
 
       // Giftcard delivery
       giftcardDeliveryTitle: "Pesanan Kad Hadiah Digital",
-      giftcardDeliveryMessage: "Kod baucar akan dihantar terus kepada anda dalam Sejarah Pesanan anda setelah pesanan anda berjaya disahkan. Anda boleh melihat dan menggunakan kod tersebut pada bila-bila masa",
+      giftcardDeliveryMessage:
+        "Kod baucar akan dihantar terus kepada anda dalam Sejarah Pesanan anda setelah pesanan anda berjaya disahkan. Anda boleh melihat dan menggunakan kod tersebut pada bila-bila masa",
 
       // Common
       back: "Kembali",
@@ -606,10 +611,10 @@ const resources = {
       noProductsFound: "Walang nahanap na produkto",
       shippingInformation: "Impormasyon ng Shipping",
       customerInformation: "Impormasyon ng Customer",
-  viewOrderHistory: "Tingnan ang Kasaysayan ng Order",
-  voucherCode: "Voucher code",
-  copyCode: "Kopyahin ang code",
-  copied: "Nakopya",
+      viewOrderHistory: "Tingnan ang Kasaysayan ng Order",
+      voucherCode: "Voucher code",
+      copyCode: "Kopyahin ang code",
+      copied: "Nakopya",
 
       // Checkout screen
       contact: "Kontak",
@@ -632,7 +637,8 @@ const resources = {
       shipping: "Paghahatid",
       freeship: "Libreng hatid",
       digitalGiftCardOrder: "Digital Gift Card Order",
-      giftCardDeliveryNotice: "Ang voucher code ay direktang ipapadala sa iyo sa inyong Order History kapag na-confirm na ang inyong order. Maaari ninyong tingnan at gamitin ang code anumang oras",
+      giftCardDeliveryNotice:
+        "Ang voucher code ay direktang ipapadala sa iyo sa inyong Order History kapag na-confirm na ang inyong order. Maaari ninyong tingnan at gamitin ang code anumang oras",
 
       // Payment button
       processingPayment: "Ginagawa ang Bayad...",
@@ -656,7 +662,8 @@ const resources = {
 
       // Giftcard delivery
       giftcardDeliveryTitle: "Digital Gift Card Order",
-      giftcardDeliveryMessage: "Ang voucher code ay ipapadala sa iyo nang direkta sa inyong Order History kapag na-confirm na ang inyong order. Makikita at magagamit ninyo ang code anumang oras",
+      giftcardDeliveryMessage:
+        "Ang voucher code ay ipapadala sa iyo nang direkta sa inyong Order History kapag na-confirm na ang inyong order. Makikita at magagamit ninyo ang code anumang oras",
 
       // Common
       back: "Balik",
@@ -773,10 +780,10 @@ const resources = {
       noProductsFound: "Tidak ada produk ditemukan",
       shippingInformation: "Informasi Pengiriman",
       customerInformation: "Informasi Pelanggan",
-  viewOrderHistory: "Lihat Riwayat Pesanan",
-  voucherCode: "Kode voucher",
-  copyCode: "Salin kode",
-  copied: "Disalin",
+      viewOrderHistory: "Lihat Riwayat Pesanan",
+      voucherCode: "Kode voucher",
+      copyCode: "Salin kode",
+      copied: "Disalin",
 
       // Checkout screen
       contact: "Kontak",
@@ -799,7 +806,8 @@ const resources = {
       shipping: "Pengiriman",
       freeship: "Gratis ongkir",
       digitalGiftCardOrder: "Pesanan Kartu Hadiah Digital",
-      giftCardDeliveryNotice: "Kode voucher akan dikirim langsung kepada Anda di Riwayat Pesanan Anda setelah pesanan Anda berhasil dikonfirmasi. Anda dapat melihat dan menggunakan kode tersebut kapan saja",
+      giftCardDeliveryNotice:
+        "Kode voucher akan dikirim langsung kepada Anda di Riwayat Pesanan Anda setelah pesanan Anda berhasil dikonfirmasi. Anda dapat melihat dan menggunakan kode tersebut kapan saja",
 
       // Payment button
       processingPayment: "Memproses Pembayaran...",
@@ -823,7 +831,8 @@ const resources = {
 
       // Giftcard delivery
       giftcardDeliveryTitle: "Pesanan Kartu Hadiah Digital",
-      giftcardDeliveryMessage: "Kode voucher akan dikirim langsung kepada Anda di Riwayat Pesanan setelah pesanan Anda berhasil dikonfirmasi. Anda dapat melihat dan menggunakan kode kapan saja",
+      giftcardDeliveryMessage:
+        "Kode voucher akan dikirim langsung kepada Anda di Riwayat Pesanan setelah pesanan Anda berhasil dikonfirmasi. Anda dapat melihat dan menggunakan kode kapan saja",
 
       // Common
       back: "Kembali",
@@ -939,10 +948,10 @@ const resources = {
       noProductsFound: "Không tìm thấy sản phẩm",
       shippingInformation: "Thông tin giao hàng",
       customerInformation: "Thông tin khách hàng",
-  viewOrderHistory: "Xem lịch sử đơn hàng",
-  voucherCode: "Mã voucher",
-  copyCode: "Sao chép mã",
-  copied: "Đã sao chép",
+      viewOrderHistory: "Xem lịch sử đơn hàng",
+      voucherCode: "Mã voucher",
+      copyCode: "Sao chép mã",
+      copied: "Đã sao chép",
 
       // Checkout screen
       contact: "Liên hệ",
@@ -965,7 +974,8 @@ const resources = {
       shipping: "Phí giao hàng",
       freeship: "Miễn phí giao hàng",
       digitalGiftCardOrder: "Đơn hàng thẻ quà tặng số",
-      giftCardDeliveryNotice: "Mã voucher sẽ được gửi trực tiếp cho bạn trong Lịch sử đơn hàng của bạn sau khi đơn hàng của bạn được xác nhận thành công. Bạn có thể xem và sử dụng mã bất cứ lúc nào",
+      giftCardDeliveryNotice:
+        "Mã voucher sẽ được gửi trực tiếp cho bạn trong Lịch sử đơn hàng của bạn sau khi đơn hàng của bạn được xác nhận thành công. Bạn có thể xem và sử dụng mã bất cứ lúc nào",
 
       // Payment button
       processingPayment: "Đang xử lý thanh toán...",
@@ -989,7 +999,8 @@ const resources = {
 
       // Giftcard delivery
       giftcardDeliveryTitle: "Đơn hàng thẻ quà tặng kỹ thuật số",
-      giftcardDeliveryMessage: "Mã voucher sẽ được gửi trực tiếp cho bạn trong Lịch sử đơn hàng của bạn sau khi đơn hàng của bạn được xác nhận thành công. Bạn có thể xem và sử dụng mã bất cứ lúc nào",
+      giftcardDeliveryMessage:
+        "Mã voucher sẽ được gửi trực tiếp cho bạn trong Lịch sử đơn hàng của bạn sau khi đơn hàng của bạn được xác nhận thành công. Bạn có thể xem và sử dụng mã bất cứ lúc nào",
 
       // Common
       back: "Quay lại",

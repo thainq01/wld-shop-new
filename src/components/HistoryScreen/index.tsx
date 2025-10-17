@@ -10,6 +10,7 @@ import {
   Hash,
   Truck,
   ExternalLink,
+  Copy,
 } from "lucide-react";
 
 import { BottomNavigation } from "../BottomNavigation";
@@ -87,6 +88,7 @@ const HistoryScreen: React.FC = () => {
   const [orders, setOrders] = useState<OrderHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [copiedCodeId, setCopiedCodeId] = useState<number | null>(null);
 
   const fetchOrderHistory = useCallback(async () => {
     if (!walletAddress) {
@@ -253,6 +255,13 @@ const HistoryScreen: React.FC = () => {
     }
   };
 
+  const truncateCode = (code: string, maxLength: number = 12) => {
+    if (!code || code.length <= maxLength) return code;
+    const start = Math.floor(maxLength / 2) - 1;
+    const end = Math.ceil(maxLength / 2) - 2;
+    return `${code.substring(0, start)}...${code.substring(code.length - end)}`;
+  };
+
   // Login required state when no wallet
   if (!walletAddress) {
     return (
@@ -343,7 +352,7 @@ const HistoryScreen: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
+    <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col pb-20">
       {orders.length === 0 ? (
         <>
           {/* Empty state - centered and styled like bag empty state */}
@@ -477,65 +486,156 @@ const HistoryScreen: React.FC = () => {
                           </span>
                         </div>
 
-                        <div className="flex items-start space-x-2">
-                          <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
-                            {formatAddress(order)}
-                          </span>
-                        </div>
+                        {/* Determine if this order is a giftcard order */}
+                        {(() => {
+                          const isGiftcardOrder =
+                            (order.carrier && order.carrier === "giftcard") ||
+                            (order.products &&
+                              order.products.length > 0 &&
+                              order.products.every(
+                                (p) =>
+                                  p.product?.collection?.slug === "giftcard"
+                              ));
 
-                        <div className="flex items-start space-x-2">
-                          <Mail className="w-4 h-4 text-gray-400 mt-0.5" />
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
-                            {order.email}
-                          </span>
-                        </div>
-
-                        <div className="flex items-start space-x-2">
-                          <Phone className="w-4 h-4 text-gray-400 mt-0.5" />
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
-                            {order.phone}
-                          </span>
-                        </div>
-
-                        {/* Shipping Tracking Info */}
-                        {(order.carrier || order.trackingCode) && (
-                          <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
-                            <div className="flex items-center space-x-2 mb-2">
-                              <Truck className="w-4 h-4 text-gray-400" />
-                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {t("shippingInformation")}
-                              </span>
-                            </div>
-                            {order.carrier && (
-                              <div className="ml-6 mb-1">
-                                <span className="text-xs text-gray-500 dark:text-gray-400">
-                                  Carrier:
-                                </span>
-                                <span className="ml-1 text-xs text-gray-700 dark:text-gray-300 font-medium">
-                                  {order.carrier}
+                          return (
+                            <>
+                              {/* Email - Always shown */}
+                              <div className="flex items-start space-x-2">
+                                <Mail className="w-4 h-4 text-gray-400 mt-0.5" />
+                                <span className="text-sm text-gray-600 dark:text-gray-400">
+                                  {order.email}
                                 </span>
                               </div>
-                            )}
-                            {order.trackingCode && (
-                              <div className="ml-6">
-                                <span className="text-xs text-gray-500 dark:text-gray-400">
-                                  Tracking:
-                                </span>
-                                <button
-                                  onClick={() =>
-                                    order.trackingCode &&
-                                    window.open(order.trackingCode, "_blank")
-                                  }
-                                  className="ml-2 inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
-                                >
-                                  Click here
-                                  <ExternalLink className="w-3 h-3" />
-                                </button>
+
+                              {/* Address + Phone for non-giftcard orders only */}
+                              {!isGiftcardOrder && (
+                                <>
+                                  <div className="flex items-start space-x-2">
+                                    <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                                      {formatAddress(order)}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-start space-x-2">
+                                    <Phone className="w-4 h-4 text-gray-400 mt-0.5" />
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                                      {order.phone}
+                                    </span>
+                                  </div>
+                                </>
+                              )}
+
+                              {/* Giftcard information - show voucher/tracking code with copy */}
+                              {isGiftcardOrder && (
+                                <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+                                  <div className="flex items-center space-x-2 mb-2">
+                                    <Truck className="w-4 h-4 text-gray-400" />
+                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                      {t("giftcardDeliveryTitle")}
+                                    </span>
+                                  </div>
+
+                                  <div className="ml-6 flex items-center gap-3">
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                                      {t("voucherCode")}:
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                      <code className="font-mono text-sm bg-gray-50 dark:bg-gray-700/50 px-2 py-1 rounded">
+                                        {order.trackingCode
+                                          ? truncateCode(order.trackingCode)
+                                          : "-"}
+                                      </code>
+                                      <button
+                                        onClick={async () => {
+                                          if (!order.trackingCode) return;
+                                          try {
+                                            await navigator.clipboard.writeText(
+                                              order.trackingCode
+                                            );
+                                            setCopiedCodeId(order.id);
+                                            setTimeout(
+                                              () => setCopiedCodeId(null),
+                                              2000
+                                            );
+                                          } catch (err) {
+                                            console.error("Copy failed:", err);
+                                          }
+                                        }}
+                                        className="inline-flex items-center justify-center p-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                        title={t("copyCode")}
+                                      >
+                                        {copiedCodeId === order.id ? (
+                                          <span className="text-xs font-medium">
+                                            {t("copied")}
+                                          </span>
+                                        ) : (
+                                          <Copy className="w-4 h-4" />
+                                        )}
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
+
+                        {/* Shipping Tracking Info - Only for non-giftcard orders */}
+                        {(() => {
+                          const isGiftcardOrder =
+                            (order.carrier && order.carrier === "giftcard") ||
+                            (order.products &&
+                              order.products.length > 0 &&
+                              order.products.every(
+                                (p) =>
+                                  p.product?.collection?.slug === "giftcard"
+                              ));
+
+                          return (
+                            !isGiftcardOrder &&
+                            (order.carrier || order.trackingCode) && (
+                              <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+                                <div className="flex items-center space-x-2 mb-2">
+                                  <Truck className="w-4 h-4 text-gray-400" />
+                                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    {t("shippingInformation")}
+                                  </span>
+                                </div>
+                                {order.carrier && (
+                                  <div className="ml-6 mb-1">
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                                      Carrier:
+                                    </span>
+                                    <span className="ml-1 text-xs text-gray-700 dark:text-gray-300 font-medium">
+                                      {order.carrier}
+                                    </span>
+                                  </div>
+                                )}
+                                {order.trackingCode && (
+                                  <div className="ml-6">
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                                      Tracking:
+                                    </span>
+                                    <button
+                                      onClick={() =>
+                                        order.trackingCode &&
+                                        window.open(
+                                          order.trackingCode,
+                                          "_blank"
+                                        )
+                                      }
+                                      className="ml-2 inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                                    >
+                                      Click here
+                                      <ExternalLink className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
-                        )}
+                            )
+                          );
+                        })()}
                       </div>
 
                       {/* Order ID */}

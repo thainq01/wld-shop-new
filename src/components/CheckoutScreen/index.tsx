@@ -245,6 +245,27 @@ export const CheckoutScreen: React.FC = () => {
   const selectedCountryOption = getCountryOption(selectedCountry);
   const selectedCountryName = selectedCountryOption?.name || "Thailand";
 
+  // Check if all items are giftcards
+  const allItemsAreGiftcards = React.useMemo(() => {
+    if (!items || items.length === 0) return false;
+    
+    // Check if we have country-specific product data for all items
+    const hasAllProductData = items.every(item => 
+      countrySpecificProducts[item.productId]?.collection
+    );
+    
+    if (!hasAllProductData) return false;
+    
+    // Check if all items have collection slug "giftcard"
+    return items.every(item => {
+      const product = countrySpecificProducts[item.productId];
+      return product?.collection?.slug === "giftcard";
+    });
+  }, [items, countrySpecificProducts]);
+
+  // Determine if only giftcard items exist (no physical products)
+  const hasOnlyGiftcards = allItemsAreGiftcards;
+
   // Country selection is now fully interactive in checkout
   const isCountryAutoSelected = false;
   const countryDisabledReason = undefined;
@@ -282,6 +303,8 @@ export const CheckoutScreen: React.FC = () => {
       country: newCountryName,
     }));
   }, [selectedCountryName]);
+
+
 
   // Function to fetch country-specific pricing for all cart items
   const fetchCountrySpecificPricing = useCallback(
@@ -377,8 +400,13 @@ export const CheckoutScreen: React.FC = () => {
     }
   }, [items, selectedCountry, fetchCountrySpecificPricing]);
 
-  // Handle automatic country selection and show toast notification
+  // Handle automatic country selection without toast notification
   useEffect(() => {
+    // Skip automatic country selection for giftcard-only orders
+    if (allItemsAreGiftcards) {
+      return;
+    }
+    
     const expectedCountry = getCountryFromLanguage(currentLanguage);
 
     // If the country doesn't match the expected country for the current language
@@ -390,14 +418,6 @@ export const CheckoutScreen: React.FC = () => {
 
       // Update the country (this will trigger price updates via the existing useEffect)
       setCountry(expectedCountry, false);
-
-      // Show toast notification to inform user about automatic country selection
-      const countryOption = getCountryOption(expectedCountry);
-      if (countryOption) {
-        toast.success(
-          `Delivery country automatically set to ${countryOption.name} based on your language preference.`
-        );
-      }
     }
   }, [
     currentLanguage,
@@ -406,6 +426,7 @@ export const CheckoutScreen: React.FC = () => {
     getCountryFromLanguage,
     setCountry,
     getCountryOption,
+    allItemsAreGiftcards,
   ]);
 
   // Helper function to build checkout products with country-specific data
@@ -497,6 +518,17 @@ export const CheckoutScreen: React.FC = () => {
   };
 
   const isFormValid = () => {
+    // For giftcard-only orders, only email, firstName, and lastName are required
+    if (allItemsAreGiftcards) {
+      return (
+        shippingAddress.email &&
+        shippingAddress.firstName &&
+        shippingAddress.lastName &&
+        canProceedWithPayment
+      );
+    }
+    
+    // For regular orders, all delivery fields are required
     const formFieldsValid =
       shippingAddress.email &&
       shippingAddress.firstName &&
@@ -550,13 +582,13 @@ export const CheckoutScreen: React.FC = () => {
             className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 mb-4 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
           />
         </div>
-        {/* Delivery Section */}
+        {/* Delivery Section - Modified for giftcard orders */}
         <div className="py-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
             {t("delivery")}
           </h2>
 
-          {/* Country */}
+          {/* Country - Always shown */}
           <div className="mb-4">
             <CountrySelector
               countries={availableCountries}
@@ -567,7 +599,7 @@ export const CheckoutScreen: React.FC = () => {
             />
           </div>
 
-          {/* Name Fields */}
+          {/* Name Fields - Always shown */}
           <div className="grid grid-cols-2 gap-4 mb-4">
             <input
               type="text"
@@ -585,67 +617,86 @@ export const CheckoutScreen: React.FC = () => {
             />
           </div>
 
-          {/* Address */}
-          <input
-            type="text"
-            placeholder={t("address")}
-            value={shippingAddress.address}
-            onChange={(e) => handleInputChange("address", e.target.value)}
-            className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 mb-4 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
-          />
+          {/* Physical delivery fields - Hidden for giftcards */}
+          {!allItemsAreGiftcards && (
+            <>
+              {/* Address */}
+              <input
+                type="text"
+                placeholder={t("address")}
+                value={shippingAddress.address}
+                onChange={(e) => handleInputChange("address", e.target.value)}
+                className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 mb-4 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
+              />
 
-          {/* Apartment */}
-          <input
-            type="text"
-            placeholder={t("apartment")}
-            value={shippingAddress.apartment}
-            onChange={(e) => handleInputChange("apartment", e.target.value)}
-            className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 mb-4 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
-          />
+              {/* Apartment */}
+              <input
+                type="text"
+                placeholder={t("apartment")}
+                value={shippingAddress.apartment}
+                onChange={(e) => handleInputChange("apartment", e.target.value)}
+                className="w-full px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 mb-4 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
+              />
 
-          {/* City and Postal Code */}
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <CitySelector
-              cities={availableCities}
-              selectedCity={shippingAddress.city}
-              onCityChange={handleCityChange}
-              disabled={availableCities.length === 0}
-              reason={
-                availableCities.length === 0
-                  ? "No cities available for selected country"
-                  : undefined
-              }
-            />
-            <input
-              type="text"
-              placeholder={t("postalCode")}
-              value={shippingAddress.postalCode}
-              onChange={(e) => handleInputChange("postalCode", e.target.value)}
-              className="px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
-            />
-          </div>
+              {/* City and Postal Code */}
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <CitySelector
+                  cities={availableCities}
+                  selectedCity={shippingAddress.city}
+                  onCityChange={handleCityChange}
+                  disabled={availableCities.length === 0}
+                  reason={
+                    availableCities.length === 0
+                      ? "No cities available for selected country"
+                      : undefined
+                  }
+                />
+                <input
+                  type="text"
+                  placeholder={t("postalCode")}
+                  value={shippingAddress.postalCode}
+                  onChange={(e) => handleInputChange("postalCode", e.target.value)}
+                  className="px-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-transparent"
+                />
+              </div>
 
-          {/* Phone */}
-          <div className="mb-4">
-            <PhoneInput
-              value={shippingAddress.phone}
-              onChange={handlePhoneChange}
-              countryCode={selectedCountry}
-              placeholder={t("phone")}
-              required={true}
-              showValidation={true}
-            />
-          </div>
+              {/* Phone */}
+              <div className="mb-4">
+                <PhoneInput
+                  value={shippingAddress.phone}
+                  onChange={handlePhoneChange}
+                  countryCode={selectedCountry}
+                  placeholder={t("phone")}
+                  required={true}
+                  showValidation={true}
+                />
+              </div>
+            </>
+          )}
         </div>
 
-        {/* Shipping Method */}
+        {/* Display giftcard delivery notice */}
+        {allItemsAreGiftcards && (
+          <div className="py-6">
+                        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">
+                {t("giftcardDeliveryTitle")}
+              </h3>
+              <p className="text-sm text-blue-600 dark:text-blue-300">
+                {t("giftcardDeliveryMessage")}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Shipping Method - Modified for giftcards */}
         <div className="py-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-            {t("shippingMethod")}
+            {allItemsAreGiftcards ? "Delivery Method" : t("shippingMethod")}
           </h2>
           <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 flex justify-between items-center">
             <span className="text-gray-900 dark:text-gray-100">
-              {t("worldwideFlatRate")}
+              {allItemsAreGiftcards ? "Digital Delivery" : t("worldwideFlatRate")}
             </span>
             <span className="font-medium text-gray-900 dark:text-gray-100">
               {t("freeship")}
@@ -872,13 +923,15 @@ export const CheckoutScreen: React.FC = () => {
                   walletAddress: address!,
                   email: shippingAddress.email,
                   country: shippingAddress.country,
-                  firstName: shippingAddress.firstName,
-                  lastName: shippingAddress.lastName,
-                  address: shippingAddress.address,
-                  apartment: shippingAddress.apartment || undefined,
-                  city: shippingAddress.city,
-                  postcode: shippingAddress.postalCode,
-                  phone: shippingAddress.phone,
+                  // For giftcards, use actual user input or default "giftcard" if empty
+                  firstName: allItemsAreGiftcards && !shippingAddress.firstName ? "giftcard" : shippingAddress.firstName,
+                  lastName: allItemsAreGiftcards && !shippingAddress.lastName ? "giftcard" : shippingAddress.lastName,
+                  // For giftcards, use default values for physical delivery fields
+                  address: allItemsAreGiftcards ? "giftcard" : shippingAddress.address,
+                  apartment: allItemsAreGiftcards ? undefined : (shippingAddress.apartment || undefined),
+                  city: allItemsAreGiftcards ? "giftcard" : shippingAddress.city,
+                  postcode: allItemsAreGiftcards ? "" : shippingAddress.postalCode,
+                  phone: allItemsAreGiftcards ? "0" : shippingAddress.phone,
                   language: currentLanguage,
                   totalAmount: total.toFixed(2),
                   status: "paid",

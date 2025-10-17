@@ -19,6 +19,7 @@ import {
   UsersManager,
   CMSSettings,
   CheckoutsManager,
+  CartManager,
 } from "./components/CMS";
 import { LoginScreen } from "./components/LoginScreen";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -48,6 +49,7 @@ function App() {
             <Route index element={<CMSDashboard />} />
             <Route path="collections" element={<CollectionsManager />} />
             <Route path="products" element={<ProductsManager />} />
+            <Route path="cart" element={<CartManager />} />
             <Route path="checkouts" element={<CheckoutsManager />} />
             <Route path="users" element={<UsersManager />} />
             <Route path="settings" element={<CMSSettings />} />

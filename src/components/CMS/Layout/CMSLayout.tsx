@@ -10,6 +10,7 @@ import {
   Users,
   LogOut,
   ShoppingCart,
+  ShoppingBag,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -20,6 +21,7 @@ const navigation = [
   { name: "Dashboard", href: "/cms", icon: BarChart3, current: false },
   { name: "Collections", href: "/cms/collections", icon: Tag, current: false },
   { name: "Products", href: "/cms/products", icon: Package, current: false },
+  { name: "Cart", href: "/cms/cart", icon: ShoppingBag, current: false },
   {
     name: "Checkouts",
     href: "/cms/checkouts",

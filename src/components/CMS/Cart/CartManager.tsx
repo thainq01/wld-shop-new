@@ -39,7 +39,7 @@ interface CartData {
 
 interface CartResponse {
   success: boolean;
-  data: CartData[];
+  data: CartItem[]; // Changed: API returns array of items, not cart objects
   statusCode: number;
 }
 
@@ -66,14 +66,57 @@ export function CartManager() {
 
       const result: CartResponse = await response.json();
 
-      if (result.success) {
-        setCartData(result.data);
+      if (result.success && Array.isArray(result.data)) {
+        console.log("Raw cart data:", result.data);
+
+        // Group cart items by wallet address
+        const cartMap = new Map<string, CartData>();
+
+        result.data.forEach((item) => {
+          const walletAddress = item.walletAddress;
+
+          // Normalize the item data
+          const normalizedItem: CartItem = {
+            ...item,
+            productPrice: item.productPrice ?? 0,
+            lineTotal: item.lineTotal ?? 0,
+            quantity: item.quantity ?? 0,
+            size: item.size ?? "",
+            productName: item.productName ?? "Unknown Product",
+          };
+
+          if (cartMap.has(walletAddress)) {
+            // Add item to existing cart
+            const existing = cartMap.get(walletAddress)!;
+            existing.items.push(normalizedItem);
+            existing.totalItems += 1;
+            existing.totalQuantity += normalizedItem.quantity;
+            existing.totalAmount += normalizedItem.lineTotal;
+          } else {
+            // Create new cart entry
+            cartMap.set(walletAddress, {
+              walletAddress,
+              items: [normalizedItem],
+              totalItems: 1,
+              totalQuantity: normalizedItem.quantity,
+              totalAmount: normalizedItem.lineTotal,
+              currency: item.currency || "WLD",
+              languageCode: item.languageCode || "en",
+            });
+          }
+        });
+
+        // Convert map back to array
+        const normalizedData = Array.from(cartMap.values());
+        console.log("Normalized cart data:", normalizedData);
+        setCartData(normalizedData);
       } else {
         throw new Error("API returned unsuccessful response");
       }
     } catch (error) {
       console.error("Error loading cart data:", error);
       toast.error("Failed to load cart data");
+      setCartData([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -105,10 +148,15 @@ export function CartManager() {
 
   const filteredCartData = cartData.filter(
     (cart) =>
-      cart.walletAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cart.items.some((item) =>
-        item.productName.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+      cart &&
+      cart.walletAddress &&
+      (cart.walletAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (cart.items || []).some(
+          (item) =>
+            item &&
+            item.productName &&
+            item.productName.toLowerCase().includes(searchTerm.toLowerCase())
+        ))
   );
 
   if (loading) {
@@ -185,7 +233,10 @@ export function CartManager() {
             <Package className="w-8 h-8 text-green-500" />
             <div className="ml-3">
               <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                {cartData.reduce((sum, cart) => sum + cart.totalItems, 0)}
+                {cartData.reduce(
+                  (sum, cart) => sum + (cart.totalItems || 0),
+                  0
+                )}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 Total Items
@@ -199,7 +250,10 @@ export function CartManager() {
             <User className="w-8 h-8 text-purple-500" />
             <div className="ml-3">
               <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                {cartData.reduce((sum, cart) => sum + cart.totalQuantity, 0)}
+                {cartData.reduce(
+                  (sum, cart) => sum + (cart.totalQuantity || 0),
+                  0
+                )}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 Total Quantity
@@ -214,7 +268,7 @@ export function CartManager() {
             <div className="ml-3">
               <p className="text-2xl font-semibold text-gray-900 dark:text-white">
                 {cartData
-                  .reduce((sum, cart) => sum + cart.totalAmount, 0)
+                  .reduce((sum, cart) => sum + (cart.totalAmount || 0), 0)
                   .toFixed(2)}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -241,8 +295,8 @@ export function CartManager() {
           </div>
         ) : (
           <div className="divide-y divide-gray-200 dark:divide-gray-700">
-            {filteredCartData.map((cart) => (
-              <div key={cart.walletAddress} className="p-4">
+            {filteredCartData.map((cart, index) => (
+              <div key={`${cart.walletAddress}-${index}`} className="p-4">
                 {/* Wallet Header */}
                 <button
                   onClick={() => toggleWalletExpansion(cart.walletAddress)}
@@ -260,15 +314,15 @@ export function CartManager() {
                         {formatWalletAddress(cart.walletAddress)}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {cart.totalItems} items • {cart.totalQuantity} qty •{" "}
-                        {cart.totalAmount.toFixed(2)} WLD
+                        {cart.totalItems || 0} items • {cart.totalQuantity || 0}{" "}
+                        qty • {(cart.totalAmount || 0).toFixed(2)} WLD
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                      {cart.items.length}{" "}
-                      {cart.items.length === 1 ? "product" : "products"}
+                      {(cart.items || []).length}{" "}
+                      {(cart.items || []).length === 1 ? "product" : "products"}
                     </span>
                   </div>
                 </button>
@@ -276,9 +330,11 @@ export function CartManager() {
                 {/* Cart Items */}
                 {expandedWallets.has(cart.walletAddress) && (
                   <div className="mt-4 ml-8 space-y-3">
-                    {cart.items.map((item) => (
+                    {(cart.items || []).map((item, itemIndex) => (
                       <div
-                        key={item.id}
+                        key={`${
+                          item.id || `${cart.walletAddress}-item-${itemIndex}`
+                        }`}
                         className="flex items-center space-x-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
                       >
                         {/* Product Image */}
@@ -305,9 +361,11 @@ export function CartManager() {
                             {item.productName}
                           </p>
                           <div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
-                            <span>Size: {item.size}</span>
-                            <span>Qty: {item.quantity}</span>
-                            <span>Price: {item.productPrice} WLD</span>
+                            <span>Size: {item.size || "N/A"}</span>
+                            <span>Qty: {item.quantity || 0}</span>
+                            <span>
+                              Price: {(item.productPrice || 0).toFixed(2)} WLD
+                            </span>
                           </div>
                           <div className="flex items-center space-x-2 mt-1">
                             <Calendar className="w-3 h-3 text-gray-400" />
@@ -320,7 +378,7 @@ export function CartManager() {
                         {/* Line Total */}
                         <div className="text-right">
                           <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                            {item.lineTotal.toFixed(2)} WLD
+                            {(item.lineTotal || 0).toFixed(2)} WLD
                           </p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
                             Line Total

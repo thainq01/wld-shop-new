@@ -905,7 +905,7 @@ const resources = {
       email: "Email",
       selectCity: "Chọn thành phố",
       shippingMethod: "Phương thức giao hàng",
-      worldwideFlatRate: "Phí cố định toàn cầu",
+      worldwideFlatRate: "Phí giao hàng",
       orderSummary: "Tóm tắt đơn hàng",
       pricesUpdatedFor: "✓ Giá đã được cập nhật cho {{country}}",
       subtotal: "Tạm tính",

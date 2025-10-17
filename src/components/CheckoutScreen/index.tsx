@@ -125,7 +125,7 @@ const CountrySelector = ({
                 duration: 0.4,
                 ease: [0.25, 0.46, 0.45, 0.94],
               }}
-              className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-t-3xl p-6 max-h-[70vh] overflow-y-auto"
+              className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-t-3xl p-6 max-h-[70vh] overflow-y-auto pb-24"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-center mb-4">
@@ -148,7 +148,7 @@ const CountrySelector = ({
                     },
                   },
                 }}
-                className="space-y-3"
+                className="space-y-3 pb-4"
               >
                 {countries.map((country) => (
                   <motion.button

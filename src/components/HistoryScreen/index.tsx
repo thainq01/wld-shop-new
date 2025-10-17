@@ -479,13 +479,6 @@ const HistoryScreen: React.FC = () => {
 
                       {/* Customer Info */}
                       <div className="space-y-2">
-                        <div className="flex items-start space-x-2">
-                          <Package className="w-4 h-4 text-gray-400 mt-0.5" />
-                          <span className="text-sm text-gray-900 dark:text-white">
-                            {order.firstName} {order.lastName}
-                          </span>
-                        </div>
-
                         {/* Determine if this order is a giftcard order */}
                         {(() => {
                           const isGiftcardOrder =
@@ -499,13 +492,25 @@ const HistoryScreen: React.FC = () => {
 
                           return (
                             <>
-                              {/* Email - Always shown */}
-                              <div className="flex items-start space-x-2">
-                                <Mail className="w-4 h-4 text-gray-400 mt-0.5" />
-                                <span className="text-sm text-gray-600 dark:text-gray-400">
-                                  {order.email}
-                                </span>
-                              </div>
+                              {/* Name - Hidden for giftcard orders */}
+                              {!isGiftcardOrder && (
+                                <div className="flex items-start space-x-2">
+                                  <Package className="w-4 h-4 text-gray-400 mt-0.5" />
+                                  <span className="text-sm text-gray-900 dark:text-white">
+                                    {order.firstName} {order.lastName}
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* Email - Hidden for giftcard orders */}
+                              {!isGiftcardOrder && (
+                                <div className="flex items-start space-x-2">
+                                  <Mail className="w-4 h-4 text-gray-400 mt-0.5" />
+                                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                                    {order.email}
+                                  </span>
+                                </div>
+                              )}
 
                               {/* Address + Phone for non-giftcard orders only */}
                               {!isGiftcardOrder && (
@@ -528,7 +533,7 @@ const HistoryScreen: React.FC = () => {
 
                               {/* Giftcard information - show voucher/tracking code with copy */}
                               {isGiftcardOrder && (
-                                <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+                                <div className="pt-2 border-gray-100 dark:border-gray-700">
                                   <div className="flex items-center space-x-2 mb-2">
                                     <Truck className="w-4 h-4 text-gray-400" />
                                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">

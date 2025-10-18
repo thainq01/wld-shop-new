@@ -29,6 +29,7 @@ export function MultiLanguageProductModal({
   
   const [formData, setFormData] = useState({
     price: 0,
+    discountPrice: 0,
     collectionId: 0,
     category: "",
     madeBy: "",
@@ -78,6 +79,7 @@ export function MultiLanguageProductModal({
     if (product) {
       setFormData({
         price: product.basePrice,
+        discountPrice: product.discountPrice || 0,
         collectionId: product.collection?.id || 0,
         category: product.category,
         madeBy: product.madeBy,
@@ -105,6 +107,7 @@ export function MultiLanguageProductModal({
       // Reset for new product
       setFormData({
         price: 0,
+        discountPrice: 0,
         collectionId: collections.length > 0 ? collections[0].id : 0,
         category: "",
         madeBy: "",
@@ -125,7 +128,7 @@ export function MultiLanguageProductModal({
   }, [product, isOpen, collections]);
 
   const handleInputChange = (field: string, value: string | number | boolean) => {
-    if (field === "price" || field === "collectionId" || field === "category" || field === "madeBy" || field === "inStock" || field === "featured" || field === "active") {
+    if (field === "price" || field === "discountPrice" || field === "collectionId" || field === "category" || field === "madeBy" || field === "inStock" || field === "featured" || field === "active") {
       setFormData(prev => ({ ...prev, [field]: value }));
     } else if (field === "countryPrice") {
       // Handle country-specific pricing
@@ -415,6 +418,24 @@ export function MultiLanguageProductModal({
                       {errors.price && (
                         <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.price}</p>
                       )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Discount Price
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.discountPrice}
+                        onChange={(e) => handleInputChange("discountPrice", parseFloat(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                        placeholder="Optional discount price"
+                      />
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Leave empty if no discount applies
+                      </p>
                     </div>
 
                     <div>

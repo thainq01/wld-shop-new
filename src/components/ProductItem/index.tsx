@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ProductItemProps } from "./types";
 import { PriceDisplay } from "../PriceDisplay";
-import { getProductPrice } from "../../utils/priceUtils";
+import { getBasePrice } from "../../utils/priceUtils";
 // Product type is imported via ProductItemProps
 
 function ProductImage({ type }: { type: string }) {
@@ -192,7 +192,7 @@ export const ProductItem: React.FC<ProductItemProps> = ({ product }) => {
         </h4>
         <div className="text-gray-500 dark:text-gray-400">
           <PriceDisplay
-            price={getProductPrice(product)}
+            price={getBasePrice(product)}
             discountPrice={product.discountPrice}
             size="small"
           />

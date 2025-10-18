@@ -3,10 +3,11 @@ import { ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ProductItemProps } from "./types";
+import { PriceDisplay } from "../PriceDisplay";
+import { getProductPrice } from "../../utils/priceUtils";
 // Product type is imported via ProductItemProps
 
 function ProductImage({ type }: { type: string }) {
-  const [isLoading, setIsLoading] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const baseClasses = "w-full h-full bg-black flex items-center justify-center";
@@ -60,12 +61,10 @@ function ProductImage({ type }: { type: string }) {
           loading="lazy"
           decoding="async"
           onLoad={() => {
-            setIsLoading(false);
             setIsLoaded(true);
             setHasError(false);
           }}
           onError={() => {
-            setIsLoading(false);
             setIsLoaded(false);
             setHasError(true);
           }}
@@ -191,14 +190,13 @@ export const ProductItem: React.FC<ProductItemProps> = ({ product }) => {
         <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
           {product.name}
         </h4>
-        <p className="text-gray-500 dark:text-gray-400">
-          {" "}
-          {product.effectivePrice ||
-            product.countryPrice ||
-            product.basePrice ||
-            product.price}{" "}
-          WLD
-        </p>
+        <div className="text-gray-500 dark:text-gray-400">
+          <PriceDisplay
+            price={getProductPrice(product)}
+            discountPrice={product.discountPrice}
+            size="small"
+          />
+        </div>
       </div>
 
       {/* Arrow */}

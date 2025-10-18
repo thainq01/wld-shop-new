@@ -459,8 +459,9 @@ export function ProductModal({
                         Collections filtered by selected language (
                         {selectedLanguage === "all"
                           ? "all languages"
-                          : cmsLanguages.find((l) => l.code === selectedLanguage)
-                              ?.name || selectedLanguage}
+                          : cmsLanguages.find(
+                              (l) => l.code === selectedLanguage
+                            )?.name || selectedLanguage}
                         )
                       </p>
                     )}
@@ -753,11 +754,19 @@ export function ProductModal({
                             value={variant.price ?? ""}
                             onChange={(e) => {
                               const inputValue = e.target.value;
-                              if (inputValue === "" || inputValue === null || inputValue === undefined) {
+                              if (
+                                inputValue === "" ||
+                                inputValue === null ||
+                                inputValue === undefined
+                              ) {
                                 updateVariant(index, "price", null);
                               } else {
                                 const numericValue = parseFloat(inputValue);
-                                updateVariant(index, "price", isNaN(numericValue) ? null : numericValue);
+                                updateVariant(
+                                  index,
+                                  "price",
+                                  isNaN(numericValue) ? null : numericValue
+                                );
                               }
                             }}
                             className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"

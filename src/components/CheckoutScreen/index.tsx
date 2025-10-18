@@ -8,6 +8,7 @@ import { BottomNavigation } from "../BottomNavigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useWLDBalance } from "../../hooks/useWLDBalance";
 import { useCheckout } from "../../hooks/useCheckout";
+import { useUserCheckoutForm } from "../../hooks/useUserCheckoutForm";
 import { useAuthWorld } from "../../store/authStore";
 import { useLanguageStore } from "../../store/languageStore";
 import { useCountryStore, countries } from "../../store/countryStore";
@@ -230,6 +231,7 @@ export const CheckoutScreen: React.FC = () => {
     isManuallySelected,
   } = useCountryStore();
   const { createCheckout } = useCheckout();
+  const { saveForm, loadForm, savedForm, isLoading: isFormLoading } = useUserCheckoutForm();
 
   const [generatedOrderId, setGeneratedOrderId] = useState<string>("");
   const [checkoutCompleted, setCheckoutCompleted] = useState(false);
@@ -308,6 +310,51 @@ export const CheckoutScreen: React.FC = () => {
 
   // Phone validation state
   const [isPhoneValid, setIsPhoneValid] = useState(false);
+
+  // Load saved checkout form when user wallet is available
+  useEffect(() => {
+    if (address) {
+      console.log("🔄 Loading saved checkout form for wallet:", address);
+      loadForm(address);
+    }
+  }, [address, loadForm]);
+
+  // Auto-fill form with saved data when it becomes available
+  useEffect(() => {
+    if (savedForm) {
+      console.log("📝 Auto-filling form with saved data:", savedForm);
+      
+      if (allItemsAreGiftcards) {
+        // For giftcard orders, only auto-fill email
+        setShippingAddress(prev => ({
+          ...prev,
+          email: savedForm.email || prev.email,
+        }));
+      } else {
+        // For regular orders, auto-fill all fields
+        setShippingAddress(prev => ({
+          ...prev,
+          email: savedForm.email || prev.email,
+          firstName: savedForm.firstName || prev.firstName,
+          lastName: savedForm.lastName || prev.lastName,
+          address: savedForm.address || prev.address,
+          apartment: savedForm.apartment || prev.apartment,
+          city: savedForm.city || prev.city,
+          postalCode: savedForm.postCode || prev.postalCode,
+          phone: savedForm.phone || prev.phone,
+          country: savedForm.country || prev.country,
+        }));
+
+        // Update country if different from saved form
+        if (savedForm.country && savedForm.country !== selectedCountryName) {
+          const countryCode = getCountryCodeFromName(savedForm.country);
+          if (countryCode) {
+            setCountry(countryCode, true);
+          }
+        }
+      }
+    }
+  }, [savedForm, allItemsAreGiftcards, selectedCountryName, getCountryCodeFromName, setCountry]);
 
   // Generate order ID when component mounts or language changes
   useEffect(() => {
@@ -612,6 +659,19 @@ export const CheckoutScreen: React.FC = () => {
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
             {t("contact")}
           </h2>
+          
+          {/* Debug Info - Remove in production */}
+          {import.meta.env.DEV && (
+            <div className="mb-4 p-3 bg-gray-100 dark:bg-gray-800 rounded text-sm">
+              <div><strong>Debug Info:</strong></div>
+              <div>Wallet Address: {address || 'Not connected'}</div>
+              <div>Is Giftcard Order: {allItemsAreGiftcards ? 'Yes' : 'No'}</div>
+              <div>Form Loading: {isFormLoading ? 'Yes' : 'No'}</div>
+              <div>Saved Form: {savedForm ? 'Found' : 'None'}</div>
+              {savedForm && <div>Saved Email: {savedForm.email}</div>}
+            </div>
+          )}
+          
           <div className="mb-4">
             <input
               type="email"
@@ -634,9 +694,22 @@ export const CheckoutScreen: React.FC = () => {
         {/* Delivery Section - Hidden for giftcard orders */}
         {!allItemsAreGiftcards && (
           <div className="py-6">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-              {t("delivery")}
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                {t("delivery")}
+              </h2>
+              {isFormLoading && (
+                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-600 dark:border-gray-400"></div>
+                  <span>Loading saved info...</span>
+                </div>
+              )}
+              {savedForm && !isFormLoading && (
+                <div className="text-sm text-green-600 dark:text-green-400">
+                  ✓ Info auto-filled
+                </div>
+              )}
+            </div>
 
             {/* Country - Always shown */}
             <div className="mb-4">
@@ -964,6 +1037,42 @@ export const CheckoutScreen: React.FC = () => {
             orderId={generatedOrderId}
             wldBalance={wldBalance}
             disabled={!isFormValid()}
+            onPaymentStart={async () => {
+              // Save the checkout form when payment is initiated
+              if (address) {
+                try {
+                  console.log("💾 Saving checkout form on payment start");
+                  await saveForm({
+                    walletAddress: address,
+                    email: shippingAddress.email,
+                    country: shippingAddress.country,
+                    firstName: allItemsAreGiftcards && !shippingAddress.firstName
+                      ? "giftcard"
+                      : shippingAddress.firstName,
+                    lastName: allItemsAreGiftcards && !shippingAddress.lastName
+                      ? "giftcard"
+                      : shippingAddress.lastName,
+                    address: allItemsAreGiftcards
+                      ? "giftcard"
+                      : shippingAddress.address,
+                    apartment: allItemsAreGiftcards
+                      ? ""
+                      : (shippingAddress.apartment || ""),
+                    city: allItemsAreGiftcards
+                      ? "giftcard"
+                      : shippingAddress.city,
+                    postCode: allItemsAreGiftcards
+                      ? ""
+                      : shippingAddress.postalCode,
+                    phone: allItemsAreGiftcards ? "0" : shippingAddress.phone,
+                  });
+                  console.log("✅ Checkout form saved on payment start");
+                } catch (saveError) {
+                  console.error("⚠️ Failed to save checkout form on payment start (non-critical):", saveError);
+                  // Don't block the payment flow if saving form fails
+                }
+              }
+            }}
             onPaymentSuccess={async (txHash) => {
               console.log("✅ WLD Payment successful:", txHash);
 

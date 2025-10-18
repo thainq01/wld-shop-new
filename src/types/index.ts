@@ -464,3 +464,39 @@ export interface OrderSuccessResponse {
   data: OrderSuccessData;
   statusCode: number;
 }
+
+// User Checkout Form Types
+export interface UserCheckoutForm {
+  id?: number;
+  walletAddress: string;
+  email: string;
+  country: string;
+  firstName: string;
+  lastName: string;
+  address: string;
+  apartment?: string;
+  city: string;
+  postCode: string;
+  phone: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateUserCheckoutFormRequest {
+  walletAddress: string;
+  email: string;
+  country: string;
+  firstName: string;
+  lastName: string;
+  address: string;
+  apartment?: string;
+  city: string;
+  postCode: string;
+  phone: string;
+}
+
+export interface UserCheckoutFormResponse {
+  success: boolean;
+  data: UserCheckoutForm;
+  statusCode: number;
+}

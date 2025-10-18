@@ -5,6 +5,7 @@ import { useWLDPayment, usePaymentStatus } from "../../hooks/useWLDPayment";
 interface WLDPaymentButtonProps {
   amount: number; // Amount in WLD
   orderId: string;
+  onPaymentStart?: () => void; // Called when payment is initiated
   onPaymentSuccess?: (txHash: string) => void;
   onPaymentError?: (error: string) => void;
   disabled?: boolean;
@@ -15,6 +16,7 @@ interface WLDPaymentButtonProps {
 export function WLDPaymentButton({
   amount,
   orderId,
+  onPaymentStart,
   onPaymentSuccess,
   onPaymentError,
   disabled = false,
@@ -40,6 +42,9 @@ export function WLDPaymentButton({
     try {
       resetStatus();
       updateStatus("paying", 1);
+      
+      // Call onPaymentStart callback when payment is initiated
+      onPaymentStart?.();
 
       // Use exact wld-prediction-client pattern
       const result = await transferByTokenExact({

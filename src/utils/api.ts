@@ -25,6 +25,8 @@ import type {
   CartResponse,
   AddToCartRequest,
   UpdateCartItemRequest,
+  UserCheckoutForm,
+  CreateUserCheckoutFormRequest,
 } from "../types";
 
 interface ApiResponse<T> {
@@ -573,4 +575,20 @@ export const cartApi = {
   // Remove a specific item from cart
   removeCartItem: (walletAddress: string, itemId: number) =>
     apiDelete(`/api/cart/${walletAddress}/items/${itemId}`),
+};
+
+// User Checkout Form API functions
+export const userCheckoutFormApi = {
+  // Save or update user checkout form
+  saveForm: (data: CreateUserCheckoutFormRequest) =>
+    apiFetch<UserCheckoutForm>("/api/checkout/user-form", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  // Get user checkout form by wallet address
+  getByWalletAddress: (walletAddress: string) =>
+    apiFetch<UserCheckoutForm>(
+      `/api/checkout/user-form/${encodeURIComponent(walletAddress)}`
+    ),
 };

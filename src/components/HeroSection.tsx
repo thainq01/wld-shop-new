@@ -10,7 +10,7 @@ import { getHeroImageUrl } from "../utils/imageOptimization";
 import { useNavigationCache } from "../hooks/useNavigationCache";
 import { BlurUpImage } from "./BlurUpImage";
 import { PriceDisplay } from "./PriceDisplay";
-import { getProductPrice } from "../utils/priceUtils";
+import { getBasePrice } from "../utils/priceUtils";
 
 // Memoized helper function to get product image
 const getProductImage = (product: Product): string => {
@@ -264,7 +264,7 @@ export function HeroSection() {
                         <div className="flex items-center justify-between">
                           <div className="text-gray-600 dark:text-gray-300 text-base sm:text-lg font-semibold">
                             <PriceDisplay
-                              price={getProductPrice(product)}
+                              price={getBasePrice(product)}
                               discountPrice={product.discountPrice}
                               size="medium"
                             />

@@ -19,7 +19,7 @@ import { useTranslation } from "react-i18next";
 import { type ProductImage, type ProductSize } from "../../types";
 import { BlurUpImage } from "../BlurUpImage";
 import { PriceDisplay } from "../PriceDisplay";
-import { getProductPrice } from "../../utils/priceUtils";
+import { getBasePrice } from "../../utils/priceUtils";
 
 // Product image component - reused from other components
 function ProductImage({
@@ -721,7 +721,7 @@ export const ProductDetailScreen: React.FC = () => {
         </h1>
         <div className="mb-6">
           <PriceDisplay
-            price={getProductPrice(productDetail)}
+            price={getBasePrice(productDetail)}
             discountPrice={productDetail.discountPrice}
             size="large"
             className="text-gray-600 dark:text-gray-400"

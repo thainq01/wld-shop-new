@@ -28,6 +28,20 @@ export const getProductPrice = (product: Product): number => {
 };
 
 /**
+ * Utility function to get the base/original price for display purposes
+ * Returns the price that should be shown as the "original" price before discount
+ */
+export const getBasePrice = (product: Product): number => {
+  return (
+    product.basePrice ||
+    product.price ||
+    product.countryPrice ||
+    product.effectivePrice ||
+    0
+  );
+};
+
+/**
  * Check if a product has a valid discount
  */
 export const hasValidDiscount = (

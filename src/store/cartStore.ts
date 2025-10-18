@@ -52,7 +52,11 @@ export const useCartStore = create<CartState>((set, get) => ({
     try {
       // For cart, use UI language for both lang and country
       const currentLanguage = useLanguageStore.getState().currentLanguage;
-      const cartData = await cartApi.getCart(walletAddress, currentLanguage, currentLanguage);
+      const cartData = await cartApi.getCart(
+        walletAddress,
+        currentLanguage,
+        currentLanguage
+      );
       console.log("Cart data fetched:", cartData);
       console.log("Cart items count:", cartData.items?.length || 0);
       console.log("Cart items:", cartData.items);
@@ -143,10 +147,15 @@ export const useCartStore = create<CartState>((set, get) => ({
       (sum, item) => sum + item.quantity,
       0
     );
-    const newTotalAmount = currentItems.reduce(
-      (sum, item) => sum + item.lineTotal,
-      0
-    );
+    // Compute new total amount using lineTotal when available; fall back to effective price * qty
+    const newTotalAmount = currentItems.reduce((sum, item) => {
+      const effective =
+        (item.discountPrice && item.discountPrice > 0
+          ? item.discountPrice
+          : item.productPrice) ?? 0;
+      const line = item.lineTotal ?? effective * item.quantity;
+      return sum + line;
+    }, 0);
 
     // Update state immediately for smooth UX
     set({
@@ -201,10 +210,15 @@ export const useCartStore = create<CartState>((set, get) => ({
 
     if (itemIndex !== -1) {
       // Update the item optimistically
+      const orig = currentItems[itemIndex];
+      const effective =
+        (orig.discountPrice && orig.discountPrice > 0
+          ? orig.discountPrice
+          : orig.productPrice) ?? 0;
       currentItems[itemIndex] = {
-        ...currentItems[itemIndex],
+        ...orig,
         quantity: quantity,
-        lineTotal: currentItems[itemIndex].productPrice * quantity,
+        lineTotal: effective * quantity,
       };
 
       // Calculate new totals
@@ -213,10 +227,14 @@ export const useCartStore = create<CartState>((set, get) => ({
         (sum, item) => sum + item.quantity,
         0
       );
-      newTotalAmount = currentItems.reduce(
-        (sum, item) => sum + item.lineTotal,
-        0
-      );
+      newTotalAmount = currentItems.reduce((sum, item) => {
+        const effective =
+          (item.discountPrice && item.discountPrice > 0
+            ? item.discountPrice
+            : item.productPrice) ?? 0;
+        const line = item.lineTotal ?? effective * item.quantity;
+        return sum + line;
+      }, 0);
 
       // Update state immediately for smooth UX
       set({

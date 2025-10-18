@@ -18,6 +18,8 @@ import { useLanguageStore } from "../../store/languageStore";
 import { useTranslation } from "react-i18next";
 import { type ProductImage, type ProductSize } from "../../types";
 import { BlurUpImage } from "../BlurUpImage";
+import { PriceDisplay } from "../PriceDisplay";
+import { getProductPrice } from "../../utils/priceUtils";
 
 // Product image component - reused from other components
 function ProductImage({
@@ -537,11 +539,6 @@ export const ProductDetailScreen: React.FC = () => {
       return;
     }
 
-    const primaryImage = productDetail.images?.find(
-      (img: ProductImage) => img.isPrimary
-    );
-    const cartImage = primaryImage?.url || productDetail.images?.[0]?.url || "";
-
     setIsAddingToCart(true);
     try {
       if (!hasWallet) {
@@ -722,13 +719,14 @@ export const ProductDetailScreen: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
           {productDetail.name}
         </h1>
-        <p className="text-xl text-gray-600 dark:text-gray-400 mb-6">
-          {productDetail.effectivePrice ||
-            productDetail.countryPrice ||
-            productDetail.basePrice ||
-            productDetail.price}{" "}
-          WLD
-        </p>
+        <div className="mb-6">
+          <PriceDisplay
+            price={getProductPrice(productDetail)}
+            discountPrice={productDetail.discountPrice}
+            size="large"
+            className="text-gray-600 dark:text-gray-400"
+          />
+        </div>
 
         {/* Size Selector */}
         <div className="mb-6">

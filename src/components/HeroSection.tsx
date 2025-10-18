@@ -9,6 +9,8 @@ import { useImagePreloader } from "../hooks/useOptimizedImage";
 import { getHeroImageUrl } from "../utils/imageOptimization";
 import { useNavigationCache } from "../hooks/useNavigationCache";
 import { BlurUpImage } from "./BlurUpImage";
+import { PriceDisplay } from "./PriceDisplay";
+import { getProductPrice } from "../utils/priceUtils";
 
 // Memoized helper function to get product image
 const getProductImage = (product: Product): string => {
@@ -260,13 +262,13 @@ export function HeroSection() {
                           {product.name || "Product Name"}
                         </h3>
                         <div className="flex items-center justify-between">
-                          <span className="text-gray-600 dark:text-gray-300 text-base sm:text-lg font-semibold">
-                            {product.effectivePrice ||
-                              product.countryPrice ||
-                              product.basePrice ||
-                              product.price}{" "}
-                            WLD
-                          </span>
+                          <div className="text-gray-600 dark:text-gray-300 text-base sm:text-lg font-semibold">
+                            <PriceDisplay
+                              price={getProductPrice(product)}
+                              discountPrice={product.discountPrice}
+                              size="medium"
+                            />
+                          </div>
                           <div className="flex items-center text-gray-500 dark:text-gray-400 text-sm">
                             <span className="mr-1">{t("viewProduct")}</span>
                             <svg

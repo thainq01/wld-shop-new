@@ -353,8 +353,11 @@ export const CheckoutScreen: React.FC = () => {
               country: countryCode,
             });
 
-            // Use countryPrice if available, otherwise use basePrice
-            const effectivePrice = product.countryPrice ?? product.basePrice;
+            // Use discountPrice if available and > 0, otherwise use countryPrice, otherwise use basePrice
+            let effectivePrice = product.countryPrice ?? product.basePrice;
+            if (product.discountPrice && product.discountPrice > 0) {
+              effectivePrice = product.discountPrice;
+            }
             const itemTotal = effectivePrice * item.quantity;
 
             console.log(
@@ -372,11 +375,15 @@ export const CheckoutScreen: React.FC = () => {
               `Failed to fetch pricing for product ${item.productId}:`,
               error
             );
-            // Fallback to current item price if API call fails
+            // Fallback to current item price if API call fails - prefer discountPrice if available
+            const fallbackPrice =
+              item.discountPrice && item.discountPrice > 0
+                ? item.discountPrice
+                : item.productPrice;
             return {
               productId: item.productId,
-              effectivePrice: item.productPrice,
-              itemTotal: item.lineTotal,
+              effectivePrice: fallbackPrice,
+              itemTotal: item.lineTotal || fallbackPrice * item.quantity,
               productData: null, // No updated data available
             };
           }
@@ -469,7 +476,12 @@ export const CheckoutScreen: React.FC = () => {
         ...(countrySpecificProduct && {
           productName: countrySpecificProduct.name,
           productDescription: countrySpecificProduct.description,
-          effectivePrice: pricing?.effectivePrice || item.productPrice,
+          // Use pricing effectivePrice if present, otherwise prefer item.discountPrice then productPrice
+          effectivePrice:
+            pricing?.effectivePrice ??
+            (item.discountPrice && item.discountPrice > 0
+              ? item.discountPrice
+              : item.productPrice),
           countryCode: selectedCountry,
           language: selectedCountry, // Use selected country as language for checkout
         }),
@@ -882,7 +894,9 @@ export const CheckoutScreen: React.FC = () => {
                   ) : (
                     `${(
                       itemPricing[item.productId]?.itemTotal ??
-                      item.productPrice * item.quantity
+                      (item.discountPrice && item.discountPrice > 0
+                        ? item.discountPrice
+                        : item.productPrice) * item.quantity
                     ).toFixed(2)} WLD`
                   )}
                 </span>

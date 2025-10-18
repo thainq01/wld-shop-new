@@ -37,6 +37,7 @@ export interface Product {
   name: string;
   description: string;
   price: number;
+  discountPrice?: number;
   collection: {
     id: number;
     name: string;
@@ -83,6 +84,7 @@ export interface CreateProductRequest {
   name: string;
   description: string;
   price: number;
+  discountPrice?: number;
   collectionId: number;
   category: string;
   material: string;
@@ -99,6 +101,7 @@ export interface UpdateProductRequest {
   name?: string;
   description?: string;
   price?: number;
+  discountPrice?: number;
   collectionId?: number;
   category?: string;
   material?: string;
@@ -179,6 +182,7 @@ export interface ProductTranslation {
 export interface MultiLanguageProduct {
   id: number;
   basePrice: number;
+  discountPrice?: number;
   collection: {
     id: number;
     name: string;
@@ -212,6 +216,7 @@ export interface MultiLanguageProduct {
 
 export interface CreateMultiLanguageProductRequest {
   price: number;
+  discountPrice?: number;
   collectionId?: number;
   category: string;
   madeBy: string;
@@ -234,6 +239,7 @@ export interface CreateMultiLanguageProductRequest {
 
 export interface UpdateMultiLanguageProductRequest {
   price?: number;
+  discountPrice?: number;
   collectionId?: number;
   category?: string;
   madeBy?: string;
@@ -261,10 +267,16 @@ export interface CartItem {
   productId: string;
   productName: string;
   productPrice: number;
+  basePrice: number;
+  discountPrice?: number;
   productImage: string;
+  collectionSlug: string;
   size: string;
   quantity: number;
+  languageCode: string;
+  currency: string;
   lineTotal: number;
+  isProductActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -274,7 +286,9 @@ export interface CartResponse {
   items: CartItem[];
   totalItems: number;
   totalQuantity: number;
-  totalAmount: string;
+  totalAmount: number;
+  currency: string;
+  languageCode: string;
 }
 
 export interface AddToCartRequest {

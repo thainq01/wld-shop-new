@@ -267,10 +267,16 @@ export interface CartItem {
   productId: string;
   productName: string;
   productPrice: number;
+  basePrice: number;
+  discountPrice?: number;
   productImage: string;
+  collectionSlug: string;
   size: string;
   quantity: number;
+  languageCode: string;
+  currency: string;
   lineTotal: number;
+  isProductActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -280,7 +286,9 @@ export interface CartResponse {
   items: CartItem[];
   totalItems: number;
   totalQuantity: number;
-  totalAmount: string;
+  totalAmount: number;
+  currency: string;
+  languageCode: string;
 }
 
 export interface AddToCartRequest {

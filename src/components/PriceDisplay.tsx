@@ -12,6 +12,8 @@ interface PriceDisplayProps {
   size?: "small" | "medium" | "large";
   /** Whether to show currency unit */
   showCurrency?: boolean;
+  /** Whether to render the small savings percentage badge */
+  showSavingsBadge?: boolean;
 }
 
 /**
@@ -27,6 +29,7 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
   className = "",
   size = "medium",
   showCurrency = true,
+  showSavingsBadge = true,
 }) => {
   const hasDiscount = hasValidDiscount(price, discountPrice);
 
@@ -69,7 +72,7 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
   const savings = price - discountPrice!;
   const savingsPercentage = Math.round((savings / price) * 100);
 
-  // Show discount price with crossed-out original price and savings info
+  // Show discount price with crossed-out original price and optional savings info
   return (
     <div className={`flex items-center gap-2 flex-wrap ${className}`}>
       <span className={styles.originalStrikethrough}>
@@ -80,9 +83,11 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
         {discountPrice!.toFixed(2)}
         {currency}
       </span>
-      <span className="text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-1.5 py-0.5 rounded font-medium">
-        -{savingsPercentage}%
-      </span>
+      {showSavingsBadge && (
+        <span className="text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-1.5 py-0.5 rounded font-medium">
+          -{savingsPercentage}%
+        </span>
+      )}
     </div>
   );
 };

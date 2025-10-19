@@ -4,7 +4,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { Toaster } from "sonner";
+import { toast, Toaster } from "sonner";
 import { MainLayout } from "./layouts/MainLayout";
 import { ExploreScreen } from "./components/ExploreScreen";
 import { CollectionScreen } from "./components/CollectionScreen";
@@ -70,6 +70,7 @@ function App() {
 
   useEffect(() => {
     setTimeout(requestPermission, 1500);
+    toast.success("noti success");
   }, []);
 
   return (

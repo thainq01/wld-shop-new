@@ -4,7 +4,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { toast, Toaster } from "sonner";
+import { Toaster } from "sonner";
 import { MainLayout } from "./layouts/MainLayout";
 import { ExploreScreen } from "./components/ExploreScreen";
 import { CollectionScreen } from "./components/CollectionScreen";
@@ -57,20 +57,15 @@ function App() {
           return;
         case RequestPermissionErrorCodes.PermissionDisabled:
         case RequestPermissionErrorCodes.UserRejected:
-          // setOpen(true);
-
-          // setting https://worldcoin.org/settings/miniapps
           return;
         default:
           break;
       }
     }
-    // Handle the response
   };
 
   useEffect(() => {
     setTimeout(requestPermission, 1500);
-    toast.success("noti success");
   }, []);
 
   return (

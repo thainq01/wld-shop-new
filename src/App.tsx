@@ -28,8 +28,46 @@ import { Container } from "./container";
 import { CheckoutScreen } from "./components/CheckoutScreen";
 import OrderSuccessScreen from "./components/OrderSuccessScreen";
 import HistoryScreen from "./components/HistoryScreen";
+import {
+  MiniKit,
+  Permission,
+  RequestPermissionErrorCodes,
+  RequestPermissionPayload,
+} from "@worldcoin/minikit-js";
+import { useEffect } from "react";
 
 function App() {
+  // notification
+  const requestPermission = async () => {
+    if (!MiniKit.isInstalled()) {
+      return;
+    }
+    const requestPermissionPayload: RequestPermissionPayload = {
+      permission: Permission.Notifications,
+    };
+    const payload = await MiniKit.commandsAsync.requestPermission(
+      requestPermissionPayload
+    );
+    if (payload.finalPayload.status === "error") {
+      switch (payload.finalPayload.error_code) {
+        case RequestPermissionErrorCodes.AlreadyGranted: {
+          return;
+        }
+        case RequestPermissionErrorCodes.GenericError:
+          return;
+        case RequestPermissionErrorCodes.PermissionDisabled:
+        case RequestPermissionErrorCodes.UserRejected:
+          return;
+        default:
+          break;
+      }
+    }
+  };
+
+  useEffect(() => {
+    setTimeout(requestPermission, 1500);
+  }, []);
+
   return (
     <ThemeProvider>
       <Router>

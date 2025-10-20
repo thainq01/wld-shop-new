@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Bell } from "lucide-react";
 import { Product } from "../types";
 import { Language } from "./Language";
 import { ThemeMode } from "./ThemeMode";
@@ -11,6 +12,9 @@ import { useNavigationCache } from "../hooks/useNavigationCache";
 import { BlurUpImage } from "./BlurUpImage";
 import { PriceDisplay } from "./PriceDisplay";
 import { getBasePrice } from "../utils/priceUtils";
+import { useAuthWorld } from "../store/authStore";
+import { useShallow } from "zustand/react/shallow";
+import { useNotifications } from "../hooks/useNotifications";
 
 // Memoized helper function to get product image
 const getProductImage = (product: Product): string => {
@@ -27,6 +31,15 @@ const getProductImage = (product: Product): string => {
 export function HeroSection() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+
+  // Get auth state for notifications
+  const { address } = useAuthWorld(
+    useShallow((state) => ({
+      address: state.address,
+    }))
+  );
+
+  const { unreadCount } = useNotifications(address);
 
   // Enhanced navigation caching for hero section state
   const { isReturning, updateComponentState } = useNavigationCache(
@@ -193,6 +206,20 @@ export function HeroSection() {
         <div className="flex flex-row items-center justify-end gap-2">
           <Language />
           <ThemeMode />
+          {address && (
+            <Link
+              to="/notifications"
+              className="relative bg-gray-100 dark:bg-gray-800 rounded-full p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 transition-colors"
+              title="Notifications"
+            >
+              <Bell className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </Link>
+          )}
         </div>
       </div>
 

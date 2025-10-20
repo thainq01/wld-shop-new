@@ -1,4 +1,4 @@
-import { X, MoreHorizontal, Settings, User } from "lucide-react";
+import { X, Settings, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuthWorld } from "../store/authStore";
 import { useShallow } from "zustand/react/shallow";
@@ -41,7 +41,7 @@ export function Header() {
         </div>
         {!address ? (
           <div className="flex items-center gap-2">
-            <LoginButton compact />
+            <LoginButton />
           </div>
         ) : (
           <>

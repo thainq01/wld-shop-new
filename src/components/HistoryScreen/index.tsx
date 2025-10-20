@@ -240,6 +240,8 @@ const HistoryScreen: React.FC = () => {
         return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400";
       case "pending":
         return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400";
+      case "cancelled":
+        return "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400";
       default:
         return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300";
     }
@@ -249,6 +251,8 @@ const HistoryScreen: React.FC = () => {
     switch (status.toLowerCase()) {
       case "paid":
         return t("paid");
+      case "cancelled":
+        return "Cancelled";
       default:
         return status.charAt(0).toUpperCase() + status.slice(1);
     }

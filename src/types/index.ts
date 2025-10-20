@@ -500,3 +500,19 @@ export interface UserCheckoutFormResponse {
   data: UserCheckoutForm;
   statusCode: number;
 }
+
+// Notification Types
+export interface Notification {
+  id: number;
+  walletAddress: string;
+  title: string;
+  message: string;
+  path: string;
+  createdAt: string;
+}
+
+export interface NotificationResponse {
+  success: boolean;
+  data: Notification[];
+  statusCode: number;
+}

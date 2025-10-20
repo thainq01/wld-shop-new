@@ -27,6 +27,7 @@ import type {
   UpdateCartItemRequest,
   UserCheckoutForm,
   CreateUserCheckoutFormRequest,
+  Notification,
 } from "../types";
 
 interface ApiResponse<T> {
@@ -590,5 +591,14 @@ export const userCheckoutFormApi = {
   getByWalletAddress: (walletAddress: string) =>
     apiFetch<UserCheckoutForm>(
       `/api/checkout/user-form/${encodeURIComponent(walletAddress)}`
+    ),
+};
+
+// Notifications API functions
+export const notificationsApi = {
+  // Get notifications by wallet address
+  getByWalletAddress: (walletAddress: string) =>
+    apiFetch<Notification[]>(
+      `/api/notifications/wallet/${encodeURIComponent(walletAddress)}`
     ),
 };

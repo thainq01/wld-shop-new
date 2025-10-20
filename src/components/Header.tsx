@@ -1,10 +1,11 @@
-import { X, MoreHorizontal, Settings, User } from "lucide-react";
+import { X, Settings, User, Bell } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuthWorld } from "../store/authStore";
 import { useShallow } from "zustand/react/shallow";
 import { LoginButton } from "./LoginButton";
 import { Language } from "./Language";
 import { ThemeMode } from "./ThemeMode";
+import { useNotifications } from "../hooks/useNotifications";
 
 export function Header() {
   const { address, username } = useAuthWorld(
@@ -13,6 +14,8 @@ export function Header() {
       username: state.username,
     }))
   );
+
+  const { unreadCount } = useNotifications(address);
 
   return (
     <header className="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-900 ">
@@ -37,11 +40,25 @@ export function Header() {
       <div className="flex items-center gap-2">
         <div className="flex flex-row items-center justify-end gap-2">
           <Language />
+          {address && (
+            <Link
+              to="/notifications"
+              className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 transition-colors"
+              title="Notifications"
+            >
+              <Bell className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </Link>
+          )}
           <ThemeMode />
         </div>
         {!address ? (
           <div className="flex items-center gap-2">
-            <LoginButton compact />
+            <LoginButton />
           </div>
         ) : (
           <>

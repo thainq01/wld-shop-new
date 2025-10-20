@@ -28,6 +28,7 @@ import { Container } from "./container";
 import { CheckoutScreen } from "./components/CheckoutScreen";
 import OrderSuccessScreen from "./components/OrderSuccessScreen";
 import HistoryScreen from "./components/HistoryScreen";
+import { NotificationsScreen } from "./components/NotificationsScreen";
 import {
   MiniKit,
   Permission,
@@ -116,6 +117,10 @@ function App() {
                       />
                       <Route path="/bag" element={<BagScreen />} />
                       <Route path="/history" element={<HistoryScreen />} />
+                      <Route
+                        path="/notifications"
+                        element={<NotificationsScreen />}
+                      />
                       <Route path="/checkout" element={<CheckoutScreen />} />
                       <Route
                         path="/order-success"

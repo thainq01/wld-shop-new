@@ -87,6 +87,11 @@ export function CheckoutsManager() {
       color:
         "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
     },
+    {
+      value: "cancelled",
+      label: "Cancelled",
+      color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+    },
   ];
 
   useEffect(() => {

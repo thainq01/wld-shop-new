@@ -601,4 +601,22 @@ export const notificationsApi = {
     apiFetch<Notification[]>(
       `/api/notifications/wallet/${encodeURIComponent(walletAddress)}`
     ),
+
+  // Mark notification as seen
+  markAsSeen: (notificationId: number, walletAddress: string) =>
+    apiFetch<{ success: boolean; message: string }>(
+      `/api/notifications/${notificationId}/seen?walletAddress=${encodeURIComponent(walletAddress)}`,
+      {
+        method: "PUT",
+      }
+    ),
+
+  // Mark all notifications as seen
+  markAllAsSeen: (walletAddress: string) =>
+    apiFetch<{ success: boolean; message: string }>(
+      `/api/notifications/wallet/${encodeURIComponent(walletAddress)}/seen-all`,
+      {
+        method: "PUT",
+      }
+    ),
 };

@@ -508,6 +508,7 @@ export interface Notification {
   title: string;
   message: string;
   path: string;
+  seen: boolean;
   createdAt: string;
 }
 

@@ -38,11 +38,37 @@ export function useNotifications(walletAddress: string | null) {
     fetchNotifications();
   }, [fetchNotifications]);
 
+  const markAsSeen = useCallback(async (notificationId: number) => {
+    try {
+      await notificationsApi.markAsSeen(notificationId, walletAddress!);
+      // Update the local state to mark as seen
+      setNotifications(prev => 
+        prev.map(n => n.id === notificationId ? { ...n, seen: true } : n)
+      );
+    } catch (err) {
+      console.error("Failed to mark notification as seen:", err);
+    }
+  }, [walletAddress]);
+
+  const markAllAsSeen = useCallback(async () => {
+    try {
+      await notificationsApi.markAllAsSeen(walletAddress!);
+      // Update all notifications to seen in local state
+      setNotifications(prev => 
+        prev.map(n => ({ ...n, seen: true }))
+      );
+    } catch (err) {
+      console.error("Failed to mark all notifications as seen:", err);
+    }
+  }, [walletAddress]);
+
   return {
     notifications,
     loading,
     error,
     refetch,
-    unreadCount: notifications?.length || 0, // You can add logic to track read/unread status
+    markAsSeen,
+    markAllAsSeen,
+    unreadCount: notifications?.filter(n => !n.seen).length || 0,
   };
 }

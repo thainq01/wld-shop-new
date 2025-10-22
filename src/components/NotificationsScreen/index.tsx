@@ -14,7 +14,7 @@ export function NotificationsScreen() {
     }))
   );
 
-  const { notifications, loading, error, refetch } = useNotifications(address);
+  const { notifications, loading, error, refetch, markAsSeen, markAllAsSeen } = useNotifications(address);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -166,6 +166,14 @@ export function NotificationsScreen() {
               <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 Notifications
               </h2>
+              {notifications.some(n => !n.seen) && (
+                <button
+                  onClick={markAllAsSeen}
+                  className="px-3 py-1 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+                >
+                  Read All
+                </button>
+              )}
             </div>
           </div>
 
@@ -175,9 +183,15 @@ export function NotificationsScreen() {
                 <Link
                   key={notification.id}
                   to={notification.path}
+                  onClick={() => markAsSeen(notification.id)}
                   className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden w-full block hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
-                  <div className="p-6">
+                  <div className="p-6 relative">
+                    {/* Red dot for unseen notifications */}
+                    {!notification.seen && (
+                      <div className="absolute top-3 right-3 w-3 h-3 bg-red-500 rounded-full"></div>
+                    )}
+                    
                     {/* Notification Header */}
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-3">

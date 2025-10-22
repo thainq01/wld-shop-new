@@ -703,11 +703,27 @@ export function CheckoutsManager() {
                 onChange={(e) => setNewStatus(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                {statusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
+                {(() => {
+                  const orderId =
+                    selectedCheckoutForStatus.orderId ||
+                    selectedCheckoutForStatus.id.toString();
+                  const isGCOrder = orderId.toUpperCase().startsWith("GC");
+
+                  // If order ID starts with GC, show only specific options
+                  const availableOptions = isGCOrder
+                    ? statusOptions.filter((option) =>
+                        ["pending", "paid", "completed", "cancelled"].includes(
+                          option.value
+                        )
+                      )
+                    : statusOptions;
+
+                  return availableOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ));
+                })()}
               </select>
             </div>
 
